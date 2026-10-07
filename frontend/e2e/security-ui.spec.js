@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createUser, signIn, signInAsAdmin, uniquePerson } from './helpers.js'
+import { ADMIN, alert, createUser, signIn, signInAsAdmin, uniquePerson } from './helpers.js'
 
 test.describe('Access control and session', () => {
   test('TC-SEC-01 (N): admin pages require sign-in', async ({ page }) => {
@@ -92,6 +92,12 @@ test.describe('UI and navigation', () => {
   test('TC-UI-06 (N): unknown URLs redirect', async ({ page }) => {
     await page.goto('/no-such-page')
     await expect(page).toHaveURL(/\/login$/)
+  })
+
+  test('TC-UI-07 (N): an unreachable backend shows a clear message', async ({ page }) => {
+    await page.route(/\/api\/auth\//, (route) => route.abort('connectionrefused'))
+    await signIn(page, ADMIN.username, ADMIN.password)
+    await expect(alert(page)).toHaveText('Unable to reach the server. Please make sure the backend is running.')
   })
 
   test('TC-UI-08 (P): deep links load on refresh', async ({ page }) => {

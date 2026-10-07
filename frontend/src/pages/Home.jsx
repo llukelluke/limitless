@@ -5,6 +5,8 @@ import { ROLES, labelFor } from '../constants.js'
 // Landing page for managers and accountants. Their Sprint 2+ tools will live here.
 export default function Home() {
   const { user } = useAuth()
+  const role = labelFor(ROLES, user.role).toLowerCase()
+  const article = /^[aeiou]/.test(role) ? 'an' : 'a'
 
   return (
     <>
@@ -15,7 +17,7 @@ export default function Home() {
       />
       <Panel title="GETTING STARTED" className="page-panel">
         <p className="home-note">
-          You are signed in as a {labelFor(ROLES, user.role).toLowerCase()}. Accounting features will appear here as
+          You are signed in as {article} {role}. Accounting features will appear here as
           they are released. Contact your administrator if you need your role or account details changed.
         </p>
       </Panel>

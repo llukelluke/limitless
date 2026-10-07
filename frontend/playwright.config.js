@@ -15,7 +15,8 @@ export default defineConfig({
     // Uses the Chrome already installed on the machine (no browser download needed)
     channel: 'chrome',
     viewport: { width: 1440, height: 900 },
-    screenshot: 'only-on-failure',
+    // E2E_SCREENSHOTS=1 keeps a screenshot of every test's final screen as evidence
+    screenshot: process.env.E2E_SCREENSHOTS ? 'on' : 'only-on-failure',
     trace: 'retain-on-failure',
   },
 })

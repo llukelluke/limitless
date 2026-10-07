@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { alert, createUser, signIn, signInAsAdmin, signOut, uniquePerson } from './helpers.js'
+import { adminToken, alert, createUser, signIn, signInAsAdmin, signOut, uniquePerson } from './helpers.js'
 
 const save = async (page) => {
   await page.getByRole('button', { name: 'Save Changes' }).click()
@@ -71,6 +71,18 @@ test.describe('User management', () => {
 
     await page.getByLabel('Search users').fill('zzz-no-such-user')
     await expect(page.getByText('No users match these filters.')).toBeVisible()
+  })
+
+  test('TC-USR-19 (P): a picture URL shows in the avatar after sign-in', async ({ page, request }) => {
+    const user = await createUser(request, uniquePerson('Pic'), 'MANAGER')
+    const token = await adminToken(request)
+    const response = await request.put(`/api/users/${user.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { picture: '/favicon.svg' },
+    })
+    expect(response.ok()).toBeTruthy()
+    await signIn(page, user.username, user.password)
+    await expect(page.locator('img.user-menu__avatar')).toHaveAttribute('src', '/favicon.svg')
   })
 
   test.describe('editing one user', () => {

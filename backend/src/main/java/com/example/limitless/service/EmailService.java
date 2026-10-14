@@ -23,20 +23,28 @@ public class EmailService {
 
     private final String apiKey;
     private final String from;
+    private final String overrideTo;
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
     public EmailService(@Value("${email.resend-api-key:}") String apiKey,
-                        @Value("${email.from:Limitless <onboarding@resend.dev>}") String from) {
+                        @Value("${email.from:Limitless <onboarding@resend.dev>}") String from,
+                        @Value("${email.override-to:}") String overrideTo) {
         this.apiKey = apiKey;
         this.from = from;
+        this.overrideTo = overrideTo;
     }
 
     public void send(String to, String subject, String body) {
         if (apiKey == null || apiKey.isBlank()) {
             log.info("\n=== EMAIL (not sent, no API key) ===\nTo: {}\nSubject: {}\n\n{}\n=============", to, subject, body);
             return;
+        }
+        // Demo mode: send everything to one inbox, noting the real recipient
+        if (overrideTo != null && !overrideTo.isBlank()) {
+            subject = "[to: " + to + "] " + subject;
+            to = overrideTo;
         }
         String json = "{\"from\":" + q(from) + ",\"to\":[" + q(to) + "],\"subject\":" + q(subject)
                 + ",\"text\":" + q(body) + "}";

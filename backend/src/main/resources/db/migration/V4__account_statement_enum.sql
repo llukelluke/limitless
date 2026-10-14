@@ -1,2 +1,2 @@
 ALTER TABLE accounts
-MODIFY COLUMN statement ENUM('Income Statement', 'Balance Sheet', 'Retained Earnings statement', 'Trial Balance');
+MODIFY COLUMN statement ENUM('INCOME_STATEMENT', 'BALANCE_SHEET', 'RETAINED_EARNINGS', 'TRIAL_BALANCE');

@@ -59,8 +59,8 @@ public class Account {
     @Column(name = "account_order")
     private Integer accountOrder;
 
-    @Column(length = 255)
-    private String statement;
+    @Enumerated(EnumType.STRING)
+    private accountStatement statement;
 
     @Column(length = 255)
     private String comment;
@@ -69,4 +69,6 @@ public class Account {
     private Boolean isActive = true;
 
     public enum normalSide {LEFT, RIGHT}
+
+    public enum accountStatement {INCOME_STATEMENT, BALANCE_SHEET, RETAINED_EARNINGS, TRIAL_BALANCE}
 }

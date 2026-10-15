@@ -89,3 +89,14 @@ The root `Dockerfile` builds the React app into the Spring Boot jar, so one serv
 | `ADMIN_PASSWORD` | first deploy only | unset (no admin created) |
 | `ADMIN_USERNAME`, `ADMIN_EMAIL` | no | `admin`, `admin@limitless.local` |
 | `PORT` | set by Railway | `8080` |
+
+## Tests
+Test plan and test cases (positive and negative, `TC-<area>-<n>`): see the team's test plan document.
+
+- **Backend unit tests** (JUnit 5 + Mockito, no database needed except `LimitlessApplicationTests`):
+  `cd backend && ./mvnw test`
+- **End-to-end browser tests** (Playwright; uses your installed Chrome). Start MySQL, the backend and
+  `npm run dev` first, then: `cd frontend && npm run test:e2e`.
+  Results report: `npx playwright show-report`. Each test name starts with its test case ID.
+  Against the deployed site: `E2E_BASE_URL=https://<domain> E2E_ADMIN_USER=admin E2E_ADMIN_PASSWORD=<password> npm run test:e2e`
+  (this creates test users there).

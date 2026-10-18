@@ -718,5 +718,187 @@ Sends an email to the specified user from within the system. Administrator only.
 
 ---
 
-## Accounts, Journal Entries, and Statements Modules
-*Not yet scoped for the current sprint*
+## Chart of Accounts Module
+
+**Access:** every logged-in role (ADMINISTRATOR, MANAGER, ACCOUNTANT) can use the GET endpoints. Only ADMINISTRATOR can add, edit, or deactivate. All requests need `Authorization: Bearer <token>`.
+
+**Account object** (used in requests and responses; snake_case):
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | integer | response only |
+| `name` | string | required, unique (case-insensitive) |
+| `account_number` | string | required, digits only, unique. Must start with 1 (Asset), 2 (Liability), 3 (Equity), 4 (Revenue) or 5 (Expense) to match `category` |
+| `description` | string | optional |
+| `normal_side` | string | required: `LEFT` (debit) or `RIGHT` (credit). `DEBIT`/`CREDIT` also accepted on input |
+| `category` | string | required: Asset, Liability, Equity, Revenue, Expense |
+| `subcategory` | string | required, e.g. "Current Assets" |
+| `initial_balance` | number | optional, default 0.00, not negative |
+| `debit`, `credit` | number | optional, default 0.00, not negative |
+| `balance` | number | optional, defaults to `initial_balance`, not negative |
+| `added_at` | datetime | response only, set by server |
+| `user_id` | integer | response only, the admin who created it |
+| `account_order` | integer | optional, e.g. 1 for Cash |
+| `statement` | string | required: `IS`, `BS`, `RE`, `TB` on input. Responses return `INCOME_STATEMENT`, `BALANCE_SHEET`, `RETAINED_EARNINGS`, `TRIAL_BALANCE` |
+| `comment` | string | optional |
+| `active` | boolean | response only |
+
+*Money values are stored with exactly two decimal places. Thousands-separator commas are a display concern for the frontend (e.g. `toLocaleString`).*
+
+---
+
+## GET /api/accounts
+Returns the chart of accounts (report of all accounts), ordered by `account_order` then `account_number`. All query parameters are optional and can be combined.
+
+| Query param | Meaning |
+|---|---|
+| `search` | matches account name (contains) OR account number (contains) |
+| `name` | name contains |
+| `number` | number starts with |
+| `category`, `subcategory` | exact match, case-insensitive |
+| `statement` | `IS`, `BS`, `RE`, `TB` or full name |
+| `active` | `true` or `false` |
+| `min_balance`, `max_balance` | balance range, inclusive |
+
+**Response 200 OK:** an array of Account objects.
+```json
+[
+  {
+    "id": 1,
+    "name": "Cash",
+    "account_number": "1010",
+    "description": "Cash on hand and in checking",
+    "normal_side": "LEFT",
+    "category": "Asset",
+    "subcategory": "Current Assets",
+    "initial_balance": 5000.50,
+    "debit": 0.00,
+    "credit": 0.00,
+    "balance": 5000.50,
+    "added_at": "2026-10-18T03:15:22",
+    "user_id": 3,
+    "account_order": 1,
+    "statement": "BALANCE_SHEET",
+    "comment": "Opening balance",
+    "active": true
+  }
+]
+```
+
+**Error Responses**\
+**Response 403 Forbidden:** missing, invalid, or expired token.
+
+---
+
+## GET /api/accounts/{id}
+Returns one account. The frontend's ledger page can use this until the ledger endpoint exists.
+
+**Response 200 OK:** a single Account object.
+
+**Response 404 Not Found:**
+```json
+{
+  "error": "Not Found",
+  "message": "Account doesn't exist."
+}
+```
+
+---
+
+## POST /api/accounts
+Adds an account. Administrator only. The event log records an `ADD`.
+
+**Request body:**
+```json
+{
+  "name": "Cash",
+  "account_number": "1010",
+  "description": "Cash on hand and in checking",
+  "normal_side": "LEFT",
+  "category": "Asset",
+  "subcategory": "Current Assets",
+  "initial_balance": 5000.50,
+  "account_order": 1,
+  "statement": "BS",
+  "comment": "Opening balance"
+}
+```
+
+**Response 201 Created:** the new Account object.
+
+**Error Responses**\
+**Response 400 Bad Request:** missing required field, non-digit account number, number not starting with the right digit for the category, negative money value, or bad normal side / statement / category. Examples:
+```json
+{
+  "error": "Bad Request",
+  "message": "Account numbers can only contain digits (no decimals, letters, or symbols)."
+}
+```
+```json
+{
+  "error": "Bad Request",
+  "message": "Account number must start with 1 for Asset accounts."
+}
+```
+**Response 409 Conflict:**
+```json
+{
+  "error": "Conflict",
+  "message": "An account with this name already exists."
+}
+```
+*(or* `"An account with this number already exists."` *)*\
+**Response 403 Forbidden:** caller is not an administrator.
+
+---
+
+## PUT /api/accounts/{id}
+Edits an account. Administrator only. Send the full set of editable fields (same body as POST). The event log records a `MODIFY` with before and after images.
+
+**Response 200 OK:** the updated Account object.
+
+**Errors:** same 400 and 409 responses as POST (a name or number is only a duplicate if it belongs to a *different* account), 404 if the account doesn't exist, 403 if not an administrator.
+
+---
+
+## PUT /api/accounts/{id}/deactivate
+Deactivates an account. Administrator only. The event log records a `DEACTIVATE`.
+
+**Response 200 OK:** the Account object with `"active": false`.
+
+**Response 400 Bad Request:**
+```json
+{
+  "error": "Bad Request",
+  "message": "Accounts with a balance greater than zero cannot be deactivated."
+}
+```
+*(or* `"This account is already deactivated."` *)*\
+**Response 404 Not Found / 403 Forbidden:** as above.
+
+---
+
+## GET /api/event-log
+Returns the event log, newest first. Available to all logged-in roles. Optional query params: `table_name` and `record_id` (use both together, e.g. `?table_name=accounts&record_id=1`).
+
+**Response 200 OK:**
+```json
+[
+  {
+    "id": 12,
+    "user_id": 3,
+    "table_name": "accounts",
+    "record_id": 1,
+    "action": "MODIFY",
+    "before_image": "{\"id\":1,\"name\":\"Cash\",\"description\":\"Cash on hand\", ...}",
+    "after_image": "{\"id\":1,\"name\":\"Cash\",\"description\":\"Cash on hand and in checking\", ...}",
+    "changed_at": "2026-10-18T03:20:10"
+  }
+]
+```
+*`action` is `ADD`, `MODIFY`, or `DEACTIVATE`. `before_image` is `null` for `ADD`. Images are JSON stored as text, so the frontend should `JSON.parse` them to display a before/after comparison.*
+
+---
+
+## Journal Entries and Statements Modules
+*Not yet scoped for the current sprint — to be added once requirements for these modules are finalized.*

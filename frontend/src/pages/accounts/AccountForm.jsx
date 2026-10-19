@@ -19,21 +19,32 @@ import useApi from '../../hooks/useApi.js'
 const statementOptions = STATEMENTS.map((s) => ({ value: s.value, label: `${s.label} — ${s.name}` }))
 const categoryFor = (value) => ACCOUNT_CATEGORIES.find((c) => c.value === value)
 
-// Returns an error message, or null when the form can be sent.
-function accountProblem(values) {
-  const required = ['name', 'number', 'category', 'subcategory', 'normal_side', 'statement', 'order']
-  if (required.some((key) => !values[key])) {
-    return 'Name, number, category, subcategory, normal side, statement, and order are required.'
-  }
-  if (!/^\d+$/.test(values.number)) return 'Account number must contain digits only — no decimals or letters.'
+// Form order, so focus goes to the first field with a problem
+const FIELD_ORDER = ['name', 'number', 'category', 'subcategory', 'normal_side', 'statement', 'order', 'initial_balance']
+const REQUIRED = ['name', 'number', 'category', 'subcategory', 'normal_side', 'statement', 'order']
+
+// Returns { field: message } for every problem; empty when the form can be sent.
+function accountErrors(values) {
+  const errors = {}
+  for (const key of REQUIRED) if (!values[key]) errors[key] = 'Required.'
   const category = categoryFor(values.category)
-  if (!values.number.startsWith(category.prefix)) {
-    return `${category.label} account numbers must start with ${category.prefix}.`
+  if (values.number && !/^\d+$/.test(values.number)) {
+    errors.number = 'Account number must contain digits only — no decimals or letters.'
+  } else if (values.number && category && !values.number.startsWith(category.prefix)) {
+    errors.number = `${category.label} account numbers must start with ${category.prefix}.`
   }
-  if (!/^\d+$/.test(values.order)) return 'Order must be a whole number, for example 01.'
+  if (values.order && !/^\d+$/.test(values.order)) errors.order = 'Order must be a whole number, for example 01.'
   if (Number.isNaN(parseMoney(values.initial_balance))) {
-    return 'Initial balance must be an amount with at most two decimal places, for example 1,250.00.'
+    errors.initial_balance = 'Must be an amount with at most two decimal places, for example 1,250.00.'
   }
+  return errors
+}
+
+// Server messages that belong to one field are shown on that field instead of in the alert.
+function fieldForServerError(message) {
+  if (/name already exists/i.test(message)) return 'name'
+  if (/number/i.test(message)) return 'number'
+  if (/monetary/i.test(message)) return 'initial_balance'
   return null
 }
 
@@ -67,6 +78,7 @@ function AccountFormPanel({ account, navigate }) {
   const [category, setCategory] = useState(account?.category ?? '')
   const [side, setSide] = useState(account?.normal_side ?? '')
   const [feedback, setFeedback] = useState('')
+  const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const backTo = account ? `/accounts/${account.id}` : '/accounts'
   const prefix = categoryFor(category)?.prefix
@@ -80,21 +92,30 @@ function AccountFormPanel({ account, navigate }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const values = formValues(event.currentTarget)
-    const problem = accountProblem(values)
-    if (problem) {
-      setFeedback(problem)
+    const form = event.currentTarget
+    const values = formValues(form)
+    const showErrors = (next) => {
+      setErrors(next)
+      form.elements[FIELD_ORDER.find((key) => next[key])]?.focus()
+    }
+
+    const problems = accountErrors(values)
+    setFeedback('')
+    if (Object.keys(problems).length) {
+      showErrors(problems)
       return
     }
 
     setSaving(true)
-    setFeedback('')
+    setErrors({})
     try {
       const body = { ...values, initial_balance: parseMoney(values.initial_balance).toFixed(2) }
       const saved = account ? await api.updateAccount(account.id, body) : await api.createAccount(body)
       navigate(`/accounts/${saved.id}`, { state: { saved: account ? 'Changes saved.' : 'Account added.' } })
     } catch (err) {
-      setFeedback(err.message)
+      const field = fieldForServerError(err.message)
+      if (field) showErrors({ [field]: err.message })
+      else setFeedback(err.message)
       setSaving(false)
     }
   }
@@ -109,11 +130,14 @@ function AccountFormPanel({ account, navigate }) {
       action={<BackLink to={backTo}>{account ? 'Back to Account' : 'Back to Chart of Accounts'}</BackLink>}
     >
       <div className="form-body">
+        <p className="form-required-note">Fields marked * are required.</p>
         <FormSection title="ACCOUNT INFORMATION">
-          <Field label="ACCOUNT NAME" name="name" defaultValue={account?.name ?? ''} placeholder="e.g. Cash" />
+          <Field label="ACCOUNT NAME" name="name" required error={errors.name} defaultValue={account?.name ?? ''} placeholder="e.g. Cash" />
           <Field
             label="ACCOUNT NUMBER"
             name="number"
+            required
+            error={errors.number}
             inputMode="numeric"
             defaultValue={account?.number ?? ''}
             placeholder={prefix ? `${prefix}01` : 'e.g. 101'}
@@ -124,6 +148,8 @@ function AccountFormPanel({ account, navigate }) {
           <Field
             label="CATEGORY"
             name="category"
+            required
+            error={errors.category}
             options={[{ value: '', label: 'Select Category' }, ...ACCOUNT_CATEGORIES]}
             value={category}
             onChange={changeCategory}
@@ -131,12 +157,16 @@ function AccountFormPanel({ account, navigate }) {
           <Field
             label="SUBCATEGORY"
             name="subcategory"
+            required
+            error={errors.subcategory}
             defaultValue={account?.subcategory ?? ''}
             placeholder="e.g. Current Assets"
           />
           <Field
             label="NORMAL SIDE"
             name="normal_side"
+            required
+            error={errors.normal_side}
             options={[{ value: '', label: 'Select Side' }, ...NORMAL_SIDES]}
             value={side}
             onChange={(event) => setSide(event.target.value)}
@@ -144,12 +174,16 @@ function AccountFormPanel({ account, navigate }) {
           <Field
             label="STATEMENT"
             name="statement"
+            required
+            error={errors.statement}
             options={[{ value: '', label: 'Select Statement' }, ...statementOptions]}
             defaultValue={account?.statement ?? ''}
           />
           <Field
             label="ORDER"
             name="order"
+            required
+            error={errors.order}
             inputMode="numeric"
             defaultValue={account?.order == null ? '' : formatOrder(account.order)}
             placeholder="e.g. 01"
@@ -168,6 +202,7 @@ function AccountFormPanel({ account, navigate }) {
           <Field
             label="INITIAL BALANCE"
             name="initial_balance"
+            error={errors.initial_balance}
             inputMode="decimal"
             defaultValue={toMoneyText(account?.initial_balance)}
             onBlur={(event) => {

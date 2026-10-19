@@ -19,8 +19,11 @@
   --paper-input: #d8d3c8;
   --paper-readonly: #eae7df;
   --ink: #000740;
-  --ink-muted: #6e7180;
-  --ink-placeholder: #939393;
+  /* Muted, placeholder and gold-on-cream text are darkened to meet WCAG AA (4.5:1) on every cream surface */
+  --ink-muted: #555866;
+  --ink-placeholder: #555866;
+  --gold-ink: #7a5c22;
+  --error-ink: #8a1f12;
   --avatar: #d9d9d9;
 
   --white: #fff;

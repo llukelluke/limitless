@@ -10,6 +10,9 @@ import {
   uniquePerson,
 } from './helpers.js'
 
+// Form label, ignoring the * that marks required fields (screen readers skip it; Playwright reads it).
+const fieldByLabel = (page, text) => page.getByLabel(new RegExp(`^${text}( \\*)?$`))
+
 // Fills the Add/Edit Account form. Only the keys given are changed.
 async function fillAccount(page, values) {
   const fields = {
@@ -21,11 +24,11 @@ async function fillAccount(page, values) {
     initial_balance: ['INITIAL BALANCE'],
     comment: ['COMMENT'],
   }
-  if (values.category) await page.getByLabel('CATEGORY', { exact: true }).selectOption(values.category)
+  if (values.category) await fieldByLabel(page, 'CATEGORY').selectOption(values.category)
   if (values.side) await page.getByLabel('NORMAL SIDE').selectOption(values.side)
   if (values.statement) await page.getByLabel('STATEMENT').selectOption(values.statement)
   for (const [key, [label]] of Object.entries(fields)) {
-    if (values[key] !== undefined) await page.getByLabel(label, { exact: true }).fill(values[key])
+    if (values[key] !== undefined) await fieldByLabel(page, label).fill(values[key])
   }
 }
 
@@ -37,6 +40,14 @@ const validAccount = (account) => ({
   order: '01',
   initial_balance: '0',
 })
+
+// The error is shown under the field, read out by screen readers, and the field gets focus.
+async function expectFieldError(page, label, message, { focused = true } = {}) {
+  const field = fieldByLabel(page, label)
+  await expect(field).toHaveAccessibleDescription(message)
+  await expect(field).toHaveAttribute('aria-invalid', 'true')
+  if (focused) await expect(field).toBeFocused()
+}
 
 async function apiAs(request, username, password) {
   const { token } = await (await request.post('/api/auth/login', { data: { username, password } })).json()
@@ -85,12 +96,11 @@ test.describe('Chart of accounts — administrator', () => {
     await page.goto('/accounts/new')
     await fillAccount(page, validAccount({ name: existing.name, number: uniqueAccount().number }))
     await page.getByRole('button', { name: 'Add Account' }).click()
-    await expect(alert(page)).toHaveText('An account with this name already exists.')
+    await expectFieldError(page, 'ACCOUNT NAME', 'An account with this name already exists.')
 
     await fillAccount(page, { name: uniqueAccount('Other').name, number: String(existing.number) })
     await page.getByRole('button', { name: 'Add Account' }).click()
-    await expect(alert(page)).toHaveText('An account with this number already exists.')
-    await alert(page).scrollIntoViewIfNeeded()
+    await expectFieldError(page, 'ACCOUNT NUMBER', 'An account with this number already exists.')
   })
 
   test('TC-ACC-03 (N): account numbers allow digits only and must start with the category digit', async ({ page }) => {
@@ -104,24 +114,23 @@ test.describe('Chart of accounts — administrator', () => {
     await fillAccount(page, { ...validAccount(uniqueAccount('Prefix', '2')) })
     await expect(page.getByText('Asset numbers start with 1')).toBeVisible()
     await page.getByRole('button', { name: 'Add Account' }).click()
-    await expect(alert(page)).toHaveText('Asset account numbers must start with 1.')
-    await alert(page).scrollIntoViewIfNeeded()
+    await expectFieldError(page, 'ACCOUNT NUMBER', 'Asset account numbers must start with 1.')
   })
 
   test('TC-ACC-04 (N): required fields and money with more than two decimals are rejected', async ({ page }) => {
     await signInAsAdmin(page)
     await page.goto('/accounts/new')
+    await expect(page.getByText('Fields marked * are required.')).toBeVisible()
     await page.getByRole('button', { name: 'Add Account' }).click()
-    await expect(alert(page)).toHaveText(
-      'Name, number, category, subcategory, normal side, statement, and order are required.',
-    )
+    // Every required field is flagged, and focus moves to the first one
+    await expect(page.locator('.field__error', { hasText: 'Required.' })).toHaveCount(7)
+    await expectFieldError(page, 'ACCOUNT NAME', 'Required.')
+    await expectFieldError(page, 'ORDER', 'Required.', { focused: false })
 
     await fillAccount(page, { ...validAccount(uniqueAccount('Money')), initial_balance: '10.555' })
     await page.getByRole('button', { name: 'Add Account' }).click()
-    await expect(alert(page)).toHaveText(
-      'Initial balance must be an amount with at most two decimal places, for example 1,250.00.',
-    )
-    await alert(page).scrollIntoViewIfNeeded()
+    await expect(page.locator('.field__error')).toHaveCount(1)
+    await expectFieldError(page, 'INITIAL BALANCE', 'Must be an amount with at most two decimal places, for example 1,250.00.')
   })
 
   test('TC-ACC-05 (N): the API rejects decimal, alphanumeric and wrong-prefix numbers and bad money', async ({ request }) => {
@@ -178,8 +187,7 @@ test.describe('Chart of accounts — administrator', () => {
     await page.goto(`/accounts/${second.id}/edit`)
     await fillAccount(page, { name: first.name })
     await page.getByRole('button', { name: 'Save Changes' }).click()
-    await expect(alert(page)).toHaveText('An account with this name already exists.')
-    await alert(page).scrollIntoViewIfNeeded()
+    await expectFieldError(page, 'ACCOUNT NAME', 'An account with this name already exists.')
   })
 
   test('TC-ACC-08 (N): an account with a balance above zero cannot be deactivated', async ({ page, request }) => {
@@ -189,6 +197,10 @@ test.describe('Chart of accounts — administrator', () => {
     const button = page.getByRole('button', { name: 'Deactivate' })
     await expect(button).toBeDisabled()
     await expect(button).toHaveAttribute('title', 'Accounts with a balance greater than zero cannot be deactivated')
+    // The reason is visible text, not only a hover tooltip
+    const note = 'The balance must be $0.00 before this account can be deactivated.'
+    await expect(page.getByText(note)).toBeVisible()
+    await expect(button).toHaveAccessibleDescription(note)
 
     const response = await request.put(`/api/accounts/${account.id}/deactivate`, {
       headers: { Authorization: `Bearer ${await adminToken(request)}` },

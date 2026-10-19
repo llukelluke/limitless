@@ -86,6 +86,7 @@ export default function AccountDetails() {
                         type="button"
                         className="btn btn--secondary btn--sm"
                         disabled={busy || hasBalance}
+                        aria-describedby={hasBalance ? 'deactivate-note' : undefined}
                         title={
                           hasBalance
                             ? 'Accounts with a balance greater than zero cannot be deactivated'
@@ -95,6 +96,11 @@ export default function AccountDetails() {
                       >
                         {busy ? 'Deactivating…' : 'Deactivate'}
                       </button>
+                    )}
+                    {account.active && hasBalance && (
+                      <p className="account-actions__note" id="deactivate-note">
+                        The balance must be $0.00 before this account can be deactivated.
+                      </p>
                     )}
                   </>
                 )}

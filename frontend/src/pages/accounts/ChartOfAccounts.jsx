@@ -3,13 +3,15 @@ import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import AsyncContent from '../../components/AsyncContent.jsx'
-import { DataTable, PageHeader, Panel, Select } from '../../components/AdminUI.jsx'
+import { DataTable, PageHeader, Panel, Select, ToolbarField } from '../../components/AdminUI.jsx'
 import { ACCOUNT_CATEGORIES, NORMAL_SIDES, STATEMENTS, formatMoney, isAdmin, labelFor, parseMoney } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
 import './Accounts.css'
 
+const ALL = { value: '', label: 'All' }
+
 const STATUS_OPTIONS = [
-  { value: '', label: 'Status' },
+  ALL,
   { value: 'active', label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
 ]
@@ -108,69 +110,83 @@ export default function ChartOfAccounts() {
         }
       >
         <div className="toolbar" role="search">
-          <input
-            className="toolbar__search"
-            type="search"
-            placeholder="Search name or number..."
-            aria-label="Search by account name or number"
-            title="Search by account name or number"
-            value={filters.search}
-            onChange={set('search')}
-          />
-          <Select
-            wrapClassName="select--inline"
-            className="toolbar__filter"
-            aria-label="Filter by category"
-            title="Filter by category"
-            options={[{ value: '', label: 'Category' }, ...ACCOUNT_CATEGORIES]}
-            value={filters.category}
-            onChange={set('category')}
-          />
-          <Select
-            wrapClassName="select--inline"
-            className="toolbar__filter"
-            aria-label="Filter by subcategory"
-            title="Filter by subcategory"
-            options={[{ value: '', label: 'Subcategory' }, ...subcategories.map((s) => ({ value: s, label: s }))]}
-            value={filters.subcategory}
-            onChange={set('subcategory')}
-          />
-          <Select
-            wrapClassName="select--inline"
-            className="toolbar__filter"
-            aria-label="Filter by statement"
-            title="Filter by financial statement"
-            options={[{ value: '', label: 'Statement' }, ...STATEMENTS]}
-            value={filters.statement}
-            onChange={set('statement')}
-          />
-          <Select
-            wrapClassName="select--inline"
-            className="toolbar__filter"
-            aria-label="Filter by status"
-            title="Filter by active or inactive"
-            options={STATUS_OPTIONS}
-            value={filters.status}
-            onChange={set('status')}
-          />
-          <input
-            className="toolbar__search toolbar__amount"
-            inputMode="decimal"
-            placeholder="Min balance"
-            aria-label="Minimum balance"
-            title="Only show accounts with at least this balance"
-            value={filters.min}
-            onChange={set('min')}
-          />
-          <input
-            className="toolbar__search toolbar__amount"
-            inputMode="decimal"
-            placeholder="Max balance"
-            aria-label="Maximum balance"
-            title="Only show accounts with at most this balance"
-            value={filters.max}
-            onChange={set('max')}
-          />
+          <ToolbarField label="SEARCH">
+            <input
+              className="toolbar__search"
+              type="search"
+              placeholder="Name or number, e.g. Cash or 101"
+              aria-label="Search by account name or number"
+              title="Search by account name or number"
+              value={filters.search}
+              onChange={set('search')}
+            />
+          </ToolbarField>
+          <ToolbarField label="CATEGORY">
+            <Select
+              wrapClassName="select--inline"
+              className="toolbar__filter"
+              aria-label="Filter by category"
+              title="Filter by category"
+              options={[ALL, ...ACCOUNT_CATEGORIES]}
+              value={filters.category}
+              onChange={set('category')}
+            />
+          </ToolbarField>
+          <ToolbarField label="SUBCATEGORY">
+            <Select
+              wrapClassName="select--inline"
+              className="toolbar__filter"
+              aria-label="Filter by subcategory"
+              title="Filter by subcategory"
+              options={[ALL, ...subcategories.map((s) => ({ value: s, label: s }))]}
+              value={filters.subcategory}
+              onChange={set('subcategory')}
+            />
+          </ToolbarField>
+          <ToolbarField label="STATEMENT">
+            <Select
+              wrapClassName="select--inline"
+              className="toolbar__filter"
+              aria-label="Filter by statement"
+              title="Filter by financial statement"
+              options={[ALL, ...STATEMENTS]}
+              value={filters.statement}
+              onChange={set('statement')}
+            />
+          </ToolbarField>
+          <ToolbarField label="STATUS">
+            <Select
+              wrapClassName="select--inline"
+              className="toolbar__filter"
+              aria-label="Filter by status"
+              title="Filter by active or inactive"
+              options={STATUS_OPTIONS}
+              value={filters.status}
+              onChange={set('status')}
+            />
+          </ToolbarField>
+          <ToolbarField label="MIN BALANCE">
+            <input
+              className="toolbar__search toolbar__amount"
+              inputMode="decimal"
+              placeholder="e.g. 1,000"
+              aria-label="Minimum balance"
+              title="Only show accounts with at least this balance"
+              value={filters.min}
+              onChange={set('min')}
+            />
+          </ToolbarField>
+          <ToolbarField label="MAX BALANCE">
+            <input
+              className="toolbar__search toolbar__amount"
+              inputMode="decimal"
+              placeholder="e.g. 50,000"
+              aria-label="Maximum balance"
+              title="Only show accounts with at most this balance"
+              value={filters.max}
+              onChange={set('max')}
+            />
+          </ToolbarField>
           {filtered && (
             <button
               type="button"

@@ -25,8 +25,15 @@
 .account-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
   margin-bottom: 32px;
+}
+
+/* Why Deactivate is disabled, shown as text (a hover tooltip alone is missed by keyboard and touch users) */
+.account-actions__note {
+  font-size: 13px;
+  color: var(--ink-muted);
 }
 
 .page-panel + .page-panel {
@@ -45,7 +52,7 @@
 .ledger-summary dt {
   font-size: 12px;
   font-weight: 600;
-  color: var(--gold-600);
+  color: var(--gold-ink);
 }
 
 .ledger-summary dd {
@@ -65,7 +72,7 @@
 .event-images__table {
   margin-top: 10px;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .data-table .event-images__table th,

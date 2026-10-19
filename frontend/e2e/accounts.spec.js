@@ -74,6 +74,8 @@ test.describe('Chart of accounts — administrator', () => {
     await expect(page.getByLabel('ADDED BY')).toHaveValue('sadmin1026')
     await expect(page.getByLabel('DATE ADDED')).toHaveValue(/\d{4}, \d{1,2}:\d{2} (AM|PM)$/)
     await expect(page.getByRole('cell', { name: 'Added', exact: true })).toBeVisible()
+    // Evidence screenshot: balances and the logged event
+    await page.getByRole('heading', { name: 'CHANGE HISTORY' }).scrollIntoViewIfNeeded()
   })
 
   test('TC-ACC-02 (N): duplicate account names and numbers are rejected', async ({ page, request }) => {
@@ -88,6 +90,7 @@ test.describe('Chart of accounts — administrator', () => {
     await fillAccount(page, { name: uniqueAccount('Other').name, number: String(existing.number) })
     await page.getByRole('button', { name: 'Add Account' }).click()
     await expect(alert(page)).toHaveText('An account with this number already exists.')
+    await alert(page).scrollIntoViewIfNeeded()
   })
 
   test('TC-ACC-03 (N): account numbers allow digits only and must start with the category digit', async ({ page }) => {
@@ -102,6 +105,7 @@ test.describe('Chart of accounts — administrator', () => {
     await expect(page.getByText('Asset numbers start with 1')).toBeVisible()
     await page.getByRole('button', { name: 'Add Account' }).click()
     await expect(alert(page)).toHaveText('Asset account numbers must start with 1.')
+    await alert(page).scrollIntoViewIfNeeded()
   })
 
   test('TC-ACC-04 (N): required fields and money with more than two decimals are rejected', async ({ page }) => {
@@ -117,6 +121,7 @@ test.describe('Chart of accounts — administrator', () => {
     await expect(alert(page)).toHaveText(
       'Initial balance must be an amount with at most two decimal places, for example 1,250.00.',
     )
+    await alert(page).scrollIntoViewIfNeeded()
   })
 
   test('TC-ACC-05 (N): the API rejects decimal, alphanumeric and wrong-prefix numbers and bad money', async ({ request }) => {
@@ -174,6 +179,7 @@ test.describe('Chart of accounts — administrator', () => {
     await fillAccount(page, { name: first.name })
     await page.getByRole('button', { name: 'Save Changes' }).click()
     await expect(alert(page)).toHaveText('An account with this name already exists.')
+    await alert(page).scrollIntoViewIfNeeded()
   })
 
   test('TC-ACC-08 (N): an account with a balance above zero cannot be deactivated', async ({ page, request }) => {
@@ -200,6 +206,7 @@ test.describe('Chart of accounts — administrator', () => {
     await expect(alert(page)).toHaveText('Account deactivated.')
     await expect(page.getByLabel('STATUS')).toHaveValue('Inactive')
     await expect(page.getByRole('cell', { name: 'Deactivated', exact: true })).toBeVisible()
+    await page.getByRole('heading', { name: 'CHANGE HISTORY' }).scrollIntoViewIfNeeded()
   })
 })
 
@@ -285,7 +292,12 @@ test.describe('Chart of accounts — manager and accountant', () => {
       expect((await request.put(`/api/accounts/${account.id}`, { headers, data: { name: 'x' } })).status()).toBe(403)
       expect((await request.put(`/api/accounts/${account.id}/deactivate`, { headers })).status()).toBe(403)
 
+      // Final screen for the evidence screenshot: loaded chart, no admin controls, role shown in the user menu
       await page.goto('/accounts')
+      await page.getByLabel('Search by account name or number').fill(account.name)
+      await expect(page.getByRole('link', { name: account.name })).toBeVisible()
+      await page.locator('.user-menu__trigger').click()
+      await expect(page.locator('.user-menu__role')).toHaveText(role === 'MANAGER' ? 'Manager' : 'Accountant')
     })
   }
 

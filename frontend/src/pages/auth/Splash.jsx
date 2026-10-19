@@ -1,31 +1,40 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Emblem, Wordmark } from '../../components/Logo.jsx'
 import './Splash.css'
 
-const ADVANCE_AFTER_MS = 1800
+const HOLD_MS = 2000
+const FADE_MS = 600
 
-// 01 Launch (emblem only) → 02 Brand Reveal (emblem + wordmark) → 03 Login.
-// Auto-advances; clicking or pressing a key skips ahead.
-export default function Splash({ reveal = false }) {
+const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+// 01–02 Launch / Brand Reveal: the logo shows for 2 seconds, then fades into 03 Login.
+// Clicking or pressing a key skips ahead.
+export default function Splash() {
   const navigate = useNavigate()
-  const next = reveal ? '/login' : '/welcome'
+  const [leaving, setLeaving] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => navigate(next, { replace: true }), ADVANCE_AFTER_MS)
-    return () => clearTimeout(timer)
-  }, [navigate, next])
+    const fade = prefersReducedMotion() ? 0 : FADE_MS
+    const toLogin = () => navigate('/login', { replace: true, state: { fromSplash: true } })
+    const start = setTimeout(() => setLeaving(true), HOLD_MS)
+    const done = setTimeout(toLogin, HOLD_MS + fade)
+    return () => {
+      clearTimeout(start)
+      clearTimeout(done)
+    }
+  }, [navigate])
 
   return (
     <button
       type="button"
-      className={`splash ${reveal ? 'splash--reveal' : ''}`}
-      onClick={() => navigate(next, { replace: true })}
+      className={`splash ${leaving ? 'splash--leaving' : ''}`}
+      onClick={() => navigate('/login', { replace: true })}
       aria-label="Continue to Limitless"
       title="Continue to Limitless"
     >
       <Emblem className="splash__emblem" />
-      {reveal && <Wordmark className="splash__wordmark" />}
+      <Wordmark className="splash__wordmark" />
     </button>
   )
 }

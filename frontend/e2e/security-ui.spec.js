@@ -53,10 +53,14 @@ test.describe('Access control and session', () => {
 })
 
 test.describe('UI and navigation', () => {
-  test('TC-UI-01/03 (P): splash shows the logo and leads to login', async ({ page }) => {
+  test('TC-UI-01/03 (P): splash shows the logo for 2 seconds, then fades to login without a click', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('img.emblem')).toBeVisible()
-    await expect(page).toHaveURL(/\/login$/, { timeout: 8_000 })
+    await expect(page.locator('.splash img.emblem')).toBeVisible()
+    await expect(page.locator('.splash .wordmark')).toBeVisible()
+    await page.waitForTimeout(1_000)
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.locator('.splash--leaving')).toBeVisible({ timeout: 2_000 })
+    await expect(page).toHaveURL(/\/login$/, { timeout: 2_000 })
     await expect(page.locator('img.emblem')).toBeVisible()
   })
 

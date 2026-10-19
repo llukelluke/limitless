@@ -2,25 +2,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   min-height: 100svh;
-  padding: 16px;
+  padding: min(122px, 13vh) 16px 16px;
   border: 0;
   background: var(--navy-950);
   cursor: pointer;
 }
 
 .splash__emblem {
-  width: min(811px, 90vw);
-}
-
-.splash--reveal {
-  justify-content: flex-start;
-  padding-top: min(122px, 13vh);
-}
-
-.splash--reveal .splash__emblem {
   width: min(811px, 90vw, 80vh);
 }
 
@@ -32,16 +23,28 @@
 @media (prefers-reduced-motion: no-preference) {
   .splash__emblem,
   .splash__wordmark {
-    animation: splash-fade 700ms ease-out both;
+    animation: splash-fade-in 700ms ease-out both;
   }
 
-  .splash--reveal .splash__emblem {
-    animation: none;
+  .splash__wordmark {
+    animation-delay: 250ms;
+  }
+
+  /* Matches FADE_MS in Splash.jsx */
+  .splash--leaving .splash__emblem,
+  .splash--leaving .splash__wordmark {
+    animation: splash-fade-out 600ms ease-in both;
   }
 }
 
-@keyframes splash-fade {
+@keyframes splash-fade-in {
   from {
+    opacity: 0;
+  }
+}
+
+@keyframes splash-fade-out {
+  to {
     opacity: 0;
   }
 }

@@ -49,6 +49,19 @@
   min-width: 0;
 }
 
+/* Arriving from the splash: the login screen fades in as the logo fades out */
+@media (prefers-reduced-motion: no-preference) {
+  .auth--fade-in {
+    animation: auth-fade-in 500ms ease-out both;
+  }
+}
+
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 .auth__help {
   position: absolute;
   top: 24px;

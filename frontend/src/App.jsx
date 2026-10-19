@@ -28,7 +28,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Splash />} /> {/* 01 */}
       <Route path="/forgot-password" element={<ForgotPassword />} /> {/* 06–07, teammate's page with its own layout */}
-      <Route path="/welcome" element={<Splash reveal />} /> {/* 02 */}
+      <Route path="/welcome" element={<Splash />} /> {/* 02, now part of the single splash */}
 
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} /> {/* 03 */}

@@ -237,26 +237,18 @@
   color: var(--ink-placeholder);
 }
 
-/* Forms: fields on the left, Save/Cancel stacked in the bottom-right corner */
-.panel--form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto 1fr;
-  align-content: start;
-}
-
-.panel--form > .panel__head {
-  grid-column: 1 / -1;
-}
-
+/* Form actions sit in one row right under the fields they submit, primary action first,
+   lined up with the fields (proximity: buttons far from their form are easy to miss) */
 .form-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 15px;
-  align-self: end;
-  margin-top: auto;
-  padding-top: 24px;
+  padding: 32px 0 0 9px;
+}
+
+.email-form + .form-actions {
+  padding-left: 33px;
 }
 
 /* ---------- Tables ---------- */
@@ -508,12 +500,12 @@
     padding-left: 0;
   }
 
-  .panel--form {
-    grid-template-columns: 1fr;
-  }
-
-  .form-actions {
+  /* Phones: full-width buttons, primary on top */
+  .form-actions,
+  .email-form + .form-actions {
+    flex-direction: column;
     align-items: stretch;
+    padding-left: 0;
   }
 
   .email-form {

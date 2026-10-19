@@ -30,6 +30,7 @@ export default function UserMenu({ user, onSignOut }) {
         className="user-menu__trigger"
         aria-haspopup="menu"
         aria-expanded={open}
+        title="Account menu"
         onClick={() => setOpen((value) => !value)}
       >
         <span className="user-menu__name">{user.username}</span>
@@ -45,7 +46,7 @@ export default function UserMenu({ user, onSignOut }) {
       {open && (
         <div className="user-menu__dropdown" role="menu">
           <p className="user-menu__role">{labelFor(ROLES, user.role)}</p>
-          <button type="button" role="menuitem" className="user-menu__item" onClick={onSignOut}>
+          <button type="button" role="menuitem" className="user-menu__item" title="Sign out of Limitless" onClick={onSignOut}>
             Sign Out
           </button>
         </div>

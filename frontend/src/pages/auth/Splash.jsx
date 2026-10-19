@@ -22,6 +22,7 @@ export default function Splash({ reveal = false }) {
       className={`splash ${reveal ? 'splash--reveal' : ''}`}
       onClick={() => navigate(next, { replace: true })}
       aria-label="Continue to Limitless"
+      title="Continue to Limitless"
     >
       <Emblem className="splash__emblem" />
       {reveal && <Wordmark className="splash__wordmark" />}

@@ -45,7 +45,7 @@ export default function Users() {
         title="USERS"
         className="page-panel"
         action={
-          <Link to="/admin/users/new" className="btn btn--primary btn--sm">
+          <Link to="/admin/users/new" className="btn btn--primary btn--sm" title="Create a new user account">
             Add User
           </Link>
         }

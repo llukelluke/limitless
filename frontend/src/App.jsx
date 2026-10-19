@@ -16,6 +16,11 @@ import EditUser from './pages/admin/EditUser.jsx'
 import { PendingRequests, ReviewRequest } from './pages/admin/AccessRequests.jsx'
 import { AllUsersReport, ExpiredPasswordsReport, ReportsHome } from './pages/admin/Reports.jsx'
 import Email from './pages/admin/Email.jsx'
+import ChartOfAccounts from './pages/accounts/ChartOfAccounts.jsx'
+import AccountDetails from './pages/accounts/AccountDetails.jsx'
+import AccountForm from './pages/accounts/AccountForm.jsx'
+import Ledger from './pages/accounts/Ledger.jsx'
+import EventLog from './pages/accounts/EventLog.jsx'
 
 // Numbers match the frames on "03 - Final Screens & Prototype" in Figma.
 function App() {
@@ -36,6 +41,18 @@ function App() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/home" element={<Home />} /> {/* Manager / accountant landing page */}
+          <Route path="/accounts" element={<ChartOfAccounts />} />
+          <Route path="/accounts/:id" element={<AccountDetails />} />
+          <Route path="/accounts/:id/ledger" element={<Ledger />} />
+          <Route path="/event-log" element={<EventLog />} />
+        </Route>
+      </Route>
+
+      {/* Only administrators add or edit accounts */}
+      <Route element={<RequireAuth role="ADMINISTRATOR" />}>
+        <Route element={<AppLayout />}>
+          <Route path="/accounts/new" element={<AccountForm />} />
+          <Route path="/accounts/:id/edit" element={<AccountForm />} />
         </Route>
       </Route>
 

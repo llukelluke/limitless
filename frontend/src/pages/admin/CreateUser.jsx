@@ -77,10 +77,10 @@ export default function CreateUser() {
         </div>
 
         <FormActions>
-          <button type="submit" className="btn btn--primary btn--sm" disabled={saving}>
+          <button type="submit" className="btn btn--primary btn--sm" disabled={saving} title="Create this user account">
             {saving ? 'Creating…' : 'Create User'}
           </button>
-          <button type="button" className="btn btn--secondary btn--sm" onClick={() => navigate('/admin/users')}>
+          <button type="button" className="btn btn--secondary btn--sm" title="Discard changes and go back to users" onClick={() => navigate('/admin/users')}>
             Cancel
           </button>
         </FormActions>

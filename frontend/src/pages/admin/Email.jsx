@@ -69,7 +69,7 @@ export default function Email() {
         </div>
 
         <FormActions>
-          <button type="submit" className="btn btn--primary btn--sm" disabled={sending}>
+          <button type="submit" className="btn btn--primary btn--sm" disabled={sending} title="Send this email to the selected user">
             {sending ? 'Sending…' : 'Send Email'}
           </button>
         </FormActions>

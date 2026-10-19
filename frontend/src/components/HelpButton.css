@@ -1,0 +1,95 @@
+.help-button {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--gold-300);
+  border-radius: 4px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--gold-100);
+  cursor: pointer;
+}
+
+.help-button:hover {
+  background: var(--navy-800);
+}
+
+.help-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100svh - 64px);
+  padding: 23px 22px 27px 34px;
+  border: 1px solid var(--paper-line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.help-dialog::backdrop {
+  background: rgba(0, 7, 25, 0.7);
+}
+
+.help-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.help-dialog__body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.help-dialog__topics {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.help-dialog__topic {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  font-size: 13px;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.help-dialog__topic:hover {
+  background: var(--paper-card);
+}
+
+.help-dialog__topic--active,
+.help-dialog__topic--active:hover {
+  background: var(--paper-input);
+  font-weight: 600;
+}
+
+.help-dialog__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.help-dialog__title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .help-dialog {
+    padding: 20px 16px;
+  }
+
+  .help-dialog__body {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

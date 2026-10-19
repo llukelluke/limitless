@@ -108,4 +108,11 @@ export const api = {
 
   allUsersReport: () => request('/users/reports/all'),
   expiredPasswordsReport: () => request('/users/reports/expired-passwords'),
+
+  listAccounts: () => request('/accounts'),
+  getAccount: (id) => request(`/accounts/${id}`),
+  createAccount: (body) => request('/accounts', { method: 'POST', body }),
+  updateAccount: (id, body) => request(`/accounts/${id}`, { method: 'PUT', body }),
+  deactivateAccount: (id) => request(`/accounts/${id}/deactivate`, { method: 'PUT' }),
+  eventLogs: (table, recordId) => request(`/event-logs${query({ table, record_id: recordId })}`),
 }

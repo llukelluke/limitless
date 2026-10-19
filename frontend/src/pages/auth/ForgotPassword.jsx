@@ -70,7 +70,7 @@ export function ResetPassword() {
 
       <div className="auth-form__actions">
         <Alert surface="dark">{error}</Alert>
-        <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting}>
+        <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} title={"Save your new password"}>
           {submitting ? 'Saving…' : 'Reset Password'}
         </button>
       </div>
@@ -93,7 +93,7 @@ export function PasswordUpdated() {
       </p>
       <div className="auth-form auth-confirm auth-updated">
         <AuthHeader title="Password Updated" subtitle="Your password has been successfully reset." />
-        <Link to="/login" className="btn btn--primary btn--lg btn--block">
+        <Link to="/login" className="btn btn--primary btn--lg btn--block" title="Go to the sign-in page">
           Sign In
         </Link>
       </div>

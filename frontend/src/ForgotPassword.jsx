@@ -107,7 +107,7 @@ function ForgotPassword() {
               </p>
             )}
 
-            <button type="submit">
+            <button type="submit" title="Check your details and continue to reset your password">
               Send Reset Link
             </button>
           </form>
@@ -207,7 +207,7 @@ function ForgotPassword() {
             </p>
           )}
 
-          <button type="submit" disabled={loading}>
+          <button type="submit" disabled={loading} title="Verify your security answers">
             {loading ? 'Verifying...' : 'Verify Information'}
           </button>
         </form>
@@ -216,6 +216,7 @@ function ForgotPassword() {
           type="button"
           className="forgot-password-back"
           onClick={handleBack}
+          title="Go back to the previous step"
           disabled={loading}
         >
           Back

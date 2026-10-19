@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom'
+import HelpButton from '../components/HelpButton.jsx'
 import { Emblem, Wordmark } from '../components/Logo.jsx'
 import './AuthLayout.css'
 
@@ -14,6 +15,7 @@ export default function AuthLayout() {
         </div>
       </aside>
       <main className="auth__panel">
+        <HelpButton className="auth__help" />
         <Outlet />
       </main>
     </div>

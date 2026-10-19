@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import AsyncContent from '../../components/AsyncContent.jsx'
 import { DataTable, PageHeader, Panel } from '../../components/AdminUI.jsx'
-import { formatDateTime } from '../../constants.js'
+import { formatDateTime, formatMoney } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
 import './Accounts.css'
 
@@ -16,14 +16,19 @@ function parseImage(text) {
   }
 }
 
-const show = (value) => (value === null || value === undefined || value === '' ? '—' : String(value))
+const MONEY_FIELDS = ['initial_balance', 'debit', 'credit', 'balance']
+
+const show = (value, field) => {
+  if (value === null || value === undefined || value === '') return '—'
+  return MONEY_FIELDS.includes(field) ? formatMoney(value) : String(value)
+}
 
 // Before and after images side by side; changed fields are highlighted.
 function Images({ event }) {
   const before = parseImage(event.before_image)
   const after = parseImage(event.after_image)
   const fields = Object.keys(after ?? before ?? {})
-  const changed = fields.filter((field) => before && after && show(before[field]) !== show(after[field]))
+  const changed = fields.filter((field) => before && after && show(before[field], field) !== show(after[field], field))
 
   return (
     <details className="event-images">
@@ -42,8 +47,8 @@ function Images({ event }) {
           {fields.map((field) => (
             <tr key={field} className={changed.includes(field) ? 'event-images__changed' : undefined}>
               <th scope="row">{field}</th>
-              <td>{before ? show(before[field]) : '—'}</td>
-              <td>{after ? show(after[field]) : '—'}</td>
+              <td>{before ? show(before[field], field) : '—'}</td>
+              <td>{after ? show(after[field], field) : '—'}</td>
             </tr>
           ))}
         </tbody>

@@ -132,7 +132,7 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("TC-ACC-05 (P): editing logs a MODIFY event with before and after images")
+    @DisplayName("TC-ACC-06 (P): editing logs a MODIFY event with before and after images")
     void updateAccount() {
         existing(new BigDecimal("0.00"));
         when(accountRepository.existsByNameIgnoreCaseAndIdNot(anyString(), anyInt())).thenReturn(false);
@@ -147,7 +147,7 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("TC-ACC-06 (N): accounts with a balance above zero cannot be deactivated")
+    @DisplayName("TC-ACC-08 (N): accounts with a balance above zero cannot be deactivated")
     void deactivateWithBalance() {
         existing(new BigDecimal("10.00"));
         assertAccountError(() -> accountService.deactivateAccount(5, "sadmin1026"),
@@ -156,7 +156,7 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("TC-ACC-07 (P): a zero-balance account is deactivated and the change is logged")
+    @DisplayName("TC-ACC-09 (P): a zero-balance account is deactivated and the change is logged")
     void deactivateZeroBalance() {
         existing(new BigDecimal("0.00"));
         Account saved = accountService.deactivateAccount(5, "sadmin1026");
@@ -167,7 +167,7 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("TC-ACC-08 (P): credit-normal balances grow with credits")
+    @DisplayName("TC-ACC-01 (P): credit-normal balances grow with credits")
     void creditNormalBalance() {
         Account a = new Account();
         a.setSide(Account.normalSide.RIGHT);
@@ -175,5 +175,55 @@ class AccountServiceTest {
         a.setDebit(new BigDecimal("25.00"));
         a.setCredit(new BigDecimal("50.00"));
         assertThat(AccountService.computeBalance(a)).isEqualByComparingTo("125.00");
+    }
+
+    @Test
+    @DisplayName("TC-ACC-07 (N): editing to a duplicate name or number is rejected and the account is left unchanged")
+    void updateDuplicates() {
+        Account account = existing(new BigDecimal("0.00"));
+        when(accountRepository.existsByNameIgnoreCaseAndIdNot("Petty Cash", 5)).thenReturn(true);
+        assertAccountError(() -> accountService.updateAccount(5, request("Petty Cash", "101", "Asset", "LEFT", "0"), "sadmin1026"),
+                HttpStatus.CONFLICT, "An account with this name already exists.");
+        // The managed entity must not be touched, or Hibernate flushes the duplicate into the database
+        assertThat(account.getName()).isEqualTo("Cash");
+
+        when(accountRepository.existsByNumberAndIdNot(102, 5)).thenReturn(true);
+        assertAccountError(() -> accountService.updateAccount(5, request("Cash", "102", "Asset", "LEFT", "0"), "sadmin1026"),
+                HttpStatus.CONFLICT, "An account with this number already exists.");
+        assertThat(account.getNumber()).isEqualTo(101);
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("TC-ACC-04 (N): missing required fields are rejected")
+    void missingFields() {
+        String message = "Name, number, category, subcategory, normal side, order and statement are required.";
+        assertAccountError(() -> accountService.createAccount(request("", "101", "Asset", "LEFT", "0"), "sadmin1026"),
+                HttpStatus.BAD_REQUEST, message);
+        assertAccountError(() -> accountService.createAccount(request("Cash", null, "Asset", "LEFT", "0"), "sadmin1026"),
+                HttpStatus.BAD_REQUEST, message);
+        assertAccountError(() -> accountService.createAccount(request("Cash", "101", "Asset", " ", "0"), "sadmin1026"),
+                HttpStatus.BAD_REQUEST, message);
+    }
+
+    @Test
+    @DisplayName("TC-ACC-05 (N): unknown category, normal side and statement are rejected")
+    void unknownEnums() {
+        assertAccountError(() -> accountService.createAccount(request("Cash", "101", "Cash", "LEFT", "0"), "sadmin1026"),
+                HttpStatus.BAD_REQUEST, "Unknown account category.");
+        assertAccountError(() -> accountService.createAccount(request("Cash", "101", "Asset", "UP", "0"), "sadmin1026"),
+                HttpStatus.BAD_REQUEST, "Unknown normal side.");
+        AccountRequest badStatement = new AccountRequest("Cash", "101", null, "LEFT", "Asset", "Current Assets", "0",
+                "1", "CASH_FLOW", null);
+        assertAccountError(() -> accountService.createAccount(badStatement, "sadmin1026"),
+                HttpStatus.BAD_REQUEST, "Unknown statement.");
+    }
+
+    @Test
+    @DisplayName("TC-ACC-01 (P): money accepts commas and is stored with two decimals")
+    void moneyParsing() {
+        assertThat(AccountService.parseMoney("1,234,567.8")).isEqualByComparingTo("1234567.80");
+        assertThat(AccountService.parseMoney("1,234,567.8").scale()).isEqualTo(2);
+        assertThat(AccountService.parseMoney("")).isEqualByComparingTo("0.00");
     }
 }

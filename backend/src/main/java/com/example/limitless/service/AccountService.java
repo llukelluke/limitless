@@ -80,13 +80,16 @@ public class AccountService {
         Account account = getAccountById(id);
         AccountResponse before = AccountResponse.from(account);
 
-        apply(account, req);
-        if (accountRepository.existsByNameIgnoreCaseAndIdNot(account.getName(), id)) {
+        // Validate on a copy first: the duplicate queries would auto-flush changes made to the managed entity
+        Account candidate = new Account();
+        apply(candidate, req);
+        if (accountRepository.existsByNameIgnoreCaseAndIdNot(candidate.getName(), id)) {
             throw new UserException(HttpStatus.CONFLICT, "An account with this name already exists.");
         }
-        if (accountRepository.existsByNumberAndIdNot(account.getNumber(), id)) {
+        if (accountRepository.existsByNumberAndIdNot(candidate.getNumber(), id)) {
             throw new UserException(HttpStatus.CONFLICT, "An account with this number already exists.");
         }
+        apply(account, req);
         account.setBalance(computeBalance(account));
 
         Account saved = accountRepository.save(account);

@@ -98,5 +98,9 @@ Test plan and test cases (positive and negative, `TC-<area>-<n>`): see the team'
 - **End-to-end browser tests** (Playwright; uses your installed Chrome). Start MySQL, the backend and
   `npm run dev` first, then: `cd frontend && npm run test:e2e`.
   Results report: `npx playwright show-report`. Each test name starts with its test case ID.
+  Evidence screenshots: `E2E_SCREENSHOTS=1 npm run test:e2e` saves each test's final screen to
+  `frontend/test-results/<test>/test-finished-1.png` (also shown in the report).
+- Lombok does not support JDK 27 yet; build the backend with JDK 25 or 26
+  (e.g. `JAVA_HOME=$(/usr/libexec/java_home -v 26) ./mvnw test`).
   Against the deployed site: `E2E_BASE_URL=https://<domain> E2E_ADMIN_USER=admin E2E_ADMIN_PASSWORD=<password> npm run test:e2e`
   (this creates test users there).

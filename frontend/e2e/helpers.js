@@ -16,6 +16,13 @@ export function uniquePerson(first = 'Test') {
   return { first, last, email: `${first}.${last}@e2e.example`.toLowerCase() }
 }
 
+// Account names and numbers are unique too. Numbers are prefix + 8 digits from the clock and a counter.
+export function uniqueAccount(name = 'Cash', prefix = '1') {
+  counter += 1
+  const digits = String((Date.now() % 1_000_000) * 100 + (counter % 100)).padStart(8, '0').slice(-8)
+  return { name: `${name} ${runId}${counter}`, number: `${prefix}${digits}` }
+}
+
 export async function signIn(page, username, password) {
   await page.goto('/login')
   await page.getByLabel('Username', { exact: true }).fill(username)
@@ -104,4 +111,25 @@ export async function setPassword(request, user, email, password = 'Known123!') 
   const reset = await request.post('/api/auth/reset-password', { data: { reset_token, new_password: password } })
   expect(reset.ok()).toBeTruthy()
   return password
+}
+
+// Creates an account as admin. Returns the AccountResponse.
+export async function createAccount(request, account, fields = {}) {
+  const token = await adminToken(request)
+  const response = await request.post('/api/accounts', {
+    headers: { Authorization: `Bearer ${token}` },
+    data: {
+      name: account.name,
+      number: account.number,
+      category: 'Asset',
+      subcategory: 'Current Assets',
+      normal_side: 'LEFT',
+      statement: 'BALANCE_SHEET',
+      order: '01',
+      initial_balance: '0',
+      ...fields,
+    },
+  })
+  expect(response.status()).toBe(201)
+  return response.json()
 }

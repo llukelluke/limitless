@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { PageHeader, Panel } from '../components/AdminUI.jsx'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { ROLES, labelFor } from '../constants.js'
@@ -17,8 +18,9 @@ export default function Home() {
       />
       <Panel title="GETTING STARTED" className="page-panel">
         <p className="home-note">
-          You are signed in as {article} {role}. Accounting features will appear here as
-          they are released. Contact your administrator if you need your role or account details changed.
+          You are signed in as {article} {role}. Open the <Link to="/accounts">Chart of Accounts</Link> to
+          view accounts and their ledgers, or the <Link to="/event-log">Event Log</Link> to see recent changes.
+          Contact your administrator if you need your role or account details changed.
         </p>
       </Panel>
     </>

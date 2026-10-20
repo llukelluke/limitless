@@ -99,7 +99,7 @@
   padding: 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--gold-100);
+  color: var(--gold-ink);
 }
 
 .form-section__grid {
@@ -147,8 +147,31 @@
   color: var(--ink);
 }
 
+/* Placeholders are examples, so they must not look like a value that was typed in */
 .field__control::placeholder {
-  color: var(--ink);
+  color: var(--ink-placeholder);
+}
+
+.field__control--invalid {
+  border-color: var(--error-ink);
+}
+
+.field__required {
+  color: var(--error-ink);
+}
+
+.form-required-note {
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.field__error {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--error-ink);
 }
 
 .field__control--locked {
@@ -211,29 +234,21 @@
 }
 
 .field__textarea::placeholder {
-  color: var(--ink);
+  color: var(--ink-placeholder);
 }
 
-/* Forms: fields on the left, Save/Cancel stacked in the bottom-right corner */
-.panel--form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto 1fr;
-  align-content: start;
-}
-
-.panel--form > .panel__head {
-  grid-column: 1 / -1;
-}
-
+/* Form actions sit in one row right under the fields they submit, primary action first,
+   lined up with the fields (proximity: buttons far from their form are easy to miss) */
 .form-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 15px;
-  align-self: end;
-  margin-top: auto;
-  padding-top: 24px;
+  padding: 32px 0 0 9px;
+}
+
+.email-form + .form-actions {
+  padding-left: 33px;
 }
 
 /* ---------- Tables ---------- */
@@ -288,12 +303,40 @@
   margin-top: 16px;
 }
 
+/* Gold text on cream is 1.6:1; cream surfaces use the darker gold instead */
+.panel .text-link,
+.help-dialog .text-link {
+  color: var(--gold-ink);
+}
+
+.panel .btn--secondary {
+  border-color: var(--gold-ink);
+  color: var(--gold-ink);
+}
+
 /* ---------- Toolbar (search + filters) ---------- */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 12px;
   margin-top: 2px;
+}
+
+.toolbar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toolbar__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.toolbar > .text-link {
+  padding-bottom: 6px;
 }
 
 .toolbar__search,
@@ -314,14 +357,16 @@
 }
 
 .toolbar__search::placeholder {
+  font-weight: 400;
+  text-transform: none;
   color: var(--ink-placeholder);
 }
 
 .toolbar__filter {
   width: auto;
+  min-width: 104px;
   padding-right: 24px;
   appearance: none;
-  color: var(--ink-placeholder);
 }
 
 .toolbar .select__caret {
@@ -422,7 +467,7 @@
   font-family: var(--serif);
   font-weight: 600;
   font-size: 16px;
-  color: var(--gold-100);
+  color: var(--gold-ink);
   text-decoration: none;
 }
 
@@ -455,12 +500,12 @@
     padding-left: 0;
   }
 
-  .panel--form {
-    grid-template-columns: 1fr;
-  }
-
-  .form-actions {
+  /* Phones: full-width buttons, primary on top */
+  .form-actions,
+  .email-form + .form-actions {
+    flex-direction: column;
     align-items: stretch;
+    padding-left: 0;
   }
 
   .email-form {

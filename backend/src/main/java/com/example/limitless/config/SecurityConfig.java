@@ -4,6 +4,7 @@ import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -45,6 +46,10 @@ public class SecurityConfig {
 
                         // User management and user reports are admin-only
                         .requestMatchers("/api/users/**").hasRole("ADMINISTRATOR")
+
+                        // Everyone signed in can view accounts; only administrators change them
+                        .requestMatchers(HttpMethod.GET, "/api/accounts/**").authenticated()
+                        .requestMatchers("/api/accounts/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/api/**").authenticated()
                         // Everything else is the React app's files and pages (see SpaConfig)
                         .anyRequest().permitAll()

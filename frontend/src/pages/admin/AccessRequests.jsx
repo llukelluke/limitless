@@ -118,12 +118,12 @@ export function ReviewRequest() {
 
         <FormActions>
           {done ? (
-            <button type="button" className="btn btn--primary btn--sm" onClick={() => navigate('/admin/access-requests')}>
+            <button type="button" className="btn btn--primary btn--sm" title="Return to pending access requests" onClick={() => navigate('/admin/access-requests')}>
               Done
             </button>
           ) : (
             <>
-              <button type="submit" className="btn btn--primary btn--sm" disabled={!request || busy}>
+              <button type="submit" className="btn btn--primary btn--sm" disabled={!request || busy} title="Approve this request and create the user">
                 Approve
               </button>
               <button
@@ -131,6 +131,7 @@ export function ReviewRequest() {
                 className="btn btn--secondary btn--sm"
                 disabled={!request || busy}
                 onClick={() => decide('reject')}
+                title="Reject this access request"
               >
                 Reject
               </button>

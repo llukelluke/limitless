@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -54,7 +54,7 @@ public class Account {
     private BigDecimal balance;
 
     @Column(name = "added_at")
-    private LocalDate addedAt;
+    private LocalDateTime addedAt;
 
     @Column(name = "account_order")
     private Integer accountOrder;

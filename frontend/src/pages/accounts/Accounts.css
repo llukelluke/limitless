@@ -1,0 +1,92 @@
+/* Money columns line up on the decimal point */
+.num {
+  display: block;
+  padding-right: 20px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.toolbar__amount {
+  width: 130px;
+}
+
+.table-actions {
+  display: inline-flex;
+  gap: 14px;
+  white-space: nowrap;
+}
+
+.data-table td:has(.event-images[open]) ~ td,
+.data-table tr:has(.event-images[open]) td {
+  vertical-align: top;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+/* Why Deactivate is disabled, shown as text (a hover tooltip alone is missed by keyboard and touch users) */
+.account-actions__note {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.page-panel + .page-panel {
+  flex: 0 0 auto;
+}
+
+/* ---------- Ledger ---------- */
+.ledger-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  margin: 24px 0 0;
+  padding-left: 11px;
+}
+
+.ledger-summary dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-ink);
+}
+
+.ledger-summary dd {
+  margin: 4px 0 0;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------- Event log before/after images ---------- */
+.event-images summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.event-images__table {
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.data-table .event-images__table th,
+.data-table .event-images__table td {
+  padding: 4px 12px 4px 0;
+  border: 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.event-images__table thead th {
+  color: var(--ink-muted);
+}
+
+.event-images__changed td {
+  background: rgba(226, 194, 117, 0.25);
+}

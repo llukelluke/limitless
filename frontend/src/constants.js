@@ -18,6 +18,53 @@ export const SECURITY_QUESTIONS = [
   'What was the make of your first car?',
 ]
 
+// Account numbers start with their category's digit (as covered in class).
+export const ACCOUNT_CATEGORIES = [
+  { value: 'Asset', label: 'Asset', prefix: '1', side: 'LEFT' },
+  { value: 'Liability', label: 'Liability', prefix: '2', side: 'RIGHT' },
+  { value: 'Equity', label: 'Equity', prefix: '3', side: 'RIGHT' },
+  { value: 'Revenue', label: 'Revenue', prefix: '4', side: 'RIGHT' },
+  { value: 'Expense', label: 'Expense', prefix: '5', side: 'LEFT' },
+]
+
+export const NORMAL_SIDES = [
+  { value: 'LEFT', label: 'Debit' },
+  { value: 'RIGHT', label: 'Credit' },
+]
+
+export const STATEMENTS = [
+  { value: 'INCOME_STATEMENT', label: 'IS', name: 'Income Statement' },
+  { value: 'BALANCE_SHEET', label: 'BS', name: 'Balance Sheet' },
+  { value: 'RETAINED_EARNINGS', label: 'RE', name: 'Retained Earnings Statement' },
+]
+
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+
+// 1250.5 → "$1,250.50"
+export const formatMoney = (value) =>
+  value === null || value === undefined || value === '' ? '—' : money.format(Number(value))
+
+// Text typed into a money field → number, or NaN unless it's an amount with at most two decimals.
+export function parseMoney(text) {
+  const plain = String(text ?? '').replace(/[$,\s]/g, '')
+  if (plain === '') return 0
+  return /^-?\d{1,13}(\.\d{1,2})?$/.test(plain) ? Number(plain) : NaN
+}
+
+// "2026-10-18T14:05:00" → "Oct. 18, 2026, 2:05 PM"
+export function formatDateTime(iso) {
+  if (!iso) return '—'
+  const [date, time = '00:00'] = iso.split('T')
+  const [hours, minutes] = time.split(':').map(Number)
+  const suffix = hours >= 12 ? 'PM' : 'AM'
+  return `${formatDate(date)}, ${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${suffix}`
+}
+
+// Order 1 → "01"
+export const formatOrder = (order) => (order === null || order === undefined ? '—' : String(order).padStart(2, '0'))
+
+export const isAdmin = (user) => user?.role === 'ADMINISTRATOR'
+
 export const homePathFor = (user) => (user?.role === 'ADMINISTRATOR' ? '/admin' : '/home')
 
 export const labelFor = (options, value) =>

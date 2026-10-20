@@ -116,10 +116,10 @@ export default function EditUser() {
         </div>
 
         <FormActions>
-          <button type="submit" className="btn btn--primary btn--sm" disabled={!user || saving}>
+          <button type="submit" className="btn btn--primary btn--sm" disabled={!user || saving} title="Save changes to this user">
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
-          <button type="button" className="btn btn--secondary btn--sm" onClick={() => navigate('/admin/users')}>
+          <button type="button" className="btn btn--secondary btn--sm" title="Discard changes and go back to users" onClick={() => navigate('/admin/users')}>
             Cancel
           </button>
         </FormActions>

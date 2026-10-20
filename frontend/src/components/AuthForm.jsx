@@ -38,6 +38,7 @@ export function AuthField({ label, labelAction, prompt, type = 'text', ...inputP
             className="auth-field__toggle"
             aria-label={revealed ? 'Hide password' : 'Show password'}
             aria-pressed={revealed}
+            title={revealed ? "Hide password" : "Show password"}
             onClick={() => setRevealed((value) => !value)}
           >
             <img src={eyeIcon} alt="" width="20" height="20" />

@@ -58,10 +58,10 @@ export default function Login() {
 
       <div className="auth-form__actions">
         <Alert surface="dark">{error}</Alert>
-        <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting}>
+        <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} title={"Sign in to Limitless"}>
           {submitting ? 'Signing In…' : 'Sign In'}
         </button>
-        <Link to="/request-access" className="btn btn--secondary btn--lg btn--block">
+        <Link to="/request-access" className="btn btn--secondary btn--lg btn--block" title="Request a new Limitless account">
           Request Access / Create Account
         </Link>
       </div>

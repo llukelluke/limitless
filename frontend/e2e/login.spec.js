@@ -75,6 +75,15 @@ test.describe('Login and account lockout', () => {
     await expect(page).toHaveURL(/\/home$/)
   })
 
+  test('TC-LOGIN-14 (P): Clear empties the username and password', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel('Username').fill('someone')
+    await page.getByLabel('Password', { exact: true }).fill('secret')
+    await page.getByRole('button', { name: 'Clear' }).click()
+    await expect(page.getByLabel('Username')).toHaveValue('')
+    await expect(page.getByLabel('Password', { exact: true })).toHaveValue('')
+  })
+
   test('TC-LOGIN-13 (P): sign out returns to login and protects admin pages', async ({ page }) => {
     await signInAsAdmin(page)
     await signOut(page)

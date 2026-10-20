@@ -37,7 +37,7 @@ export default function Login() {
   }
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit} noValidate>
+    <form className="auth-form" onSubmit={handleSubmit} onReset={() => setError('')} noValidate>
       <AuthHeader title="Welcome to Limitless" subtitle="Sign in to access your financial workspace." />
 
       <div className="auth-form__fields">
@@ -60,6 +60,9 @@ export default function Login() {
         <Alert surface="dark">{error}</Alert>
         <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} title={"Sign in to Limitless"}>
           {submitting ? 'Signing In…' : 'Sign In'}
+        </button>
+        <button type="reset" className="btn btn--secondary btn--lg btn--block" disabled={submitting} title="Clear the username and password">
+          Clear
         </button>
         <Link to="/request-access" className="btn btn--secondary btn--lg btn--block" title="Request a new Limitless account">
           Request Access / Create Account

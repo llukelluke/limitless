@@ -28,6 +28,16 @@ public class JournalAttachments {
     @Column(name = "file_type", length = 10)
     private String fileType;
 
+    @Column(name = "original_name")
+    private String originalName;
+
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
+
+    public JournalAttachments(JournalEntry journalEntryID, String filePath, String fileType, String originalName) {
+        this.journalEntryID = journalEntryID;
+        this.filePath = filePath;
+        this.fileType = fileType;
+        this.originalName = originalName;
+    }
 }

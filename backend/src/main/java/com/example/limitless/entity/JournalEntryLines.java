@@ -32,5 +32,12 @@ public class JournalEntryLines {
     @Column(precision = 15, scale = 2)
     private BigDecimal amount;
 
+    public JournalEntryLines(JournalEntry journalEntryID, Account accountID, Side side, BigDecimal amount){
+        this.journalEntryID = journalEntryID;
+        this.accountID = accountID;
+        this.side = side;
+        this.amount = amount;
+    }
+
     public enum Side{LEFT, RIGHT}
 }

@@ -49,7 +49,7 @@ public class AttachmentService {
     }
 
     /** Validates and stores the file, adds the row to the entry (caller saves the entry). */
-    public JournalAttachment store(JournalEntry entry, MultipartFile file) {
+    public JournalAttachments store(JournalEntry entry, MultipartFile file) {
         if (file == null || file.isEmpty()) throw new UserException(HttpStatus.BAD_REQUEST, messages.get("ATT_002"));
         if (file.getSize() > MAX_BYTES) throw new UserException(HttpStatus.PAYLOAD_TOO_LARGE, messages.get("ATT_003"));
 
@@ -68,12 +68,12 @@ public class AttachmentService {
         } catch (IOException e) {
             throw new UserException(HttpStatus.INTERNAL_SERVER_ERROR, "The file could not be saved.");
         }
-        JournalAttachment att = new JournalAttachment(entry, relative, ext, original);
+        JournalAttachments att = new JournalAttachments(entry, relative, ext, original);
         entry.getAttachments().add(att);
         return att;
     }
 
-    public Download load(JournalAttachment att) {
+    public Download load(JournalAttachments att) {
         Path p = baseDir.resolve(att.getFilePath()).normalize();
         if (!p.startsWith(baseDir) || !Files.exists(p)) {
             throw new UserException(HttpStatus.NOT_FOUND, messages.get("ATT_004"));
@@ -82,7 +82,7 @@ public class AttachmentService {
         return new Download(new FileSystemResource(p), att.getOriginalName(), type);
     }
 
-    public void deleteFile(JournalAttachment att) {
+    public void deleteFile(JournalAttachments att) {
         try {
             Path p = baseDir.resolve(att.getFilePath()).normalize();
             if (p.startsWith(baseDir)) Files.deleteIfExists(p);
@@ -91,7 +91,7 @@ public class AttachmentService {
         }
     }
 
-    public AttachmentResponse toResponse(JournalAttachment a) {
+    public AttachmentResponse toResponse(JournalAttachments a) {
         return new AttachmentResponse(a.getId(), a.getOriginalName(), a.getFileType(), a.getUploadedAt());
     }
 

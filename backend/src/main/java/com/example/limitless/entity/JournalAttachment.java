@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "journal_attachments")
-public class JournalAttachments {
+public class JournalAttachment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +20,7 @@ public class JournalAttachments {
 
     @ManyToOne
     @JoinColumn(name = "journal_entry_id", nullable = false)
-    private JournalEntry journalEntryID;
+    private JournalEntry entry;
 
     @Column(name = "file_path", length = 255)
     private String filePath;
@@ -34,8 +34,8 @@ public class JournalAttachments {
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
 
-    public JournalAttachments(JournalEntry journalEntryID, String filePath, String fileType, String originalName) {
-        this.journalEntryID = journalEntryID;
+    public JournalAttachment(JournalEntry entry, String filePath, String fileType, String originalName) {
+        this.entry = entry;
         this.filePath = filePath;
         this.fileType = fileType;
         this.originalName = originalName;

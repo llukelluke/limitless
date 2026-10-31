@@ -53,11 +53,11 @@ public class JournalEntry {
 
     @OneToMany(mappedBy = "entry", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")
-    private List<JournalEntryLines> lines = new ArrayList<>();
+    private List<JournalEntryLine> lines = new ArrayList<>();
 
     @OneToMany(mappedBy = "entry", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")
-    private List<JournalAttachments> attachments = new ArrayList<>();
+    private List<JournalAttachment> attachments = new ArrayList<>();
 
     public enum JournalEntryType {REGULAR, ADJUSTING}
 

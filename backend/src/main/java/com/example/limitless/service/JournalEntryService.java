@@ -65,7 +65,8 @@ public class JournalEntryService {
         e.setCreatedAt(LocalDateTime.now());
         apply(e, req);
         JournalEntry saved = entries.save(e);
-        events.record(actor.getId(), TABLE, saved.getId(), EventLog.Action.ADD, null, snapshot(saved));
+        events.recordJson(TABLE, saved.getId(), EventLog.actionType.ADD,
+                null, snapshot(saved), actor);
         return toResponse(saved);
     }
 
@@ -76,7 +77,8 @@ public class JournalEntryService {
         String before = snapshot(e);
         apply(e, req);
         JournalEntry saved = entries.save(e);
-        events.record(actor.getId(), TABLE, saved.getId(), EventLog.Action.MODIFY, before, snapshot(saved));
+        events.recordJson(TABLE, saved.getId(), EventLog.actionType.MODIFY,
+                before, snapshot(saved), actor);
         return toResponse(saved);
     }
 
@@ -87,7 +89,8 @@ public class JournalEntryService {
         String before = snapshot(e);
         e.getAttachments().forEach(attachmentService::deleteFile);
         entries.delete(e);
-        events.record(actor.getId(), TABLE, id, EventLog.Action.DEACTIVATE, before, null);
+        events.recordJson(TABLE, id, EventLog.actionType.DEACTIVATE,
+                before, null, actor);
     }
 
     // =====================================================================
@@ -101,7 +104,8 @@ public class JournalEntryService {
         String before = snapshot(e);
         e.setStatus(JournalEntry.JournalStatus.SUBMITTED);
         JournalEntry saved = entries.save(e);
-        events.record(actor.getId(), TABLE, saved.getId(), EventLog.Action.MODIFY, before, snapshot(saved));
+        events.recordJson(TABLE, saved.getId(), EventLog.actionType.MODIFY,
+                before, snapshot(saved), actor);
         notifyManagers(saved, actor);
         return toResponse(saved);
     }
@@ -122,20 +126,21 @@ public class JournalEntryService {
             BigDecimal amt = line.getAmount();
             boolean debit = line.getSide() == JournalEntryLine.Side.DEBIT;
             if (debit) a.setDebit(nz(a.getDebit()).add(amt)); else a.setCredit(nz(a.getCredit()).add(amt));
-            boolean increases = (a.getSide() == Account.Side.LEFT) == debit;
+            boolean increases = (a.getSide() == Account.normalSide.LEFT) == debit;
             a.setBalance(increases ? nz(a.getBalance()).add(amt) : nz(a.getBalance()).subtract(amt));
         }
         for (Account a : touched.values()) {
             accounts.save(a);
-            events.record(manager.getId(), "accounts", a.getId(), EventLog.Action.MODIFY,
-                    beforeImages.get(a.getId()), AccountSnapshot.of(a));
+            events.recordJson("accounts", a.getId(), EventLog.actionType.MODIFY,
+                    beforeImages.get(a.getId()), AccountSnapshot.of(a), manager);
         }
 
         e.setStatus(JournalEntry.JournalStatus.APPROVED);
         e.setReviewedBy(manager);
         e.setReviewedAt(LocalDateTime.now());
         JournalEntry saved = entries.save(e);
-        events.record(manager.getId(), TABLE, saved.getId(), EventLog.Action.MODIFY, beforeEntry, snapshot(saved));
+        events.recordJson(TABLE, saved.getId(), EventLog.actionType.MODIFY,
+                beforeEntry, snapshot(saved), manager);
         notifyCreator(saved, "approved", null);
         return toResponse(saved);
     }
@@ -153,7 +158,8 @@ public class JournalEntryService {
         e.setReviewedBy(manager);
         e.setReviewedAt(LocalDateTime.now());
         JournalEntry saved = entries.save(e);
-        events.record(manager.getId(), TABLE, saved.getId(), EventLog.Action.MODIFY, before, snapshot(saved));
+        events.recordJson(TABLE, saved.getId(), EventLog.actionType.MODIFY,
+                before, snapshot(saved), manager);
         notifyCreator(saved, "rejected", saved.getComment());
         return toResponse(saved);
     }
@@ -168,7 +174,8 @@ public class JournalEntryService {
         String before = snapshot(e);
         JournalAttachment att = attachmentService.store(e, file);
         JournalEntry saved = entries.saveAndFlush(e);
-        events.record(actor.getId(), TABLE, saved.getId(), EventLog.Action.MODIFY, before, snapshot(saved));
+        events.recordJson(TABLE, saved.getId(), EventLog.actionType.MODIFY,
+                before, snapshot(saved), actor);
         // the new row now has an id; find it again
         JournalAttachment stored = saved.getAttachments().stream()
                 .filter(a -> a.getFilePath().equals(att.getFilePath())).findFirst().orElse(att);
@@ -192,7 +199,8 @@ public class JournalEntryService {
         e.getAttachments().remove(att);
         attachmentService.deleteFile(att);
         JournalEntry saved = entries.save(e);
-        events.record(actor.getId(), TABLE, saved.getId(), EventLog.Action.MODIFY, before, snapshot(saved));
+        events.recordJson(TABLE, saved.getId(), EventLog.actionType.MODIFY,
+                before, snapshot(saved), actor);
     }
 
     // =====================================================================
@@ -288,7 +296,7 @@ public class JournalEntryService {
                 Optional<Account> acct = accounts.findById(line.accountId());
                 if (acct.isEmpty()) {
                     out.add(issue("JRN_007", "line", n));
-                } else if (!Boolean.TRUE.equals(acct.get().getActive())) {
+                } else if (!Boolean.TRUE.equals(acct.get().getIsActive())) {
                     out.add(issue("JRN_008", "line", n, "account", acct.get().getName()));
                 }
             }

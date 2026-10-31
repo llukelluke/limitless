@@ -43,7 +43,7 @@ public class LedgerService {
 
         BigDecimal running = account.getInitialBalance() == null ? BigDecimal.ZERO.setScale(2) : account.getInitialBalance();
         BigDecimal opening = running;
-        boolean leftNormal = account.getSide() == Account.Side.LEFT;
+        boolean leftNormal = account.getSide() == Account.normalSide.LEFT;
 
         BigDecimal searchAmount = parseAmount(search);
         String needle = search == null ? "" : search.trim().toLowerCase(Locale.ROOT);

@@ -34,7 +34,20 @@ public class EventLogService {
         event.setChangedAt(LocalDateTime.now());
         return eventLogRepository.save(event);
     }
-
+    /** For callers that already have the before/after images as JSON text. */
+    @Transactional
+    public EventLog recordJson(String table, Integer recordId, EventLog.actionType action,
+                               String beforeJson, String afterJson, User user) {
+        EventLog event = new EventLog();
+        event.setTableName(table);
+        event.setRecordId(recordId);
+        event.setAction(action);
+        event.setBefore_image(beforeJson);
+        event.setAfter_image(afterJson);
+        event.setUser(user);
+        event.setChangedAt(LocalDateTime.now());
+        return eventLogRepository.save(event);
+    }
     @Transactional(readOnly = true)
     public List<EventLog> list(String table, Integer recordId) {
         if (table != null && recordId != null) {

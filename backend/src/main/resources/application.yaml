@@ -8,6 +8,13 @@ spring:
     username: ${DB_USERNAME:limitless_user}
     password: ${DB_PASSWORD:limitless_pass}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+
+uploads:
+  dir: ./uploads
 
   jpa:
     hibernate:

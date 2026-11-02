@@ -34,25 +34,38 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/error",
+                        // 1. Public
+                        .requestMatchers("/error",
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
-                                "/api/auth/access-requests"
-                        ).permitAll()
-                        // Approving/rejecting access requests is admin-only
-                        .requestMatchers("/api/auth/access-requests/**").hasRole("ADMINISTRATOR")
+                                "/api/auth/access-requests").permitAll()
 
-                        // User management and user reports are admin-only
-                        .requestMatchers("/api/users/**").hasRole("ADMINISTRATOR")
+                        // 2. Anyone logged in can view accounts, ledgers, event logs, journal entries
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/accounts/**", "/api/event-log/**", "/api/journal-entries/**")
+                        .hasAnyRole("ADMINISTRATOR", "MANAGER", "ACCOUNTANT")
 
-                        // Everyone signed in can view accounts; only administrators change them
-                        .requestMatchers(HttpMethod.GET, "/api/accounts/**").authenticated()
+                        // 3. Email from the account pages: all roles
+                        .requestMatchers("/api/email/**")
+                        .hasAnyRole("ADMINISTRATOR", "MANAGER", "ACCOUNTANT")
+
+                        // 4. Only a manager approves or rejects
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/journal-entries/*/approve", "/api/journal-entries/*/reject")
+                        .hasRole("MANAGER")
+
+                        // 5. Create, edit, cancel, submit, attach: manager or accountant
+                        .requestMatchers("/api/journal-entries/**")
+                        .hasAnyRole("MANAGER", "ACCOUNTANT")
+
+                        // 6. Add, edit, deactivate accounts: administrator only
                         .requestMatchers("/api/accounts/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers("/api/**").authenticated()
-                        // Everything else is the React app's files and pages (see SpaConfig)
-                        .anyRequest().permitAll()
+
+                        // 7. Admin-only user management (your existing rules)
+                        .requestMatchers("/api/auth/access-requests/**", "/api/users/**").hasRole("ADMINISTRATOR")
+
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(form -> form.disable())

@@ -72,6 +72,13 @@ export default function AccountDetails() {
                 >
                   View Ledger
                 </Link>
+                <Link
+                  to={admin ? '/admin/email' : '/email'}
+                  className="btn btn--secondary btn--sm"
+                  title={admin ? 'Email a manager or accountant' : 'Email a manager or administrator'}
+                >
+                  Email User
+                </Link>
                 {admin && (
                   <>
                     <Link

@@ -336,7 +336,7 @@ test.describe('Sprint 2 page layout', () => {
       await expect(page.locator('.app__logo img').first()).toBeVisible()
       const services = page.getByRole('toolbar', { name: 'Services' })
       for (const name of ['Chart of Accounts', 'Journalize', 'Event Log', '? Help']) {
-        await expect(services.getByRole(name === 'Journalize' || name === '? Help' ? 'button' : 'link', { name })).toBeVisible()
+        await expect(services.getByRole(name === '? Help' ? 'button' : 'link', { name })).toBeVisible()
       }
     }
 

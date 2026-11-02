@@ -21,6 +21,9 @@ import AccountDetails from './pages/accounts/AccountDetails.jsx'
 import AccountForm from './pages/accounts/AccountForm.jsx'
 import Ledger from './pages/accounts/Ledger.jsx'
 import EventLog from './pages/accounts/EventLog.jsx'
+import JournalList from './pages/journal/JournalList.jsx'
+import JournalForm from './pages/journal/JournalForm.jsx'
+import JournalEntry from './pages/journal/JournalEntry.jsx'
 
 // Numbers match the frames on "03 - Final Screens & Prototype" in Figma.
 function App() {
@@ -45,6 +48,10 @@ function App() {
           <Route path="/accounts/:id" element={<AccountDetails />} />
           <Route path="/accounts/:id/ledger" element={<Ledger />} />
           <Route path="/event-log" element={<EventLog />} />
+          <Route path="/journal" element={<JournalList />} />
+          <Route path="/journal/new" element={<JournalForm />} /> {/* managers and accountants only */}
+          <Route path="/journal/:id" element={<JournalEntry />} />
+          <Route path="/email" element={<Email />} /> {/* managers and accountants email managers / admins */}
         </Route>
       </Route>
 

@@ -54,7 +54,9 @@ function parseJson(text) {
 async function request(path, { method = 'GET', body } = {}) {
   const session = loadSession()
   const headers = {}
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // FormData (file uploads) sets its own multipart Content-Type
+  const form = body instanceof FormData
+  if (body !== undefined && !form) headers['Content-Type'] = 'application/json'
   if (session) headers.Authorization = `Bearer ${session.token}`
 
   let response
@@ -62,7 +64,7 @@ async function request(path, { method = 'GET', body } = {}) {
     response = await fetch(`/api${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined || form ? body : JSON.stringify(body),
     })
   } catch {
     throw new ApiError(0, 'Unable to reach the server. Please make sure the backend is running.')
@@ -115,4 +117,32 @@ export const api = {
   updateAccount: (id, body) => request(`/accounts/${id}`, { method: 'PUT', body }),
   deactivateAccount: (id) => request(`/accounts/${id}/deactivate`, { method: 'PUT' }),
   eventLogs: (table, recordId) => request(`/event-logs${query({ table, record_id: recordId })}`),
+
+  // Managers, accountants and administrators every signed-in user may email (see API_CONTRACT.md).
+  listContacts: () => request('/contacts'),
+  emailContact: (id, body) => request(`/contacts/${id}/email`, { method: 'POST', body }),
+
+  errorMessages: () => request('/error-messages'),
+
+  // filters: { status, account_id, from, to }
+  listJournalEntries: (filters = {}) => request(`/journal-entries${query(filters)}`),
+  getJournalEntry: (id) => request(`/journal-entries/${id}`),
+  // `form` is FormData: an "entry" JSON part plus any "files"
+  createJournalEntry: (form) => request('/journal-entries', { method: 'POST', body: form }),
+  approveJournalEntry: (id) => request(`/journal-entries/${id}/approve`, { method: 'PUT' }),
+  rejectJournalEntry: (id, comment) => request(`/journal-entries/${id}/reject`, { method: 'PUT', body: { comment } }),
+  downloadAttachment,
+}
+
+// Attachments need the auth header, so a plain <a href> can't fetch them.
+async function downloadAttachment(entryId, attachment) {
+  const session = loadSession()
+  const response = await fetch(`/api/journal-entries/${entryId}/attachments/${attachment.id}`, {
+    headers: session ? { Authorization: `Bearer ${session.token}` } : {},
+  })
+  if (!response.ok) throw new ApiError(response.status, `Could not download ${attachment.file_name}.`)
+  const url = URL.createObjectURL(await response.blob())
+  const link = Object.assign(document.createElement('a'), { href: url, download: attachment.file_name })
+  link.click()
+  URL.revokeObjectURL(url)
 }

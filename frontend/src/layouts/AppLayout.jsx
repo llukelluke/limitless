@@ -9,6 +9,7 @@ import './AppLayout.css'
 
 const ACCOUNTING_NAV = [
   { label: 'Accounts', to: '/accounts', match: ['/accounts'], title: 'View the chart of accounts' },
+  { label: 'Journal', to: '/journal', match: ['/journal'], title: 'Create and review journal entries' },
   { label: 'Event Log', to: '/event-log', match: ['/event-log'], title: 'View the history of changes to records' },
 ]
 
@@ -21,7 +22,11 @@ const ADMIN_NAV = [
   { label: 'Email', to: '/admin/email', match: ['/admin/email'], title: 'Send an email to a user' },
 ]
 
-const MEMBER_NAV = [{ label: 'Home', to: '/home', match: [], exact: '/home', title: 'Your home page' }, ...ACCOUNTING_NAV]
+const MEMBER_NAV = [
+  { label: 'Home', to: '/home', match: [], exact: '/home', title: 'Your home page' },
+  ...ACCOUNTING_NAV,
+  { label: 'Email', to: '/email', match: ['/email'], title: 'Email a manager or administrator' },
+]
 
 function isActive(item, pathname) {
   const path = pathname.replace(/\/$/, '')
@@ -68,10 +73,9 @@ export default function AppLayout() {
           <Link to="/accounts" className="app__service" title="View, search and filter the chart of accounts">
             Chart of Accounts
           </Link>
-          {/* shortcut: journalizing is Sprint 3, link it to its page once that exists */}
-          <button type="button" className="app__service" disabled title="Journalizing: create and review journal entries (coming in the next release)">
+          <Link to="/journal" className="app__service" title="Journalizing: create and review journal entries">
             Journalize
-          </button>
+          </Link>
           <Link to="/event-log" className="app__service" title="View the before and after images of every change">
             Event Log
           </Link>

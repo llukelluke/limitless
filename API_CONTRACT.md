@@ -719,4 +719,76 @@ Sends an email to the specified user from within the system. Administrator only.
 ---
 
 ## Accounts, Journal Entries, and Statements Modules
-*Not yet scoped for the current sprint*
+
+### Sprint 3: Journalizing & Ledger (frontend is built against these)
+
+All responses use snake_case like the rest of this contract. Dates are `YYYY-MM-DD`, timestamps `YYYY-MM-DDTHH:mm:ss`.
+
+#### Journal entry object
+```json
+{
+  "id": 12,
+  "entry_date": "2026-11-02",
+  "entry_type": "REGULAR",
+  "status": "PENDING",
+  "description": null,
+  "comment": null,
+  "created_by": "jlawson0926",
+  "created_at": "2026-11-02T10:15:00",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "lines": [
+    { "id": 30, "account_id": 1, "account_number": 101, "account_name": "Cash", "side": "LEFT", "amount": 500.00 },
+    { "id": 31, "account_id": 9, "account_number": 401, "account_name": "Service Revenue", "side": "RIGHT", "amount": 500.00 }
+  ],
+  "attachments": [
+    { "id": 4, "file_name": "invoice-1042.pdf", "file_type": "pdf", "uploaded_at": "2026-11-02T10:15:00" }
+  ]
+}
+```
+`status` is `PENDING`, `APPROVED` or `REJECTED`; `comment` holds the manager's rejection reason. `description` needs a new nullable column on `journal_entries`, and `reviewed_by` must become nullable.
+
+#### GET /api/journal-entries
+Any signed-in user. Optional query params: `status`, `account_id` (entries with a line on that account), `from`, `to` (entry_date range). **200:** array of journal entry objects.
+
+#### GET /api/journal-entries/{id}
+**200:** one journal entry object. **404** if it doesn't exist.
+
+#### POST /api/journal-entries
+Managers and accountants (403 for administrators). `multipart/form-data`:
+- `entry`: JSON part `{ "entry_date", "entry_type", "description", "lines": [{ "account_id", "side", "amount" }] }` (debits listed first)
+- `files`: zero or more source documents (pdf, doc, docx, xls, xlsx, csv, jpg, jpeg, png)
+
+Saved as `PENDING`, and every manager is emailed that an entry is waiting for approval. The server repeats the frontend checks and answers **400** with `{ "error_code": "JE_00x", "message": "..." }` from the `error_messages` table. Entries cannot be deleted once submitted (no DELETE endpoint). **201:** the journal entry object.
+
+#### PUT /api/journal-entries/{id}/approve
+Managers only. Pending entry becomes `APPROVED` and each line posts to its account (`debit`/`credit`/`balance` updated). **200:** the journal entry object.
+
+#### PUT /api/journal-entries/{id}/reject
+Managers only. Body `{ "comment": "Wrong account for rent." }`, required (400 `JE_009` if blank). **200:** the journal entry object.
+
+#### GET /api/journal-entries/{id}/attachments/{attachmentId}
+Any signed-in user. Returns the file with `Content-Disposition: attachment; filename="..."`.
+
+#### GET /api/error-messages
+Any signed-in user. **200:** `[{ "error_code": "JE_006", "message": "Total debits must equal total credits." }, ...]`. The journal form shows these in red. Seed (new Flyway migration):
+```sql
+INSERT INTO error_messages (error_code, message) VALUES
+  ('JE_001', 'Enter the date of the journal entry.'),
+  ('JE_002', 'Choose an account from the chart of accounts.'),
+  ('JE_003', 'Enter an amount greater than zero, with at most two decimal places.'),
+  ('JE_004', 'A journal entry needs at least one debit.'),
+  ('JE_005', 'A journal entry needs at least one credit.'),
+  ('JE_006', 'Total debits must equal total credits.'),
+  ('JE_007', 'Each account can appear only once in a journal entry.'),
+  ('JE_008', 'Attachments must be PDF, Word, Excel, CSV, JPG, or PNG files.'),
+  ('JE_009', 'Enter a reason in the comment field when rejecting a journal entry.');
+```
+
+#### GET /api/contacts
+Any signed-in user. Active managers and administrators that managers and accountants may email. **200:** `[{ "id", "first_name", "last_name", "username", "role" }]`.
+
+#### POST /api/contacts/{id}/email
+Any signed-in user; `id` must be an active manager or administrator. Body `{ "subject", "body" }` (both required). **200:** `{ "message": "Email sent successfully." }`.
+
+The ledger page builds itself from `GET /api/journal-entries?status=APPROVED&account_id={id}`, starting from the account's `initial_balance`.

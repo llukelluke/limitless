@@ -1,11 +1,16 @@
 import { Link } from 'react-router-dom'
+import { api } from '../api/client.js'
+import Alert from '../components/Alert.jsx'
 import { PageHeader, Panel } from '../components/AdminUI.jsx'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { ROLES, labelFor } from '../constants.js'
+import useApi from '../hooks/useApi.js'
 
-// Landing page for managers and accountants. Their Sprint 2+ tools will live here.
+// Landing page for managers and accountants. Managers are told about entries waiting for approval.
 export default function Home() {
   const { user } = useAuth()
+  const { data: entries } = useApi(api.listJournalEntries)
+  const pending = (entries ?? []).filter((entry) => entry.status === 'PENDING').length
   const role = labelFor(ROLES, user.role).toLowerCase()
   const article = /^[aeiou]/.test(role) ? 'an' : 'a'
 
@@ -17,9 +22,18 @@ export default function Home() {
         subtitle="Your financial workspace."
       />
       <Panel title="GETTING STARTED" className="page-panel">
+        {user.role === 'MANAGER' && pending > 0 && (
+          <Alert tone="info">
+            <strong>
+              {pending} journal {pending === 1 ? 'entry is' : 'entries are'} waiting for your approval.
+            </strong>{' '}
+            <Link to="/journal?status=PENDING">Review pending entries →</Link>
+          </Alert>
+        )}
         <p className="home-note">
           You are signed in as {article} {role}. Open the <Link to="/accounts">Chart of Accounts</Link> to
-          view accounts and their ledgers, or the <Link to="/event-log">Event Log</Link> to see recent changes.
+          view accounts and their ledgers, the <Link to="/journal">Journal</Link> to prepare and review journal
+          entries, or the <Link to="/event-log">Event Log</Link> to see recent changes.
           Contact your administrator if you need your role or account details changed.
         </p>
       </Panel>

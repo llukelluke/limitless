@@ -1,9 +1,11 @@
-import { useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import AsyncContent from '../../components/AsyncContent.jsx'
-import { BackLink, DataTable, PageHeader, Panel } from '../../components/AdminUI.jsx'
-import { NORMAL_SIDES, formatDateTime, formatMoney, labelFor } from '../../constants.js'
+import { BackLink, DataTable, PageHeader, Panel, ToolbarField } from '../../components/AdminUI.jsx'
+import { NORMAL_SIDES, formatDate, formatMoney, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
+import { ledgerRows, matchesLedgerRow } from '../../journal.js'
 import './Accounts.css'
 
 const money = (key) => ({
@@ -14,29 +16,37 @@ const money = (key) => ({
 })
 
 const columns = [
-  { key: 'date', header: 'DATE', width: '22%', render: (row) => formatDateTime(row.date) },
-  { key: 'description', header: 'DESCRIPTION', width: '25%' },
-  { key: 'pr', header: 'PR', width: '8%' },
+  { key: 'date', header: 'DATE', width: '14%', render: (row) => formatDate(row.date) },
+  { key: 'description', header: 'DESCRIPTION', width: '33%' },
+  {
+    key: 'pr',
+    header: 'PR',
+    width: '8%',
+    render: (row) =>
+      row.entry_id && (
+        <Link to={`/journal/${row.entry_id}`} title="Open the journal entry that made this posting">
+          JE-{row.entry_id}
+        </Link>
+      ),
+  },
   money('debit'),
   money('credit'),
   money('balance'),
 ]
 
-// Account ledger. shortcut: shows only the opening balance until journal entries (Sprint 3) post here.
+const EMPTY_FILTERS = { search: '', from: '', to: '' }
+
+// Account ledger: opening balance, then each approved journal entry posting with a running balance.
 export default function Ledger() {
   const { id } = useParams()
   const { data: account, error, loading } = useApi(() => api.getAccount(id), [id])
+  const journal = useApi(() => api.listJournalEntries({ status: 'APPROVED', account_id: id }), [id])
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
 
-  const opening = account && {
-    id: 'opening',
-    date: account.added_at,
-    description: 'Opening balance',
-    pr: '',
-    debit: account.normal_side === 'LEFT' ? account.initial_balance : null,
-    credit: account.normal_side === 'RIGHT' ? account.initial_balance : null,
-    balance: account.initial_balance,
-  }
-
+  const allRows = account && journal.data ? ledgerRows(account, journal.data) : []
+  const rows = allRows.filter((row) => matchesLedgerRow(row, filters))
+  const set = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }))
+  const filtered = filters.search || filters.from || filters.to
   return (
     <>
       <PageHeader
@@ -71,8 +81,38 @@ export default function Ledger() {
                   <dd>{formatMoney(account.balance)}</dd>
                 </div>
               </dl>
-              <DataTable columns={columns} rows={[opening]} caption={`Ledger for ${account.name}`} />
-              <p className="async-status">Journal entries will be listed here once journalizing is available.</p>
+              <div className="toolbar" role="search">
+                <ToolbarField label="SEARCH">
+                  <input
+                    className="toolbar__search"
+                    type="search"
+                    placeholder="Account name or amount"
+                    aria-label="Search by account name or amount"
+                    title="Search by account name (any account in the entry) or amount"
+                    value={filters.search}
+                    onChange={set('search')}
+                  />
+                </ToolbarField>
+                <ToolbarField label="FROM">
+                  <input className="toolbar__search toolbar__date" type="date" aria-label="From date" title="Only postings on or after this date" value={filters.from} onChange={set('from')} />
+                </ToolbarField>
+                <ToolbarField label="TO">
+                  <input className="toolbar__search toolbar__date" type="date" aria-label="To date" title="Only postings on or before this date" value={filters.to} onChange={set('to')} />
+                </ToolbarField>
+                {filtered && (
+                  <button type="button" className="text-link" title="Clear the search and dates" onClick={() => setFilters(EMPTY_FILTERS)}>
+                    Clear filters
+                  </button>
+                )}
+              </div>
+              <AsyncContent loading={journal.loading && !journal.data} error={journal.error}>
+                <DataTable
+                  columns={columns}
+                  rows={rows}
+                  caption={`Ledger for ${account.name}`}
+                  empty="No postings match these filters."
+                />
+              </AsyncContent>
             </>
           )}
         </AsyncContent>

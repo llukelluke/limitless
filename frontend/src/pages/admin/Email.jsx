@@ -1,24 +1,31 @@
 import { useId, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../../api/client.js'
+import { useAuth } from '../../auth/AuthContext.jsx'
 import Alert from '../../components/Alert.jsx'
 import { Field, FormActions, PageHeader, Panel } from '../../components/AdminUI.jsx'
-import { formValues, fullName, isSystemUser } from '../../constants.js'
+import { ROLES, formValues, fullName, isAdmin, isSystemUser, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
 
 // 18 Admin Email — send an email to any user from inside the system.
+// Managers and accountants use the same page (/email) to reach managers and administrators.
 export default function Email() {
   const messageId = useId()
   const [searchParams] = useSearchParams()
-  const { data: users, error: loadError } = useApi(api.listUsers)
+  const { user: me } = useAuth()
+  const admin = isAdmin(me)
+  const { data: users, error: loadError } = useApi(admin ? api.listUsers : api.listContacts)
   const [feedback, setFeedback] = useState(null)
   const [sending, setSending] = useState(false)
 
   const recipientOptions = [
     { value: '', label: users ? 'Select User...' : 'Loading users…' },
     ...(users ?? [])
-      .filter(isSystemUser)
-      .map((user) => ({ value: String(user.id), label: `${fullName(user)} (${user.username})` })),
+      .filter((user) => isSystemUser(user) && user.id !== me.id)
+      .map((user) => ({
+        value: String(user.id),
+        label: `${fullName(user)} (${user.username}${admin ? '' : `, ${labelFor(ROLES, user.role)}`})`,
+      })),
   ]
 
   const handleSubmit = async (event) => {
@@ -33,9 +40,9 @@ export default function Email() {
     setSending(true)
     setFeedback(null)
     try {
-      await api.sendEmail(recipient_id, { subject, body: message })
+      await (admin ? api.sendEmail : api.emailContact)(recipient_id, { subject, body: message })
       const recipient = users.find((user) => String(user.id) === recipient_id)
-      setFeedback({ tone: 'success', message: `Email sent to ${recipient.email_address}.` })
+      setFeedback({ tone: 'success', message: `Email sent to ${recipient.email_address ?? fullName(recipient)}.` })
       form.reset()
     } catch (err) {
       setFeedback({ tone: 'error', message: err.message })
@@ -46,7 +53,11 @@ export default function Email() {
 
   return (
     <>
-      <PageHeader title="Email Users" subtitle="Send messages to registered Limitless users." />
+      <PageHeader
+        eyebrow={admin ? undefined : 'EMAIL'}
+        title={admin ? 'Email Users' : 'Email a Manager or Administrator'}
+        subtitle={admin ? 'Send messages to registered Limitless users.' : 'Send a message to a manager or administrator.'}
+      />
 
       <Panel as="form" title="SEND EMAIL" className="page-panel" onSubmit={handleSubmit} noValidate>
         <div className="form-body email-form">

@@ -90,3 +90,11 @@
 .event-images__changed td {
   background: rgba(226, 194, 117, 0.25);
 }
+
+.toolbar__date {
+  width: 160px;
+}
+
+.ledger-summary + .toolbar {
+  margin: 28px 0 8px;
+}

@@ -102,11 +102,20 @@ export default function ChartOfAccounts() {
         title="ACCOUNTS"
         className="page-panel"
         action={
-          admin && (
-            <Link to="/accounts/new" className="btn btn--primary btn--sm" title="Add a new account to the chart of accounts">
-              Add Account
+          <span className="table-actions">
+            <Link
+              to={admin ? '/admin/email' : '/email'}
+              className="btn btn--secondary btn--sm"
+              title={admin ? 'Email a manager or accountant' : 'Email a manager or administrator'}
+            >
+              Email User
             </Link>
-          )
+            {admin && (
+              <Link to="/accounts/new" className="btn btn--primary btn--sm" title="Add a new account to the chart of accounts">
+                Add Account
+              </Link>
+            )}
+          </span>
         }
       >
         <div className="toolbar" role="search">

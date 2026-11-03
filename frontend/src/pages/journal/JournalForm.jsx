@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
@@ -7,8 +7,7 @@ import AsyncContent from '../../components/AsyncContent.jsx'
 import { BackLink, Field, FormActions, FormSection, PageHeader, Panel, Select } from '../../components/AdminUI.jsx'
 import { formatMoney, isAdmin, parseMoney, todayIso } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
-import useErrorMessages from '../../hooks/useErrorMessages.js'
-import { ATTACHMENT_TYPES, ENTRY_TYPES, validateEntry } from '../../journal.js'
+import { ATTACHMENT_TYPES, ENTRY_TYPES, toRequest } from '../../journal.js'
 import './Journal.css'
 
 let nextKey = 0
@@ -17,24 +16,19 @@ const blankDraft = () => ({
   entry_date: todayIso(),
   entry_type: 'REGULAR',
   description: '',
-  lines: [newLine('LEFT'), newLine('RIGHT')],
+  lines: [newLine('DEBIT'), newLine('CREDIT')],
 })
 
 const ACCEPT = ATTACHMENT_TYPES.map((ext) => `.${ext}`).join(',')
 
-// Problems shown in red; each one names the line to fix and disappears once it is fixed.
+// Problems shown in red: [{ code, message }] from the server's error_messages table.
 export function ProblemList({ problems }) {
-  const message = useErrorMessages()
   if (!problems.length) return null
   return (
     <Alert>
       <ul className="journal-problems">
         {problems.map((p, index) => (
-          <li key={index}>
-            {p.where && <strong>{p.where}: </strong>}
-            {message(p.code)}
-            {p.extra && ` ${p.extra}`}
-          </li>
+          <li key={index}>{p.message}</li>
         ))}
       </ul>
     </Alert>
@@ -44,12 +38,12 @@ export function ProblemList({ problems }) {
 function SideSection({ side, title, lines, accountOptions, onChange, onAdd, onRemove }) {
   const own = lines.filter((line) => line.side === side)
   const total = own.reduce((sum, line) => sum + (parseMoney(line.amount) || 0), 0)
-  const label = side === 'LEFT' ? 'debit' : 'credit'
+  const label = side.toLowerCase()
   return (
     <fieldset className="form-section journal-side">
       <legend className="form-section__title">{title}</legend>
       {own.map((line, index) => (
-        <div key={line.key} className={`journal-line ${side === 'RIGHT' ? 'journal-line--credit' : ''}`}>
+        <div key={line.key} className={`journal-line ${side === 'CREDIT' ? 'journal-line--credit' : ''}`}>
           <Select
             wrapClassName="journal-line__account"
             className="field__control field__control--select"
@@ -92,7 +86,7 @@ function SideSection({ side, title, lines, accountOptions, onChange, onAdd, onRe
 }
 
 // Prepare a journal entry: debits first, then credits, plus source documents.
-// Nothing is saved until Submit; Reset starts over and Cancel leaves without saving.
+// Nothing is kept unless Submit succeeds; Reset starts over and Cancel leaves without saving.
 export default function JournalForm() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -102,8 +96,18 @@ export default function JournalForm() {
   const [draft, setDraft] = useState(blankDraft)
   const [files, setFiles] = useState([])
   const [attempted, setAttempted] = useState(false)
+  const [problems, setProblems] = useState([])
   const [busy, setBusy] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+
+  // After the first Submit, re-check with the server as the user types so errors clear once fixed.
+  useEffect(() => {
+    if (!attempted) return
+    const timer = setTimeout(() => {
+      api.validateJournalEntry(toRequest(draft)).then((result) => setProblems(result.errors), () => {})
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [attempted, draft])
 
   if (isAdmin(user)) return <Navigate to="/journal" replace />
 
@@ -114,7 +118,6 @@ export default function JournalForm() {
       .sort((a, b) => a.number - b.number)
       .map((account) => ({ value: String(account.id), label: `${account.number} · ${account.name}` })),
   ]
-  const problems = validateEntry(draft, files)
 
   const set = (key) => (event) => setDraft((current) => ({ ...current, [key]: event.target.value }))
   const changeLine = (key, field, value) =>
@@ -129,31 +132,31 @@ export default function JournalForm() {
     setDraft(blankDraft())
     setFiles([])
     setAttempted(false)
+    setProblems([])
     setSubmitError(null)
   }
 
   const submit = async (event) => {
     event.preventDefault()
     setAttempted(true)
-    if (problems.length) return
-
-    const lines = ['LEFT', 'RIGHT'].flatMap((side) =>
-      draft.lines
-        .filter((line) => line.side === side)
-        .map((line) => ({ account_id: Number(line.account_id), side, amount: parseMoney(line.amount) })),
-    )
-    const form = new FormData()
-    const entry = { ...draft, description: draft.description.trim() || null, lines }
-    form.append('entry', new Blob([JSON.stringify(entry)], { type: 'application/json' }))
-    files.forEach((file) => form.append('files', file))
-
     setBusy(true)
     setSubmitError(null)
+    const body = toRequest(draft)
+    let saved = null
     try {
-      const saved = await api.createJournalEntry(form)
+      const check = await api.validateJournalEntry(body)
+      setProblems(check.errors)
+      if (!check.valid) return setBusy(false)
+      // The backend saves a draft, takes files one at a time, then submits it for approval.
+      saved = await api.createJournalEntry(body)
+      for (const file of files) await api.uploadAttachment(saved.id, file)
+      await api.submitJournalEntry(saved.id)
       navigate(`/journal/${saved.id}`, { state: { saved: 'Journal entry submitted for approval.' } })
     } catch (err) {
-      setSubmitError(err.message)
+      // Don't leave a half-made draft behind; the user fixes the problem and submits again.
+      if (saved) await api.cancelJournalEntry(saved.id).catch(() => {})
+      if (err.errors?.length) setProblems(err.errors)
+      else setSubmitError(err.message)
       setBusy(false)
     }
   }
@@ -190,8 +193,8 @@ export default function JournalForm() {
             </FormSection>
 
             {[
-              ['LEFT', 'DEBITS'],
-              ['RIGHT', 'CREDITS'],
+              ['DEBIT', 'DEBITS'],
+              ['CREDIT', 'CREDITS'],
             ].map(([side, title]) => (
               <SideSection
                 key={side}

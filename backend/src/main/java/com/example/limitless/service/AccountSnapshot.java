@@ -8,7 +8,7 @@ final class AccountSnapshot {
     static String of(Account a) {
         return "{"
                 + "\"id\":" + a.getId()
-                + ",\"user_id\":" + a.getUser()
+                + ",\"user_id\":" + (a.getUser() == null ? null : a.getUser().getId())
                 + ",\"name\":" + JsonUtil.q(a.getName())
                 + ",\"account_number\":" + a.getNumber()
                 + ",\"description\":" + JsonUtil.q(a.getDescription())

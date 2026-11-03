@@ -7,8 +7,7 @@ import AsyncContent from '../../components/AsyncContent.jsx'
 import { BackLink, DataTable, Field, FormSection, PageHeader, Panel } from '../../components/AdminUI.jsx'
 import { formatDate, formatDateTime, formatMoney, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
-import { ENTRY_TYPES, entryTotal, sortedLines } from '../../journal.js'
-import { ProblemList } from './JournalForm.jsx'
+import { ENTRY_TYPES, sortedLines } from '../../journal.js'
 import { StatusBadge } from './JournalList.jsx'
 import './Journal.css'
 
@@ -52,14 +51,14 @@ export default function JournalEntry() {
   const [rejecting, setRejecting] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const canReview = user.role === 'MANAGER' && entry?.status === 'PENDING'
+  const canReview = user.role === 'MANAGER' && entry?.status === 'SUBMITTED'
   const rows = entry && [
     ...sortedLines(entry).map((line) => ({
       ...line,
-      debit: line.side === 'LEFT' ? line.amount : null,
-      credit: line.side === 'RIGHT' ? line.amount : null,
+      debit: line.side === 'DEBIT' ? line.amount : null,
+      credit: line.side === 'CREDIT' ? line.amount : null,
     })),
-    { id: 'total', account_name: 'Totals', debit: entryTotal(entry), credit: entryTotal(entry) },
+    { id: 'total', account_name: 'Totals', debit: entry.total_debits, credit: entry.total_credits },
   ]
 
   const review = async (action) => {
@@ -133,7 +132,6 @@ export default function JournalEntry() {
                     value={comment}
                     onChange={(event) => setComment(event.target.value)}
                   />
-                  <ProblemList problems={comment.trim() ? [] : [{ code: 'JE_009' }]} />
                   <div className="account-actions">
                     <button
                       type="button"
@@ -158,9 +156,9 @@ export default function JournalEntry() {
                 </div>
                 <Field label="DATE" value={formatDate(entry.entry_date)} readOnly />
                 <Field label="TYPE" value={labelFor(ENTRY_TYPES, entry.entry_type)} readOnly />
-                <Field label="PREPARED BY" value={entry.created_by ?? '—'} readOnly />
+                <Field label="PREPARED BY" value={entry.created_by_name ?? '—'} readOnly />
                 <Field label="SUBMITTED" value={formatDateTime(entry.created_at)} readOnly />
-                {entry.reviewed_by && <Field label="REVIEWED BY" value={entry.reviewed_by} readOnly />}
+                {entry.reviewed_by && <Field label="REVIEWED BY" value={entry.reviewed_by_name} readOnly />}
                 {entry.reviewed_at && <Field label="REVIEWED" value={formatDateTime(entry.reviewed_at)} readOnly />}
                 <Field label="DESCRIPTION" value={entry.description ?? '—'} readOnly className="field--wide" />
                 {entry.comment && <Field label="COMMENT" value={entry.comment} readOnly className="field--wide" />}
@@ -176,10 +174,10 @@ export default function JournalEntry() {
                         <button
                           type="button"
                           className="text-link"
-                          title={`Download ${attachment.file_name}`}
+                          title={`Download ${attachment.original_name}`}
                           onClick={() => download(attachment)}
                         >
-                          {attachment.file_name}
+                          {attachment.original_name}
                         </button>
                       </li>
                     ))}

@@ -9,13 +9,13 @@ import useApi from '../../hooks/useApi.js'
 import { JOURNAL_STATUSES, matchesEntry, sortedLines } from '../../journal.js'
 import './Journal.css'
 
-const STATUS_OPTIONS = [{ value: '', label: 'All' }, ...JOURNAL_STATUSES]
+const STATUS_OPTIONS = [{ value: '', label: 'All' }, ...JOURNAL_STATUSES.filter((s) => s.value !== 'DRAFT')]
 
 // One line per account, debits first; credits are indented as on paper.
 const lineCells = (entry, render) => (
   <ul className="journal-lines">
     {sortedLines(entry).map((line) => (
-      <li key={line.id} className={line.side === 'RIGHT' ? 'journal-lines__credit' : undefined}>
+      <li key={line.id} className={line.side === 'CREDIT' ? 'journal-lines__credit' : undefined}>
         {render(line)}
       </li>
     ))}
@@ -51,10 +51,10 @@ const columns = [
         </Link>
       )),
   },
-  { key: 'debit', header: <span className="num">DEBIT</span>, width: '13%', render: (e) => lineCells(e, amount('LEFT')) },
-  { key: 'credit', header: <span className="num">CREDIT</span>, width: '13%', render: (e) => lineCells(e, amount('RIGHT')) },
+  { key: 'debit', header: <span className="num">DEBIT</span>, width: '13%', render: (e) => lineCells(e, amount('DEBIT')) },
+  { key: 'credit', header: <span className="num">CREDIT</span>, width: '13%', render: (e) => lineCells(e, amount('CREDIT')) },
   { key: 'status', header: 'STATUS', width: '10%', render: (e) => <StatusBadge status={e.status} /> },
-  { key: 'created_by', header: 'PREPARED BY', width: '11%' },
+  { key: 'created_by_name', header: 'PREPARED BY', width: '11%' },
   {
     key: 'action',
     header: 'ACTION',

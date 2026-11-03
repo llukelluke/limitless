@@ -9,8 +9,8 @@ import useApi from '../hooks/useApi.js'
 // Landing page for managers and accountants. Managers are told about entries waiting for approval.
 export default function Home() {
   const { user } = useAuth()
-  const { data: entries } = useApi(api.listJournalEntries)
-  const pending = (entries ?? []).filter((entry) => entry.status === 'PENDING').length
+  const { data } = useApi(api.pendingJournalCount)
+  const pending = data?.count ?? 0
   const role = labelFor(ROLES, user.role).toLowerCase()
   const article = /^[aeiou]/.test(role) ? 'an' : 'a'
 
@@ -27,7 +27,7 @@ export default function Home() {
             <strong>
               {pending} journal {pending === 1 ? 'entry is' : 'entries are'} waiting for your approval.
             </strong>{' '}
-            <Link to="/journal?status=PENDING">Review pending entries →</Link>
+            <Link to="/journal?status=SUBMITTED">Review pending entries →</Link>
           </Alert>
         )}
         <p className="home-note">

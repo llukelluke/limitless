@@ -5,7 +5,6 @@ import AsyncContent from '../../components/AsyncContent.jsx'
 import { BackLink, DataTable, PageHeader, Panel, ToolbarField } from '../../components/AdminUI.jsx'
 import { NORMAL_SIDES, formatDate, formatMoney, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
-import { ledgerRows, matchesLedgerRow } from '../../journal.js'
 import './Accounts.css'
 
 const money = (key) => ({
@@ -40,11 +39,21 @@ const EMPTY_FILTERS = { search: '', from: '', to: '' }
 export default function Ledger() {
   const { id } = useParams()
   const { data: account, error, loading } = useApi(() => api.getAccount(id), [id])
-  const journal = useApi(() => api.listJournalEntries({ status: 'APPROVED', account_id: id }), [id])
   const [filters, setFilters] = useState(EMPTY_FILTERS)
+  // The server filters and keeps the running balance right even when earlier rows are hidden.
+  const ledger = useApi(() => api.getLedger(id, filters), [id, filters])
 
-  const allRows = account && journal.data ? ledgerRows(account, journal.data) : []
-  const rows = allRows.filter((row) => matchesLedgerRow(row, filters))
+  const rows = ledger.data
+    ? [
+        { id: 'opening', description: 'Opening balance', debit: null, credit: null, balance: ledger.data.opening_balance },
+        ...ledger.data.rows.map((row, index) => ({
+          ...row,
+          id: index,
+          date: row.entry_date,
+          entry_id: row.post_reference,
+        })),
+      ]
+    : []
   const set = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }))
   const filtered = filters.search || filters.from || filters.to
   return (
@@ -86,9 +95,9 @@ export default function Ledger() {
                   <input
                     className="toolbar__search"
                     type="search"
-                    placeholder="Account name or amount"
-                    aria-label="Search by account name or amount"
-                    title="Search by account name (any account in the entry) or amount"
+                    placeholder="Amount, description or PR"
+                    aria-label="Search by amount, description or post reference"
+                    title="Search by amount, description or post reference"
                     value={filters.search}
                     onChange={set('search')}
                   />
@@ -105,7 +114,7 @@ export default function Ledger() {
                   </button>
                 )}
               </div>
-              <AsyncContent loading={journal.loading && !journal.data} error={journal.error}>
+              <AsyncContent loading={ledger.loading && !ledger.data} error={ledger.error}>
                 <DataTable
                   columns={columns}
                   rows={rows}

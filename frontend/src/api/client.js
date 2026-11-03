@@ -3,9 +3,10 @@
 const SESSION_KEY = 'limitless.session'
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, errors = []) {
     super(message)
     this.status = status
+    this.errors = errors // journal validation: [{ code, message }] from the error_messages table
   }
 }
 
@@ -78,7 +79,7 @@ async function request(path, { method = 'GET', body } = {}) {
       onUnauthorized()
       throw new ApiError(response.status, 'Your session has expired. Please sign in again.')
     }
-    throw new ApiError(response.status, data?.message ?? `Request failed (${response.status}).`)
+    throw new ApiError(response.status, data?.message ?? `Request failed (${response.status}).`, data?.errors)
   }
   return data
 }
@@ -118,19 +119,28 @@ export const api = {
   deactivateAccount: (id) => request(`/accounts/${id}/deactivate`, { method: 'PUT' }),
   eventLogs: (table, recordId) => request(`/event-logs${query({ table, record_id: recordId })}`),
 
-  // Managers, accountants and administrators every signed-in user may email (see API_CONTRACT.md).
-  listContacts: () => request('/contacts'),
-  emailContact: (id, body) => request(`/contacts/${id}/email`, { method: 'POST', body }),
+  // Email from the account pages: recipients the signed-in user may email.
+  emailRecipients: () => request('/email/recipients'),
+  emailUser: (body) => request('/email', { method: 'POST', body }),
 
-  errorMessages: () => request('/error-messages'),
-
-  // filters: { status, account_id, from, to }
+  // filters: { status, from, to, search }
   listJournalEntries: (filters = {}) => request(`/journal-entries${query(filters)}`),
+  pendingJournalCount: () => request('/journal-entries/pending-count'),
   getJournalEntry: (id) => request(`/journal-entries/${id}`),
-  // `form` is FormData: an "entry" JSON part plus any "files"
-  createJournalEntry: (form) => request('/journal-entries', { method: 'POST', body: form }),
+  validateJournalEntry: (body) => request('/journal-entries/validate', { method: 'POST', body }),
+  // Saves a DRAFT; submitJournalEntry sends it for approval.
+  createJournalEntry: (body) => request('/journal-entries', { method: 'POST', body }),
+  cancelJournalEntry: (id) => request(`/journal-entries/${id}`, { method: 'DELETE' }),
+  submitJournalEntry: (id) => request(`/journal-entries/${id}/submit`, { method: 'POST' }),
+  uploadAttachment: (id, file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request(`/journal-entries/${id}/attachments`, { method: 'POST', body: form })
+  },
   approveJournalEntry: (id) => request(`/journal-entries/${id}/approve`, { method: 'PUT' }),
   rejectJournalEntry: (id, comment) => request(`/journal-entries/${id}/reject`, { method: 'PUT', body: { comment } }),
+  // filters: { from, to, search }
+  getLedger: (id, filters = {}) => request(`/accounts/${id}/ledger${query(filters)}`),
   downloadAttachment,
 }
 
@@ -140,9 +150,9 @@ async function downloadAttachment(entryId, attachment) {
   const response = await fetch(`/api/journal-entries/${entryId}/attachments/${attachment.id}`, {
     headers: session ? { Authorization: `Bearer ${session.token}` } : {},
   })
-  if (!response.ok) throw new ApiError(response.status, `Could not download ${attachment.file_name}.`)
+  if (!response.ok) throw new ApiError(response.status, `Could not download ${attachment.original_name}.`)
   const url = URL.createObjectURL(await response.blob())
-  const link = Object.assign(document.createElement('a'), { href: url, download: attachment.file_name })
+  const link = Object.assign(document.createElement('a'), { href: url, download: attachment.original_name })
   link.click()
   URL.revokeObjectURL(url)
 }

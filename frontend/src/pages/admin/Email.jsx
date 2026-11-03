@@ -14,17 +14,18 @@ export default function Email() {
   const [searchParams] = useSearchParams()
   const { user: me } = useAuth()
   const admin = isAdmin(me)
-  const { data: users, error: loadError } = useApi(admin ? api.listUsers : api.listContacts)
+  const { data: users, error: loadError } = useApi(admin ? api.listUsers : api.emailRecipients)
   const [feedback, setFeedback] = useState(null)
   const [sending, setSending] = useState(false)
 
   const recipientOptions = [
     { value: '', label: users ? 'Select User...' : 'Loading users…' },
     ...(users ?? [])
-      .filter((user) => isSystemUser(user) && user.id !== me.id)
+      // Non-admins get { id, name, role } from /email/recipients, already limited to who they may email.
+      .filter((user) => !admin || (isSystemUser(user) && user.id !== me.id))
       .map((user) => ({
         value: String(user.id),
-        label: `${fullName(user)} (${user.username}${admin ? '' : `, ${labelFor(ROLES, user.role)}`})`,
+        label: admin ? `${fullName(user)} (${user.username})` : `${user.name} (${labelFor(ROLES, user.role)})`,
       })),
   ]
 
@@ -40,9 +41,10 @@ export default function Email() {
     setSending(true)
     setFeedback(null)
     try {
-      await (admin ? api.sendEmail : api.emailContact)(recipient_id, { subject, body: message })
+      if (admin) await api.sendEmail(recipient_id, { subject, body: message })
+      else await api.emailUser({ recipient_user_id: Number(recipient_id), subject, body: message })
       const recipient = users.find((user) => String(user.id) === recipient_id)
-      setFeedback({ tone: 'success', message: `Email sent to ${recipient.email_address ?? fullName(recipient)}.` })
+      setFeedback({ tone: 'success', message: `Email sent to ${admin ? recipient.email_address : recipient.name}.` })
       form.reset()
     } catch (err) {
       setFeedback({ tone: 'error', message: err.message })

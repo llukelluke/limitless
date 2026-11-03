@@ -1,0 +1,38 @@
+.releases {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink);
+}
+
+.release + .release {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--paper-line);
+}
+
+.release__title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.release__date {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.release__name {
+  margin: 4px 0 10px;
+  font-weight: 600;
+  color: var(--gold-ink);
+}
+
+.release__changes {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}

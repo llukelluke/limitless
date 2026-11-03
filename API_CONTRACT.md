@@ -372,6 +372,14 @@ Authenticates a user with username and password. *(Sprint items 1, 5, 13)*
   "message": "Invalid username or password."
 }
 ```
+**Response 400 Bad Request:**\
+*Returned when the username or password is empty. It is not counted as a failed attempt.*
+```json
+{
+  "error": "Bad Request",
+  "message": "Please enter your username and password."
+}
+```
 **Response 403 Forbidden:**\
 *Returned when the account is suspended or deactivated.*
 ```json
@@ -380,6 +388,7 @@ Authenticates a user with username and password. *(Sprint items 1, 5, 13)*
   "message": "This account is suspended."
 }
 ```
+*Also returned when the user signs in with a temporary password more than 24 hours old: `"Your temporary password has expired. Ask an administrator for a new one."`*
 **Response 429 Too Many Requests:**\
 *Returned on the attempt that pushes the user over the 3 failed-login limit; the account is suspended as a result.*
 ```json
@@ -595,6 +604,21 @@ Sets a new password using a valid reset token. *(Sprint items 10, 11, 12)*
   "message": "This password has been used before. Please choose a different password."
 }
 ```
+
+---
+
+## POST /api/users/{id}/temporary-password
+Replaces the user's password with a new temporary one that expires in 24 hours (e.g. after the old one expired). Administrator only. The password is returned once; only its hash is stored.
+
+**Response 200 OK:**
+```json
+{
+  "temporary_password": "Kq7!mzP2xa"
+}
+```
+*Temporary passwords from `POST /api/users`, an approved access request, or this endpoint all expire 24 hours after they are issued. User objects carry `"temp_password_expires_at": "2026-11-04T14:45:00"` (local time) while a temporary password is in use, and `null` once the user sets their own password.*
+
+**Response 404 Not Found:** the user doesn't exist.
 
 ---
 

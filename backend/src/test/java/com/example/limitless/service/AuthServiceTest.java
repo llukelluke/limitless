@@ -53,6 +53,28 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("TC-LOGIN-11 (N): an empty password is refused without counting a failed attempt")
+    void emptyPasswordRefused() {
+        assertRejected("", HttpStatus.BAD_REQUEST, "Please enter your username and password.");
+        assertThat(user.getPasswordAttempts() == null ? 0 : user.getPasswordAttempts()).isZero();
+    }
+
+    @Test
+    @DisplayName("TC-LOGIN-12 (N): a temporary password stops working once it expires")
+    void expiredTemporaryPasswordRefused() {
+        user.setTempPasswordExpiresAt(java.time.LocalDateTime.now().minusMinutes(1));
+        assertRejected("Secret12!", HttpStatus.FORBIDDEN,
+                "Your temporary password has expired. Ask an administrator for a new one.");
+    }
+
+    @Test
+    @DisplayName("TC-LOGIN-13 (P): a temporary password works before it expires")
+    void unexpiredTemporaryPasswordWorks() {
+        user.setTempPasswordExpiresAt(java.time.LocalDateTime.now().plusHours(23));
+        assertThat(authService.login("jlee1026", "Secret12!")).isSameAs(user);
+    }
+
+    @Test
     @DisplayName("TC-LOGIN-05 (N): wrong password is rejected and counted")
     void wrongPasswordRejected() {
         assertRejected("Wrong123!", HttpStatus.UNAUTHORIZED, "Invalid username or password.");

@@ -8,7 +8,7 @@ import { BackLink, DataTable, Field, FormSection, PageHeader, Panel } from '../.
 import { formatDate, formatDateTime, formatMoney, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
 import { ENTRY_TYPES, sortedLines } from '../../journal.js'
-import { StatusBadge } from './JournalList.jsx'
+import { JournalStatus } from './JournalList.jsx'
 import './Journal.css'
 
 const money = (key) => ({
@@ -152,7 +152,7 @@ export default function JournalEntry() {
               <FormSection title="ENTRY">
                 <div className="field">
                   <span className="field__label">STATUS</span>
-                  <StatusBadge status={entry.status} />
+                  <JournalStatus status={entry.status} />
                 </div>
                 <Field label="DATE" value={formatDate(entry.entry_date)} readOnly />
                 <Field label="TYPE" value={labelFor(ENTRY_TYPES, entry.entry_type)} readOnly />
@@ -164,7 +164,7 @@ export default function JournalEntry() {
                 {entry.comment && <Field label="COMMENT" value={entry.comment} readOnly className="field--wide" />}
               </FormSection>
 
-              <DataTable columns={columns} rows={rows} caption={`Lines of journal entry JE-${entry.id}`} />
+              <DataTable sortable={false} columns={columns} rows={rows} caption={`Lines of journal entry JE-${entry.id}`} />
 
               <FormSection title="SOURCE DOCUMENTS">
                 {entry.attachments?.length ? (

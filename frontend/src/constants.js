@@ -93,6 +93,12 @@ export function todayIso() {
 export const isPasswordExpired = (user) => Boolean(user.password_expiry) && user.password_expiry < todayIso()
 
 export const passwordStatus = (user) => {
+  if (user.temp_password_expires_at) {
+    // The server sends local time with no zone, which Date parses as local time too
+    return new Date(user.temp_password_expires_at) < new Date()
+      ? 'Temporary password expired'
+      : `Temporary, expires ${formatDateTime(user.temp_password_expires_at)}`
+  }
   if (!user.password_expiry) return '—'
   return isPasswordExpired(user) ? 'Expired' : 'Valid'
 }
@@ -115,4 +121,22 @@ export function formValues(form) {
       return [key, text === '' ? null : text]
     }),
   )
+}
+
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+
+// Sorts by the raw value (numbers, ISO dates, text), never the formatted cell. Blanks go last.
+export function compareValues(a, b) {
+  const blank = (v) => v === null || v === undefined || v === ''
+  if (blank(a) || blank(b)) return blank(a) - blank(b)
+  if (typeof a === 'number' && typeof b === 'number') return a - b
+  if (typeof a === 'boolean' || typeof b === 'boolean') return Number(b) - Number(a)
+  return collator.compare(String(a), String(b))
+}
+
+// Status colours: green = active/approved, yellow = waiting (pending, submitted, draft), red = can't be used.
+export const STATUS_TONES = {
+  ACTIVATED: 'green', APPROVED: 'green', ACTIVE: 'green',
+  PENDING: 'yellow', SUBMITTED: 'yellow', DRAFT: 'yellow',
+  DEACTIVATED: 'red', SUSPENDED: 'red', REJECTED: 'red', INACTIVE: 'red',
 }

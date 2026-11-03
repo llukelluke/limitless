@@ -107,6 +107,7 @@ export const api = {
   activateUser: (id) => request(`/users/${id}/activate`, { method: 'PUT' }),
   deactivateUser: (id) => request(`/users/${id}/deactivate`, { method: 'PUT' }),
   suspendUser: (id, body) => request(`/users/${id}/suspend`, { method: 'PUT', body }),
+  issueTemporaryPassword: (id) => request(`/users/${id}/temporary-password`, { method: 'POST' }),
   sendEmail: (id, body) => request(`/users/${id}/send-email`, { method: 'POST', body }),
 
   allUsersReport: () => request('/users/reports/all'),

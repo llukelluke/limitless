@@ -11,11 +11,6 @@
   width: 130px;
 }
 
-.table-actions {
-  display: inline-flex;
-  gap: 14px;
-  white-space: nowrap;
-}
 
 .data-table td:has(.event-images[open]) ~ td,
 .data-table tr:has(.event-images[open]) td {

@@ -1,0 +1,22 @@
+/* Brand the calculator: navy body and title bar, cream keys, gold operators. */
+.limitless-calculator {
+  --pac-font: var(--sans);
+  --pac-body: var(--navy-card);
+  --pac-body-edge: var(--gold-600);
+  --pac-titlebar: var(--navy-800);
+  --pac-titlebar-text: var(--gold-100);
+  --pac-close: var(--error-ink);
+  --pac-screen: var(--paper);
+  --pac-screen-text: var(--ink);
+  --pac-screen-muted: var(--ink-muted);
+  --pac-screen-edge: var(--gold-300);
+  --pac-function-key: var(--paper-line);
+  --pac-function-key-text: var(--ink);
+  --pac-key: var(--paper);
+  --pac-key-text: var(--ink);
+  --pac-key-edge: var(--paper-line);
+  --pac-operator-key: var(--gold-300);
+  --pac-operator-key-text: var(--navy-900);
+  --pac-equals-key: var(--gold-100);
+  --pac-equals-key-text: var(--navy-900);
+}

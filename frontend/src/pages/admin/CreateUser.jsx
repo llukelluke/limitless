@@ -70,7 +70,7 @@ export default function CreateUser() {
               <Alert tone="success">
                 Created <strong>{created.user.username}</strong>. Temporary password:{' '}
                 <strong className="secret">{created.temporary_password}</strong> — share it with the user securely;
-                it won&apos;t be shown again. <Link to={`/admin/users/${created.user.id}`}>View user →</Link>
+                it expires in 24 hours and won&apos;t be shown again. <Link to={`/admin/users/${created.user.id}`}>View user →</Link>
               </Alert>
             )}
           </div>

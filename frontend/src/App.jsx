@@ -14,7 +14,9 @@ import Users from './pages/admin/Users.jsx'
 import CreateUser from './pages/admin/CreateUser.jsx'
 import EditUser from './pages/admin/EditUser.jsx'
 import { PendingRequests, ReviewRequest } from './pages/admin/AccessRequests.jsx'
-import { AllUsersReport, ExpiredPasswordsReport, ReportsHome } from './pages/admin/Reports.jsx'
+import { AllUsersReport, ExpiredPasswordsReport, UsersByStatusReport } from './pages/admin/Reports.jsx'
+import { ChartOfAccountsReport, EventLogReport, JournalReport, ReportsHome } from './pages/reports/Reports.jsx'
+import WhatsNew from './pages/whats-new/WhatsNew.jsx'
 import Email from './pages/admin/Email.jsx'
 import ChartOfAccounts from './pages/accounts/ChartOfAccounts.jsx'
 import AccountDetails from './pages/accounts/AccountDetails.jsx'
@@ -52,6 +54,11 @@ function App() {
           <Route path="/journal/new" element={<JournalForm />} /> {/* managers and accountants only */}
           <Route path="/journal/:id" element={<JournalEntry />} />
           <Route path="/email" element={<Email />} /> {/* managers and accountants email managers / admins */}
+          <Route path="/reports" element={<ReportsHome />} />
+          <Route path="/reports/accounts" element={<ChartOfAccountsReport />} />
+          <Route path="/reports/journal" element={<JournalReport />} />
+          <Route path="/reports/event-log" element={<EventLogReport />} />
+          <Route path="/whats-new" element={<WhatsNew />} />
         </Route>
       </Route>
 
@@ -74,6 +81,7 @@ function App() {
           <Route path="reports" element={<ReportsHome />} /> {/* 15 */}
           <Route path="reports/users" element={<AllUsersReport />} /> {/* 16 */}
           <Route path="reports/expired-passwords" element={<ExpiredPasswordsReport />} /> {/* 17 */}
+          <Route path="reports/users-by-status" element={<UsersByStatusReport />} />
           <Route path="email" element={<Email />} /> {/* 18 */}
         </Route>
       </Route>

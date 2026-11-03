@@ -10,6 +10,7 @@ export function ResetPassword() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
 
   if (!state?.reset_token) return <Navigate to="/forgot-password" replace />
@@ -19,17 +20,15 @@ export function ResetPassword() {
     const { new_password, confirm_password } = formValues(event.currentTarget)
     const password = new_password ?? ''
     const problems = passwordProblems(password)
-    if (problems.length) {
-      setError(`Password must ${problems.join(', ')}.`)
-      return
+    const next = {
+      new_password: !password ? 'Enter a new password.' : problems.length ? `Password must ${problems.join(', ')}.` : '',
+      confirm_password: !confirm_password ? 'Re-enter the new password.' : password !== confirm_password ? 'The passwords do not match.' : '',
     }
-    if (password !== confirm_password) {
-      setError('The passwords do not match.')
-      return
-    }
+    setFieldErrors(next)
+    setError('')
+    if (next.new_password || next.confirm_password) return
 
     setSubmitting(true)
-    setError('')
     try {
       await api.resetPassword({ reset_token: state.reset_token, new_password: password })
       navigate('/forgot-password/done', { replace: true })
@@ -50,6 +49,7 @@ export function ResetPassword() {
           type="password"
           placeholder="Enter your new password."
           autoComplete="new-password"
+          error={fieldErrors.new_password}
         />
         <AuthField
           label="Confirm password"
@@ -57,6 +57,7 @@ export function ResetPassword() {
           type="password"
           placeholder="Re-enter your new password."
           autoComplete="new-password"
+          error={fieldErrors.confirm_password}
         />
       </div>
 

@@ -82,6 +82,7 @@ public class AccessRequestService {
                 ? User.UserRole.ACCOUNTANT : userService.parseRole(role));
         user.setUsername(userService.generateUsername(user.getFirstName(), user.getLastName(), today));
         user.setPasswordHash(passwordEncoder.encode(tempPassword));
+        user.setTempPasswordExpiresAt(java.time.LocalDateTime.now().plus(UserService.TEMP_PASSWORD_LIFETIME));
         user.setPasswordChangedAt(today);
         user.setPasswordExpiry(today.plusDays(90));
         user.setStatus(User.UserStatus.ACTIVATED);
@@ -90,7 +91,7 @@ public class AccessRequestService {
         emailService.send(saved.getEmailAddress(), "Your Limitless access request was approved",
                 "Hi " + saved.getFirstName() + ",\n\nYour request was approved.\n"
                         + "Username: " + saved.getUsername() + "\n"
-                        + "Temporary password: " + tempPassword + "\n\n"
+                        + "Temporary password: " + tempPassword + " (expires in 24 hours)\n\n"
                         + "Log in here: " + appUrl + "/login");
         return saved;
     }

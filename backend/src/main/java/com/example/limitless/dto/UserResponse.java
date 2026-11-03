@@ -19,6 +19,7 @@ public record UserResponse(
         @JsonProperty("suspension_start") LocalDate suspensionStart,
         @JsonProperty("suspension_end") LocalDate suspensionEnd,
         @JsonProperty("password_expiry") LocalDate passwordExpiry,
+        @JsonProperty("temp_password_expires_at") java.time.LocalDateTime tempPasswordExpiresAt,
         @JsonProperty("created_at") LocalDate createdAt) {
 
     public static UserResponse from(User u) {
@@ -28,6 +29,6 @@ public record UserResponse(
                 u.getRole() == null ? null : u.getRole().name(),
                 u.getStatus() == null ? null : u.getStatus().name(),
                 u.getSuspensionStart(), u.getSuspensionEnd(),
-                u.getPasswordExpiry(), u.getCreatedAt());
+                u.getPasswordExpiry(), u.getTempPasswordExpiresAt(), u.getCreatedAt());
     }
 }

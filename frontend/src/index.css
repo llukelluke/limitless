@@ -164,3 +164,75 @@ textarea {
   font-size: 14px;
   font-weight: 600;
 }
+
+/* Printing: only the page's report content, black on white, no navigation or controls. */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  html,
+  body,
+  .app,
+  .app__main {
+    background: #fff !important;
+    color: #000;
+  }
+
+  .app__sidebar,
+  .app__services,
+  .user-menu,
+  .no-print,
+  .panel__head .text-link,
+  .panel__head .btn,
+  .toolbar,
+  .pac {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .app__main {
+    padding: 0;
+  }
+
+  .page-header__eyebrow,
+  .page-header__title,
+  .page-header__subtitle {
+    color: #000 !important;
+  }
+
+  .app .panel {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .page-panel {
+    margin-top: 8mm;
+  }
+
+  .data-table__scroll {
+    overflow: visible;
+  }
+
+  .data-table tr {
+    break-inside: avoid;
+  }
+
+  .data-table__sort-icon {
+    display: none;
+  }
+
+  a {
+    color: #000;
+    text-decoration: none;
+  }
+}

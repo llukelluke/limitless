@@ -14,29 +14,6 @@
   padding-left: 24px;
 }
 
-.journal-status {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.journal-status--pending {
-  background: rgba(226, 194, 117, 0.35);
-  color: var(--gold-ink);
-}
-
-.journal-status--approved {
-  background: #edf5eb;
-  color: #24521c;
-}
-
-.journal-status--rejected {
-  background: #fbecea;
-  color: var(--error-ink);
-}
-
 /* ---------- New entry form ---------- */
 .journal-side {
   display: grid;

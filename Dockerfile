@@ -4,6 +4,8 @@
 FROM node:22-alpine AS frontend
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
+# The calculator is installed from a release file kept in the repo
+COPY frontend/vendor ./vendor
 RUN npm ci
 COPY frontend/ ./
 RUN npm run build

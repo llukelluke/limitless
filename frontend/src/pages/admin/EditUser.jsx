@@ -38,6 +38,18 @@ export default function EditUser() {
   const { data: user, error, loading, reload } = useApi(() => api.getUser(id), [id])
   const [feedback, setFeedback] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [tempPassword, setTempPassword] = useState(null)
+
+  const issueTemporaryPassword = async () => {
+    setFeedback(null)
+    try {
+      const { temporary_password } = await api.issueTemporaryPassword(user.id)
+      setTempPassword(temporary_password)
+      reload()
+    } catch (err) {
+      setFeedback({ tone: 'error', message: err.message })
+    }
+  }
 
   if (user?.status === 'PENDING') return <Navigate to={`/admin/access-requests/${user.id}`} replace />
 
@@ -99,6 +111,16 @@ export default function EditUser() {
                     readOnly
                     className="field--stack"
                   />
+                  <div className="field field--wide">
+                    <button
+                      type="button"
+                      className="btn btn--secondary btn--sm"
+                      title="Replace this user's password with a new temporary one that expires in 24 hours"
+                      onClick={issueTemporaryPassword}
+                    >
+                      Issue Temporary Password
+                    </button>
+                  </div>
                 </FormSection>
 
                 <FormSection title="SCHEDULED SUSPENSION">
@@ -107,9 +129,15 @@ export default function EditUser() {
                 </FormSection>
               </div>
             )}
-            {feedback && (
+            {(feedback || tempPassword) && (
               <div className="form-feedback">
-                <Alert tone={feedback.tone}>{feedback.message}</Alert>
+                {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
+                {tempPassword && (
+                  <Alert tone="success">
+                    New temporary password: <strong className="secret">{tempPassword}</strong>. Share it with the user
+                    securely; it expires in 24 hours and won&apos;t be shown again.
+                  </Alert>
+                )}
               </div>
             )}
           </AsyncContent>

@@ -2,7 +2,7 @@
 // beforeAll creates this run's own users, accounts and entries, so the suite can be re-run on the same database.
 // E2E_EVIDENCE_DIR=… keeps a screenshot per test for the test-case document.
 import { expect, test } from '@playwright/test'
-import { ADMIN, adminToken, createAccount, createUser, uniqueAccount, uniquePerson } from './helpers.js'
+import { ADMIN, adminToken, createAccount, createUser, evidence, uniqueAccount, uniquePerson } from './helpers.js'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -11,11 +11,6 @@ const problems = (page) => page.locator('.form-feedback .alert')
 const submit = (page) => page.getByRole('button', { name: 'Submit for Approval' })
 const refs = (page) => page.locator('tbody tr td:first-child')
 const today = new Date().toISOString().slice(0, 10)
-
-async function evidence(page, name) {
-  await expect(page.locator('.async-status', { hasText: 'Loading…' })).toHaveCount(0)
-  if (process.env.E2E_EVIDENCE_DIR) await page.screenshot({ path: `${process.env.E2E_EVIDENCE_DIR}/${name}.png` })
-}
 
 // W = this run's world: users (with tokens), accounts, and the six seeded entries e1…e6.
 const W = {}
@@ -304,6 +299,7 @@ test.describe('Journal entries: create (accountant and manager)', () => {
     await as(page, W.accountant)
     await page.goto(`/journal/${W.e5}`)
     await expect(page.locator('.journal-status')).toHaveText('Pending')
+    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(251, 239, 196)')
     for (const name of ['Delete', 'Edit', 'Approve', 'Reject']) await expect(page.getByRole('button', { name })).toHaveCount(0)
     expect((await api(request, W.accountant.token, 'DELETE', `/journal-entries/${W.e5}`)).status).toBe(409)
     expect((await api(request, W.accountant.token, 'PUT', `/journal-entries/${W.e5}/approve`)).status).toBe(403)
@@ -365,6 +361,7 @@ test.describe('Journal entries: manager approval', () => {
     await page.getByRole('button', { name: 'Approve' }).click()
     await expect(page.locator('.alert')).toHaveText('Entry approved and posted to the ledger.')
     await expect(page.locator('.journal-status')).toHaveText('Approved')
+    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(227, 241, 223)')
     await expect(page.getByLabel('REVIEWED BY')).toHaveValue(fullName(W.manager))
     await expect(page.getByRole('button', { name: 'Approve' })).toHaveCount(0)
     await evidence(page, 'S14')
@@ -395,6 +392,7 @@ test.describe('Journal entries: manager approval', () => {
     await page.getByRole('button', { name: 'Confirm Rejection' }).click()
     await expect(page.locator('.alert')).toHaveText('Entry rejected.')
     await expect(page.locator('.journal-status')).toHaveText('Rejected')
+    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(251, 227, 223)')
     await expect(page.getByLabel('COMMENT')).toHaveValue('Rent belongs in October, not November.')
     await evidence(page, 'S16')
   })

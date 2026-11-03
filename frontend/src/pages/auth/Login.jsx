@@ -11,6 +11,7 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
 
   if (user) return <Navigate to={homePathFor(user)} replace />
@@ -18,13 +19,15 @@ export default function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault()
     const { username, password } = formValues(event.currentTarget)
-    if (!username || !password) {
-      setError('Please enter your username and password.')
-      return
+    const missing = {
+      username: username?.trim() ? '' : 'Enter your username.',
+      password: password ? '' : 'Enter your password.',
     }
+    setFieldErrors(missing)
+    setError('')
+    if (missing.username || missing.password) return
 
     setSubmitting(true)
-    setError('')
     try {
       const signedIn = await login(username, password)
       const from = location.state?.from
@@ -37,17 +40,21 @@ export default function Login() {
   }
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit} onReset={() => setError('')} noValidate>
+    <form className="auth-form" onSubmit={handleSubmit} onReset={() => {
+      setError('')
+      setFieldErrors({})
+    }} noValidate>
       <AuthHeader title="Welcome to Limitless" subtitle="Sign in to access your financial workspace." />
 
       <div className="auth-form__fields">
-        <AuthField label="Username" name="username" placeholder="Enter your username." autoComplete="username" />
+        <AuthField label="Username" name="username" placeholder="Enter your username." autoComplete="username" error={fieldErrors.username} />
         <AuthField
           label="Password"
           name="password"
           type="password"
           placeholder="••••••••••••"
           autoComplete="current-password"
+          error={fieldErrors.password}
           labelAction={
             <Link to="/forgot-password" className="text-link text-link--muted">
               Forgot Password?

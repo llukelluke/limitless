@@ -216,7 +216,8 @@ test.describe('Chart of accounts — administrator', () => {
     page.once('dialog', (dialog) => dialog.accept())
     await page.getByRole('button', { name: 'Deactivate' }).click()
     await expect(alert(page)).toHaveText('Account deactivated.')
-    await expect(page.getByLabel('STATUS')).toHaveValue('Inactive')
+    await expect(page.locator('.status-badge')).toHaveText('Inactive')
+    await expect(page.locator('.status-badge')).toHaveCSS('background-color', 'rgb(251, 227, 223)') // red
     await expect(page.getByRole('cell', { name: 'Deactivated', exact: true })).toBeVisible()
     await page.getByRole('heading', { name: 'CHANGE HISTORY' }).scrollIntoViewIfNeeded()
   })

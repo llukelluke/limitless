@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import AsyncContent from '../../components/AsyncContent.jsx'
-import { DataTable, PageHeader, Panel, Select, ToolbarField } from '../../components/AdminUI.jsx'
+import { AccountStatus, DataTable, PageHeader, Panel, Select, ToolbarField } from '../../components/AdminUI.jsx'
 import { ACCOUNT_CATEGORIES, NORMAL_SIDES, STATEMENTS, formatMoney, isAdmin, labelFor, parseMoney } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
 import './Accounts.css'
@@ -38,7 +38,7 @@ const baseColumns = [
     render: (a) => <span className="num">{formatMoney(a.balance)}</span>,
   },
   { key: 'statement', header: 'STATEMENT', width: '9%', render: (a) => labelFor(STATEMENTS, a.statement) },
-  { key: 'status', header: 'STATUS', width: '8%', render: (a) => (a.active ? 'Active' : 'Inactive') },
+  { key: 'status', header: 'STATUS', width: '8%', render: (a) => <AccountStatus account={a} />, sortValue: (a) => a.active },
 ]
 
 const actionColumn = (admin) => ({

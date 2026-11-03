@@ -4,7 +4,7 @@ import { api } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import Alert from '../../components/Alert.jsx'
 import AsyncContent from '../../components/AsyncContent.jsx'
-import { BackLink, Field, FormSection, PageHeader, Panel } from '../../components/AdminUI.jsx'
+import { AccountStatus, BackLink, Field, FormSection, PageHeader, Panel } from '../../components/AdminUI.jsx'
 import {
   NORMAL_SIDES,
   STATEMENTS,
@@ -127,7 +127,10 @@ export default function AccountDetails() {
                 <Field label="NORMAL SIDE" value={labelFor(NORMAL_SIDES, account.normal_side)} readOnly />
                 <Field label="STATEMENT" value={statementName(account.statement)} readOnly />
                 <Field label="ORDER" value={formatOrder(account.order)} readOnly />
-                <Field label="STATUS" value={account.active ? 'Active' : 'Inactive'} readOnly />
+                <div className="field">
+                  <span className="field__label">STATUS</span>
+                  <AccountStatus account={account} />
+                </div>
                 <Field label="DESCRIPTION" value={account.description ?? '—'} readOnly className="field--wide" />
               </FormSection>
 

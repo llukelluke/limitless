@@ -20,7 +20,7 @@ async function submitNewPassword(page, password, confirm = password) {
   await page.getByRole('button', { name: 'Reset Password' }).click()
 }
 
-const error = (page) => page.locator('.alert, .forgot-password-error').first()
+const error = (page) => page.locator('.auth-field__error, .alert, .forgot-password-error').first()
 
 test.describe('Forgot and reset password', () => {
   let person

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import AsyncContent from '../../components/AsyncContent.jsx'
-import { DataTable, PageHeader, Panel, Select, ToolbarField } from '../../components/AdminUI.jsx'
+import { DataTable, PageHeader, Panel, Select, StatusBadge, ToolbarField } from '../../components/AdminUI.jsx'
 import { formatDate, formatMoney, isAdmin, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
 import { JOURNAL_STATUSES, matchesEntry, sortedLines } from '../../journal.js'
@@ -24,8 +24,12 @@ const lineCells = (entry, render) => (
 
 const amount = (side) => (line) => <span className="num">{line.side === side ? formatMoney(line.amount) : ' '}</span>
 
-export function StatusBadge({ status }) {
-  return <span className={`journal-status journal-status--${status.toLowerCase()}`}>{labelFor(JOURNAL_STATUSES, status)}</span>
+export function JournalStatus({ status }) {
+  return (
+    <StatusBadge status={status} className="journal-status">
+      {labelFor(JOURNAL_STATUSES, status)}
+    </StatusBadge>
+  )
 }
 
 const columns = [
@@ -43,6 +47,7 @@ const columns = [
   {
     key: 'accounts',
     header: 'ACCOUNTS',
+    sortValue: (e) => sortedLines(e)[0]?.account_name,
     width: '26%',
     render: (e) =>
       lineCells(e, (line) => (
@@ -51,9 +56,9 @@ const columns = [
         </Link>
       )),
   },
-  { key: 'debit', header: <span className="num">DEBIT</span>, width: '13%', render: (e) => lineCells(e, amount('DEBIT')) },
-  { key: 'credit', header: <span className="num">CREDIT</span>, width: '13%', render: (e) => lineCells(e, amount('CREDIT')) },
-  { key: 'status', header: 'STATUS', width: '10%', render: (e) => <StatusBadge status={e.status} /> },
+  { key: 'debit', header: <span className="num">DEBIT</span>, width: '13%', sortValue: (e) => e.total_debits, render: (e) => lineCells(e, amount('DEBIT')) },
+  { key: 'credit', header: <span className="num">CREDIT</span>, width: '13%', sortValue: (e) => e.total_credits, render: (e) => lineCells(e, amount('CREDIT')) },
+  { key: 'status', header: 'STATUS', width: '10%', render: (e) => <JournalStatus status={e.status} /> },
   { key: 'created_by_name', header: 'PREPARED BY', width: '11%' },
   {
     key: 'action',

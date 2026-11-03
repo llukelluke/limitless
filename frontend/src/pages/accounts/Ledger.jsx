@@ -116,6 +116,7 @@ export default function Ledger() {
               </div>
               <AsyncContent loading={ledger.loading && !ledger.data} error={ledger.error}>
                 <DataTable
+                  sortable={false}
                   columns={columns}
                   rows={rows}
                   caption={`Ledger for ${account.name}`}

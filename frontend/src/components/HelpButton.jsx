@@ -9,12 +9,16 @@ const TOPICS = [
       'Limitless is an accounting application for administrators, managers and accountants.',
       'Use the menu on the left or the service buttons at the top of each page to move between features. Your username and today\'s date are shown in the top left corner; click the date to open a calendar.',
       'Hover over any button to see a short description of what it does.',
+      'Click any column heading in a table to sort by it; click again to reverse the order.',
+      'The Calculator button in the top toolbar opens a calculator you can drag anywhere on the page.',
+      'Click "What\'s New" at the bottom of the left menu to see what changed in each version.',
     ],
   },
   {
     title: 'Signing In & Passwords',
     body: [
       'Sign in with the username and password your administrator gave you. New users can request access from the sign-in page; an administrator must approve the request.',
+      'Temporary passwords expire 24 hours after they are issued. If yours has expired, ask an administrator for a new one.',
       'Passwords must be at least 8 characters, start with a letter, and include a letter, a number and a special character. Passwords expire after 90 days.',
       'After three failed sign-in attempts your account is suspended. Use "Forgot password" to reset it by answering your security questions.',
     ],
@@ -39,13 +43,25 @@ const TOPICS = [
   {
     title: 'Ledgers',
     body: [
-      'Each account has a ledger showing its opening balance and the posted journal entries that changed it, with a running balance.',
-      'Journal entries will appear in the ledger once journalizing is available.',
+      'Each account has a ledger showing its opening balance and every approved journal entry that changed it, with a running balance.',
+      'Click the post reference (PR) to open the journal entry. Filter by date, or search by amount, description or post reference.',
     ],
   },
   {
     title: 'Journalizing',
-    body: ['Journal entry creation and approval are coming in the next release.'],
+    body: [
+      'Managers and accountants prepare journal entries: debits first, then credits. Debits must equal credits, and only active accounts can be used.',
+      'Attach source documents (PDF, Word, Excel, CSV, JPG or PNG). Errors are shown in red and clear as soon as they are fixed.',
+      'Submitted entries wait for a manager, who approves them (posting them to the ledger) or rejects them with a reason.',
+      'Search the journal by account name, amount or date, and filter by status or date range.',
+    ],
+  },
+  {
+    title: 'Reports',
+    body: [
+      'Open Reports from the left menu. Financial reports: Chart of Accounts, Journal Entries and Event Log. Administrators also see user reports.',
+      'Every report has a Print button; the printout leaves out the menus and buttons.',
+    ],
   },
   {
     title: 'Event Log',

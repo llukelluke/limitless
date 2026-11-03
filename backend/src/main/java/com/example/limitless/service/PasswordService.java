@@ -86,6 +86,7 @@ public class PasswordService {
         LocalDate today = LocalDate.now();
         historyRepository.save(new PasswordHistory(user, user.getPasswordHash(), today));
         user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+        user.setTempPasswordExpiresAt(null);
         user.setPasswordChangedAt(today);
         user.setPasswordExpiry(today.plusDays(PASSWORD_LIFETIME_DAYS));
         user.setPasswordAttempts(0);

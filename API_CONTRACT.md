@@ -718,77 +718,337 @@ Sends an email to the specified user from within the system. Administrator only.
 
 ---
 
-## Accounts, Journal Entries, and Statements Modules
+## Chart of Accounts Module
 
-### Sprint 3: Journalizing & Ledger (frontend is built against these)
+**Access:** every logged-in role (ADMINISTRATOR, MANAGER, ACCOUNTANT) can use the GET endpoints. Only ADMINISTRATOR can add, edit, or deactivate. All requests need `Authorization: Bearer <token>`.
 
-All responses use snake_case like the rest of this contract. Dates are `YYYY-MM-DD`, timestamps `YYYY-MM-DDTHH:mm:ss`.
+**Account object** (used in requests and responses; snake_case):
 
-#### Journal entry object
+| Field | Type | Notes |
+|---|---|---|
+| `id` | integer | response only |
+| `name` | string | required, unique (case-insensitive) |
+| `account_number` | string | required, digits only, unique. Must start with 1 (Asset), 2 (Liability), 3 (Equity), 4 (Revenue) or 5 (Expense) to match `category` |
+| `description` | string | optional |
+| `normal_side` | string | required: `LEFT` (debit) or `RIGHT` (credit). `DEBIT`/`CREDIT` also accepted on input |
+| `category` | string | required: Asset, Liability, Equity, Revenue, Expense |
+| `subcategory` | string | required, e.g. "Current Assets" |
+| `initial_balance` | number | optional, default 0.00, not negative |
+| `debit`, `credit` | number | optional, default 0.00, not negative |
+| `balance` | number | optional, defaults to `initial_balance`, not negative |
+| `added_at` | datetime | response only, set by server |
+| `user_id` | integer | response only, the admin who created it |
+| `account_order` | integer | optional, e.g. 1 for Cash |
+| `statement` | string | required: `IS`, `BS`, `RE`, `TB` on input. Responses return `INCOME_STATEMENT`, `BALANCE_SHEET`, `RETAINED_EARNINGS`, `TRIAL_BALANCE` |
+| `comment` | string | optional |
+| `active` | boolean | response only |
+
+*Money values are stored with exactly two decimal places. Thousands-separator commas are a display concern for the frontend (e.g. `toLocaleString`).*
+
+---
+
+## GET /api/accounts
+Returns the chart of accounts (report of all accounts), ordered by `account_order` then `account_number`. All query parameters are optional and can be combined.
+
+| Query param | Meaning |
+|---|---|
+| `search` | matches account name (contains) OR account number (contains) |
+| `name` | name contains |
+| `number` | number starts with |
+| `category`, `subcategory` | exact match, case-insensitive |
+| `statement` | `IS`, `BS`, `RE`, `TB` or full name |
+| `active` | `true` or `false` |
+| `min_balance`, `max_balance` | balance range, inclusive |
+
+**Response 200 OK:** an array of Account objects.
+```json
+[
+  {
+    "id": 1,
+    "name": "Cash",
+    "account_number": "1010",
+    "description": "Cash on hand and in checking",
+    "normal_side": "LEFT",
+    "category": "Asset",
+    "subcategory": "Current Assets",
+    "initial_balance": 5000.50,
+    "debit": 0.00,
+    "credit": 0.00,
+    "balance": 5000.50,
+    "added_at": "2026-10-18T03:15:22",
+    "user_id": 3,
+    "account_order": 1,
+    "statement": "BALANCE_SHEET",
+    "comment": "Opening balance",
+    "active": true
+  }
+]
+```
+
+**Error Responses**\
+**Response 403 Forbidden:** missing, invalid, or expired token.
+
+---
+
+## GET /api/accounts/{id}
+Returns one account. The frontend's ledger page can use this until the ledger endpoint exists.
+
+**Response 200 OK:** a single Account object.
+
+**Response 404 Not Found:**
 ```json
 {
-  "id": 12,
-  "entry_date": "2026-11-02",
+  "error": "Not Found",
+  "message": "Account doesn't exist."
+}
+```
+
+---
+
+## POST /api/accounts
+Adds an account. Administrator only. The event log records an `ADD`.
+
+**Request body:**
+```json
+{
+  "name": "Cash",
+  "account_number": "1010",
+  "description": "Cash on hand and in checking",
+  "normal_side": "LEFT",
+  "category": "Asset",
+  "subcategory": "Current Assets",
+  "initial_balance": 5000.50,
+  "account_order": 1,
+  "statement": "BS",
+  "comment": "Opening balance"
+}
+```
+
+**Response 201 Created:** the new Account object.
+
+**Error Responses**\
+**Response 400 Bad Request:** missing required field, non-digit account number, number not starting with the right digit for the category, negative money value, or bad normal side / statement / category. Examples:
+```json
+{
+  "error": "Bad Request",
+  "message": "Account numbers can only contain digits (no decimals, letters, or symbols)."
+}
+```
+```json
+{
+  "error": "Bad Request",
+  "message": "Account number must start with 1 for Asset accounts."
+}
+```
+**Response 409 Conflict:**
+```json
+{
+  "error": "Conflict",
+  "message": "An account with this name already exists."
+}
+```
+*(or* `"An account with this number already exists."` *)*\
+**Response 403 Forbidden:** caller is not an administrator.
+
+---
+
+## PUT /api/accounts/{id}
+Edits an account. Administrator only. Send the full set of editable fields (same body as POST). The event log records a `MODIFY` with before and after images.
+
+**Response 200 OK:** the updated Account object.
+
+**Errors:** same 400 and 409 responses as POST (a name or number is only a duplicate if it belongs to a *different* account), 404 if the account doesn't exist, 403 if not an administrator.
+
+---
+
+## PUT /api/accounts/{id}/deactivate
+Deactivates an account. Administrator only. The event log records a `DEACTIVATE`.
+
+**Response 200 OK:** the Account object with `"active": false`.
+
+**Response 400 Bad Request:**
+```json
+{
+  "error": "Bad Request",
+  "message": "Accounts with a balance greater than zero cannot be deactivated."
+}
+```
+*(or* `"This account is already deactivated."` *)*\
+**Response 404 Not Found / 403 Forbidden:** as above.
+
+---
+
+## GET /api/event-log
+Returns the event log, newest first. Available to all logged-in roles. Optional query params: `table_name` and `record_id` (use both together, e.g. `?table_name=accounts&record_id=1`).
+
+**Response 200 OK:**
+```json
+[
+  {
+    "id": 12,
+    "user_id": 3,
+    "table_name": "accounts",
+    "record_id": 1,
+    "action": "MODIFY",
+    "before_image": "{\"id\":1,\"name\":\"Cash\",\"description\":\"Cash on hand\", ...}",
+    "after_image": "{\"id\":1,\"name\":\"Cash\",\"description\":\"Cash on hand and in checking\", ...}",
+    "changed_at": "2026-10-18T03:20:10"
+  }
+]
+```
+*`action` is `ADD`, `MODIFY`, or `DEACTIVATE`. `before_image` is `null` for `ADD`. Images are JSON stored as text, so the frontend should `JSON.parse` them to display a before/after comparison.*
+
+---
+
+## Journal Entries Module
+
+**Access:** every logged-in role can view (GET). MANAGER and ACCOUNTANT can create, edit, cancel, submit, and attach. Only MANAGER can approve or reject. ADMINISTRATOR cannot journalize.
+
+**Life cycle:** `DRAFT` → `SUBMITTED` (shown in the UI as *pending approval*) → `APPROVED` or `REJECTED`. Only a draft can be edited or cancelled, and only by the person who created it. Other users cannot see someone else's draft. Approving an entry posts it to the ledger and updates each account's `debit`, `credit` and `balance`. A rejected entry stays rejected; the accountant prepares a new one.
+
+**Journal entry object:**
+
+| Field | Notes |
+|---|---|
+| `id` | |
+| `entry_date` | `yyyy-MM-dd` |
+| `entry_type` | `REGULAR` (default) or `ADJUSTING` |
+| `status` | `DRAFT`, `SUBMITTED`, `APPROVED`, `REJECTED` |
+| `description` | optional, max 255 chars. Shown in the ledger's description column |
+| `comment` | the manager's reason when rejected |
+| `created_by`, `created_by_name`, `reviewed_by`, `reviewed_by_name`, `reviewed_at`, `created_at` | response only |
+| `total_debits`, `total_credits` | response only, two decimals |
+| `lines` | array of `{ id, account_id, account_name, account_number, side, amount }`. `side` is `DEBIT` or `CREDIT`. **Debit lines always come first.** |
+| `attachments` | array of `{ id, original_name, file_type, uploaded_at }` |
+
+**Request body for create/edit/validate:**
+```json
+{
+  "entry_date": "2026-10-20",
   "entry_type": "REGULAR",
-  "status": "PENDING",
-  "description": null,
-  "comment": null,
-  "created_by": "jlawson0926",
-  "created_at": "2026-11-02T10:15:00",
-  "reviewed_by": null,
-  "reviewed_at": null,
+  "description": "Office supplies",
   "lines": [
-    { "id": 30, "account_id": 1, "account_number": 101, "account_name": "Cash", "side": "LEFT", "amount": 500.00 },
-    { "id": 31, "account_id": 9, "account_number": 401, "account_name": "Service Revenue", "side": "RIGHT", "amount": 500.00 }
-  ],
-  "attachments": [
-    { "id": 4, "file_name": "invoice-1042.pdf", "file_type": "pdf", "uploaded_at": "2026-11-02T10:15:00" }
+    { "account_id": 7, "side": "DEBIT",  "amount": 250.00 },
+    { "account_id": 2, "side": "CREDIT", "amount": 250.00 }
   ]
 }
 ```
-`status` is `PENDING`, `APPROVED` or `REJECTED`; `comment` holds the manager's rejection reason. `description` needs a new nullable column on `journal_entries`, and `reviewed_by` must become nullable.
+Any number of debit lines and credit lines is allowed. Accounts must exist in the chart of accounts and be active.
 
-#### GET /api/journal-entries
-Any signed-in user. Optional query params: `status`, `account_id` (entries with a line on that account), `from`, `to` (entry_date range). **200:** array of journal entry objects.
-
-#### GET /api/journal-entries/{id}
-**200:** one journal entry object. **404** if it doesn't exist.
-
-#### POST /api/journal-entries
-Managers and accountants (403 for administrators). `multipart/form-data`:
-- `entry`: JSON part `{ "entry_date", "entry_type", "description", "lines": [{ "account_id", "side", "amount" }] }` (debits listed first)
-- `files`: zero or more source documents (pdf, doc, docx, xls, xlsx, csv, jpg, jpeg, png)
-
-Saved as `PENDING`, and every manager is emailed that an entry is waiting for approval. The server repeats the frontend checks and answers **400** with `{ "error_code": "JE_00x", "message": "..." }` from the `error_messages` table. Entries cannot be deleted once submitted (no DELETE endpoint). **201:** the journal entry object.
-
-#### PUT /api/journal-entries/{id}/approve
-Managers only. Pending entry becomes `APPROVED` and each line posts to its account (`debit`/`credit`/`balance` updated). **200:** the journal entry object.
-
-#### PUT /api/journal-entries/{id}/reject
-Managers only. Body `{ "comment": "Wrong account for rent." }`, required (400 `JE_009` if blank). **200:** the journal entry object.
-
-#### GET /api/journal-entries/{id}/attachments/{attachmentId}
-Any signed-in user. Returns the file with `Content-Disposition: attachment; filename="..."`.
-
-#### GET /api/error-messages
-Any signed-in user. **200:** `[{ "error_code": "JE_006", "message": "Total debits must equal total credits." }, ...]`. The journal form shows these in red. Seed (new Flyway migration):
-```sql
-INSERT INTO error_messages (error_code, message) VALUES
-  ('JE_001', 'Enter the date of the journal entry.'),
-  ('JE_002', 'Choose an account from the chart of accounts.'),
-  ('JE_003', 'Enter an amount greater than zero, with at most two decimal places.'),
-  ('JE_004', 'A journal entry needs at least one debit.'),
-  ('JE_005', 'A journal entry needs at least one credit.'),
-  ('JE_006', 'Total debits must equal total credits.'),
-  ('JE_007', 'Each account can appear only once in a journal entry.'),
-  ('JE_008', 'Attachments must be PDF, Word, Excel, CSV, JPG, or PNG files.'),
-  ('JE_009', 'Enter a reason in the comment field when rejecting a journal entry.');
+**Validation errors (400).** Every error message comes from the `error_messages` table. A response lists *all* problems at once so the user can fix them together. Show each `message` in red; clear the list once a re-validate or re-submit succeeds.
+```json
+{
+  "error": "Bad Request",
+  "message": "Total debits (250.00) must equal total credits (200.00). The difference is 50.00.",
+  "errors": [
+    { "code": "JRN_005", "message": "Total debits (250.00) must equal total credits (200.00). The difference is 50.00." }
+  ]
+}
 ```
+Possible codes: JRN_001 date required · JRN_002 bad entry type · JRN_003 no debit · JRN_004 no credit · JRN_005 debits ≠ credits · JRN_006 account missing on a line · JRN_007 account not in chart · JRN_008 account deactivated · JRN_009 bad side · JRN_010 amount missing · JRN_011 amount ≤ 0 · JRN_012 more than 2 decimals · JRN_018 no lines · JRN_019 description too long.
+*Saving a draft only enforces the line-level rules (006 to 012). The accounting rules (001, 003, 004, 005, 018) are enforced on submit and by `/validate`.*
 
-#### GET /api/contacts
-Any signed-in user. Active managers and administrators that managers and accountants may email. **200:** `[{ "id", "first_name", "last_name", "username", "role" }]`.
+Other errors use the usual `{ "error", "message" }` shape: **404** `JRN_013` entry doesn't exist · **403** `JRN_015` not your draft · **409** `JRN_014` entry isn't a draft · **409** `JRN_016` entry isn't pending · **400** `JRN_017` reject without a reason.
 
-#### POST /api/contacts/{id}/email
-Any signed-in user; `id` must be an active manager or administrator. Body `{ "subject", "body" }` (both required). **200:** `{ "message": "Email sent successfully." }`.
+---
 
-The ledger page builds itself from `GET /api/journal-entries?status=APPROVED&account_id={id}`, starting from the account's `initial_balance`.
+## GET /api/journal-entries
+Lists journal entries, newest first. All params optional.
+
+| Query param | Meaning |
+|---|---|
+| `status` | `DRAFT`, `PENDING`, `APPROVED`, `REJECTED` (your own drafts only) |
+| `from`, `to` | entry date range, `yyyy-MM-dd`, inclusive |
+| `search` | matches an account name on any line, **or** an amount on any line, **or** an exact entry date (`yyyy-MM-dd`) |
+
+Without `status`, it returns every non-draft entry plus your own drafts. **Response 200:** an array of journal entry objects.
+
+## GET /api/journal-entries/pending-count
+**Response 200:** `{ "count": 3 }`. Use it for the manager's "waiting for approval" badge.
+
+## GET /api/journal-entries/{id}
+**Response 200:** one journal entry object. **404** if it doesn't exist or is someone else's draft.
+
+## POST /api/journal-entries
+Creates a **draft**. **Response 201:** the entry. **400:** validation errors (above).
+
+## POST /api/journal-entries/validate
+Checks an entry without saving it. Run it as the user types to show and clear errors live.
+**Response 200:** `{ "valid": false, "errors": [ { "code": "...", "message": "..." } ] }`
+
+## PUT /api/journal-entries/{id}
+Replaces a draft's date, type, description and lines (same body as POST). Creator only. **Response 200:** the entry.
+
+## DELETE /api/journal-entries/{id}
+Cancels (deletes) a draft and its files. **Response 200:** `{ "message": "Journal entry cancelled." }`. A submitted entry returns **409**.
+
+## POST /api/journal-entries/{id}/submit
+Validates fully, then moves the entry to `SUBMITTED` and emails every active manager. **400** with the error list if anything is wrong, and the entry stays a draft.
+
+## PUT /api/journal-entries/{id}/approve
+Manager only. Posts the entry to the ledger. **Response 200:** the entry with `status: "APPROVED"`.
+
+## PUT /api/journal-entries/{id}/reject
+Manager only. **Body:** `{ "comment": "Reason is required" }`. **Response 200:** the entry with `status: "REJECTED"` and the comment saved. The creator is emailed the reason.
+
+---
+
+## Attachments (source documents)
+Allowed types: **pdf, doc, docx, xls, xlsx, csv, jpg, jpeg, png**, up to 10 MB each. Only on a draft, by its creator.
+
+* `POST /api/journal-entries/{id}/attachments` with `multipart/form-data`, field name **`file`**. **201:** `{ id, original_name, file_type, uploaded_at }`. **400** `ATT_001` wrong type / `ATT_002` empty file · **413** `ATT_003` too large.
+* `GET /api/journal-entries/{id}/attachments/{attachmentId}` downloads the file. It needs the `Authorization` header, so fetch it as a blob in the frontend. A plain `<a href>` will not send the token.
+* `DELETE /api/journal-entries/{id}/attachments/{attachmentId}` removes a file from a draft.
+
+---
+
+## GET /api/accounts/{id}/ledger
+The account's ledger: every **approved** journal entry line for that account, with a running balance. All roles.
+
+| Query param | Meaning |
+|---|---|
+| `from`, `to` | date range, `yyyy-MM-dd`. The balances stay correct even when earlier rows are hidden |
+| `search` | matches an amount, a description, or a post reference |
+
+**Response 200:**
+```json
+{
+  "account_id": 2,
+  "account_name": "Cash",
+  "account_number": "1010",
+  "normal_side": "LEFT",
+  "initial_balance": 1000.00,
+  "opening_balance": 1000.00,
+  "rows": [
+    {
+      "entry_date": "2026-10-20",
+      "description": "Office supplies",
+      "post_reference": 12,
+      "debit": null,
+      "credit": 250.00,
+      "balance": 750.00
+    }
+  ],
+  "ending_balance": 750.00
+}
+```
+`post_reference` is the journal entry id. Make it a link to `GET /api/journal-entries/{id}`. `debit` or `credit` is `null` for the empty cell. `opening_balance` is the balance just before the first row shown. Balance rule: for a normal-debit (`LEFT`) account, debits increase it and credits decrease it; for a normal-credit (`RIGHT`) account it's the reverse.
+
+---
+
+## Email from the account pages
+
+* `GET /api/email/recipients` returns `[ { id, name, role } ]`, the people the logged-in user may email. Administrator → managers and accountants. Accountant → managers and administrators. Manager → administrators and accountants.
+* `POST /api/email` with `{ "recipient_user_id": 4, "subject": "...", "body": "..." }`. **200:** `{ "message": "Email sent." }`. **400** `EML_001` missing field · **404** `EML_003` unknown recipient · **403** `EML_002` not an allowed recipient.
+
+*(The older admin-only `POST /api/users/{id}/send-email` still exists.)*
+
+---
+
+## Event logs for accounts
+Already available from Sprint 2: `GET /api/event-log?table_name=accounts&record_id={accountId}`. Approving a journal entry also writes a `MODIFY` event for each account whose balance changed, with before and after images, the approving manager's `user_id`, and the time. Journal entries are logged too, under `table_name=journal_entries`.
+
+---
+
+## Statements Module
+*Not yet scoped for the current sprint — to be added once requirements for this module are finalized.*

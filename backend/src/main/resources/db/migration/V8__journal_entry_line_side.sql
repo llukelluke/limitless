@@ -1,0 +1,1 @@
+ALTER TABLE journal_entry_lines MODIFY COLUMN side ENUM('DEBIT','CREDIT') NOT NULL;

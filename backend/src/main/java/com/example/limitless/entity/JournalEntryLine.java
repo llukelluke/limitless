@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Entity
 @Table(name = "journal_entry_lines")
-public class JournalEntryLines {
+public class JournalEntryLine {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,11 +20,11 @@ public class JournalEntryLines {
 
     @ManyToOne
     @JoinColumn(name = "journal_entry_id", nullable = false)
-    private JournalEntry journalEntryID;
+    private JournalEntry entry;
 
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
-    private Account accountID;
+    private Account account;
 
     @Enumerated(EnumType.STRING)
     private Side side;
@@ -32,5 +32,12 @@ public class JournalEntryLines {
     @Column(precision = 15, scale = 2)
     private BigDecimal amount;
 
-    public enum Side{LEFT, RIGHT}
+    public JournalEntryLine(JournalEntry journalEntryID, Account account, Side side, BigDecimal amount){
+        this.entry = journalEntryID;
+        this.account = account;
+        this.side = side;
+        this.amount = amount;
+    }
+
+    public enum Side{DEBIT, CREDIT}
 }

@@ -63,6 +63,10 @@ public class User {
     @Column(name = "password_expiry")
     private LocalDate passwordExpiry;
 
+    // Set when a temporary password is issued; null once the user picks their own.
+    @Column(name = "temp_password_expires_at")
+    private java.time.LocalDateTime tempPasswordExpiresAt;
+
     @Column(name = "password_attempts")
     private Integer passwordAttempts;
 

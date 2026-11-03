@@ -2,33 +2,17 @@ import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import AsyncContent from '../../components/AsyncContent.jsx'
 import { DataTable, PageHeader, Panel } from '../../components/AdminUI.jsx'
-import { formatDateTime, formatMoney } from '../../constants.js'
+import { formatDateTime } from '../../constants.js'
+import { ACTIONS, changedFields, parseImage, show } from '../../eventLog.js'
 import useApi from '../../hooks/useApi.js'
 import './Accounts.css'
-
-const ACTIONS = { ADD: 'Added', MODIFY: 'Modified', DEACTIVATE: 'Deactivated' }
-
-function parseImage(text) {
-  try {
-    return text ? JSON.parse(text) : null
-  } catch {
-    return null
-  }
-}
-
-const MONEY_FIELDS = ['initial_balance', 'debit', 'credit', 'balance']
-
-const show = (value, field) => {
-  if (value === null || value === undefined || value === '') return '—'
-  return MONEY_FIELDS.includes(field) ? formatMoney(value) : String(value)
-}
 
 // Before and after images side by side; changed fields are highlighted.
 function Images({ event }) {
   const before = parseImage(event.before_image)
   const after = parseImage(event.after_image)
   const fields = Object.keys(after ?? before ?? {})
-  const changed = fields.filter((field) => before && after && show(before[field], field) !== show(after[field], field))
+  const changed = changedFields(event)
 
   return (
     <details className="event-images">
@@ -64,6 +48,7 @@ const columns = [
   { key: 'action', header: 'ACTION', width: '10%', render: (e) => ACTIONS[e.action] ?? e.action },
   {
     key: 'record',
+    sortValue: (e) => `${e.table_name} ${String(e.record_id).padStart(10, '0')}`,
     header: 'RECORD',
     width: '14%',
     render: (e) =>

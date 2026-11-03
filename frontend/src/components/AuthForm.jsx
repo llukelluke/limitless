@@ -11,7 +11,8 @@ export function AuthHeader({ title, subtitle }) {
 }
 
 // Gold label above an underlined input. `labelAction` renders on the right of the label row.
-export function AuthField({ label, labelAction, prompt, type = 'text', ...inputProps }) {
+// `error` shows in red under the field and is announced with it.
+export function AuthField({ label, labelAction, prompt, error, type = 'text', ...inputProps }) {
   const id = useId()
   const [revealed, setRevealed] = useState(false)
   const isPassword = type === 'password'
@@ -30,6 +31,8 @@ export function AuthField({ label, labelAction, prompt, type = 'text', ...inputP
           id={id}
           className="auth-field__input"
           type={isPassword && revealed ? 'text' : type}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
           {...inputProps}
         />
         {isPassword && (
@@ -45,6 +48,11 @@ export function AuthField({ label, labelAction, prompt, type = 'text', ...inputP
           </button>
         )}
       </div>
+      {error && (
+        <p id={`${id}-error`} className="auth-field__error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

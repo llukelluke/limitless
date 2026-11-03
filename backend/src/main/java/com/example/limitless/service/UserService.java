@@ -21,6 +21,7 @@ public class UserService {
     private static final String PW_SPECIALS = "!@#$%";
 
     private final UserRepository userRepository;
+    public static final java.time.Duration TEMP_PASSWORD_LIFETIME = java.time.Duration.ofHours(24);
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom random = new SecureRandom();
 
@@ -75,6 +76,7 @@ public class UserService {
 
         String tempPassword = generateTempPassword();
         user.setPasswordHash(passwordEncoder.encode(tempPassword));
+        user.setTempPasswordExpiresAt(java.time.LocalDateTime.now().plus(TEMP_PASSWORD_LIFETIME));
         user.setPasswordChangedAt(today);
         user.setPasswordExpiry(today.plusDays(PASSWORD_LIFETIME_DAYS));
 
@@ -113,6 +115,18 @@ public class UserService {
 
         // Username is NOT regenerated on name change; it is fixed at creation.
         return userRepository.save(user);
+    }
+
+    /** Replaces the user's password with a new temporary one (e.g. after the old one expired). */
+    @Transactional
+    public String issueTemporaryPassword(Integer id) {
+        User user = getUserById(id);
+        String tempPassword = generateTempPassword();
+        user.setPasswordHash(passwordEncoder.encode(tempPassword));
+        user.setTempPasswordExpiresAt(java.time.LocalDateTime.now().plus(TEMP_PASSWORD_LIFETIME));
+        user.setPasswordAttempts(0);
+        userRepository.save(user);
+        return tempPassword;
     }
 
     // ---------- Status changes ----------

@@ -3,9 +3,10 @@
 const SESSION_KEY = 'limitless.session'
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, errors = []) {
     super(message)
     this.status = status
+    this.errors = errors // journal validation: [{ code, message }] from the error_messages table
   }
 }
 
@@ -54,7 +55,9 @@ function parseJson(text) {
 async function request(path, { method = 'GET', body } = {}) {
   const session = loadSession()
   const headers = {}
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // FormData (file uploads) sets its own multipart Content-Type
+  const form = body instanceof FormData
+  if (body !== undefined && !form) headers['Content-Type'] = 'application/json'
   if (session) headers.Authorization = `Bearer ${session.token}`
 
   let response
@@ -62,7 +65,7 @@ async function request(path, { method = 'GET', body } = {}) {
     response = await fetch(`/api${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined || form ? body : JSON.stringify(body),
     })
   } catch {
     throw new ApiError(0, 'Unable to reach the server. Please make sure the backend is running.')
@@ -76,7 +79,7 @@ async function request(path, { method = 'GET', body } = {}) {
       onUnauthorized()
       throw new ApiError(response.status, 'Your session has expired. Please sign in again.')
     }
-    throw new ApiError(response.status, data?.message ?? `Request failed (${response.status}).`)
+    throw new ApiError(response.status, data?.message ?? `Request failed (${response.status}).`, data?.errors)
   }
   return data
 }
@@ -104,6 +107,7 @@ export const api = {
   activateUser: (id) => request(`/users/${id}/activate`, { method: 'PUT' }),
   deactivateUser: (id) => request(`/users/${id}/deactivate`, { method: 'PUT' }),
   suspendUser: (id, body) => request(`/users/${id}/suspend`, { method: 'PUT', body }),
+  issueTemporaryPassword: (id) => request(`/users/${id}/temporary-password`, { method: 'POST' }),
   sendEmail: (id, body) => request(`/users/${id}/send-email`, { method: 'POST', body }),
 
   allUsersReport: () => request('/users/reports/all'),
@@ -115,4 +119,41 @@ export const api = {
   updateAccount: (id, body) => request(`/accounts/${id}`, { method: 'PUT', body }),
   deactivateAccount: (id) => request(`/accounts/${id}/deactivate`, { method: 'PUT' }),
   eventLogs: (table, recordId) => request(`/event-logs${query({ table, record_id: recordId })}`),
+
+  // Email from the account pages: recipients the signed-in user may email.
+  emailRecipients: () => request('/email/recipients'),
+  emailUser: (body) => request('/email', { method: 'POST', body }),
+
+  // filters: { status, from, to, search }
+  listJournalEntries: (filters = {}) => request(`/journal-entries${query(filters)}`),
+  pendingJournalCount: () => request('/journal-entries/pending-count'),
+  getJournalEntry: (id) => request(`/journal-entries/${id}`),
+  validateJournalEntry: (body) => request('/journal-entries/validate', { method: 'POST', body }),
+  // Saves a DRAFT; submitJournalEntry sends it for approval.
+  createJournalEntry: (body) => request('/journal-entries', { method: 'POST', body }),
+  cancelJournalEntry: (id) => request(`/journal-entries/${id}`, { method: 'DELETE' }),
+  submitJournalEntry: (id) => request(`/journal-entries/${id}/submit`, { method: 'POST' }),
+  uploadAttachment: (id, file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request(`/journal-entries/${id}/attachments`, { method: 'POST', body: form })
+  },
+  approveJournalEntry: (id) => request(`/journal-entries/${id}/approve`, { method: 'PUT' }),
+  rejectJournalEntry: (id, comment) => request(`/journal-entries/${id}/reject`, { method: 'PUT', body: { comment } }),
+  // filters: { from, to, search }
+  getLedger: (id, filters = {}) => request(`/accounts/${id}/ledger${query(filters)}`),
+  downloadAttachment,
+}
+
+// Attachments need the auth header, so a plain <a href> can't fetch them.
+async function downloadAttachment(entryId, attachment) {
+  const session = loadSession()
+  const response = await fetch(`/api/journal-entries/${entryId}/attachments/${attachment.id}`, {
+    headers: session ? { Authorization: `Bearer ${session.token}` } : {},
+  })
+  if (!response.ok) throw new ApiError(response.status, `Could not download ${attachment.original_name}.`)
+  const url = URL.createObjectURL(await response.blob())
+  const link = Object.assign(document.createElement('a'), { href: url, download: attachment.original_name })
+  link.click()
+  URL.revokeObjectURL(url)
 }

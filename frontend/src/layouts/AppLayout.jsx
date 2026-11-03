@@ -1,14 +1,17 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import Calendar from '../components/Calendar.jsx'
+import CalculatorButton from '../components/CalculatorButton.jsx'
 import HelpButton from '../components/HelpButton.jsx'
 import Logo from '../components/Logo.jsx'
 import UserMenu from '../components/UserMenu.jsx'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { homePathFor, isAdmin } from '../constants.js'
+import { CURRENT_VERSION } from '../releases.js'
 import './AppLayout.css'
 
 const ACCOUNTING_NAV = [
   { label: 'Accounts', to: '/accounts', match: ['/accounts'], title: 'View the chart of accounts' },
+  { label: 'Journal', to: '/journal', match: ['/journal'], title: 'Create and review journal entries' },
   { label: 'Event Log', to: '/event-log', match: ['/event-log'], title: 'View the history of changes to records' },
 ]
 
@@ -17,11 +20,16 @@ const ADMIN_NAV = [
   { label: 'Dashboard', to: '/admin', match: ['/admin/access-requests'], exact: '/admin', title: 'Administrator dashboard' },
   { label: 'Users', to: '/admin/users', match: ['/admin/users'], title: 'Manage user accounts' },
   ...ACCOUNTING_NAV,
-  { label: 'Reports', to: '/admin/reports', match: ['/admin/reports'], title: 'View user reports' },
+  { label: 'Reports', to: '/admin/reports', match: ['/admin/reports', '/reports'], title: 'View and print financial and user reports' },
   { label: 'Email', to: '/admin/email', match: ['/admin/email'], title: 'Send an email to a user' },
 ]
 
-const MEMBER_NAV = [{ label: 'Home', to: '/home', match: [], exact: '/home', title: 'Your home page' }, ...ACCOUNTING_NAV]
+const MEMBER_NAV = [
+  { label: 'Home', to: '/home', match: [], exact: '/home', title: 'Your home page' },
+  ...ACCOUNTING_NAV,
+  { label: 'Reports', to: '/reports', match: ['/reports'], title: 'View and print financial reports' },
+  { label: 'Email', to: '/email', match: ['/email'], title: 'Email a manager or administrator' },
+]
 
 function isActive(item, pathname) {
   const path = pathname.replace(/\/$/, '')
@@ -62,19 +70,22 @@ export default function AppLayout() {
             )
           })}
         </nav>
+        <Link to="/whats-new" className="app__version" title="See what changed in each version of Limitless">
+          Version {CURRENT_VERSION} · What&apos;s New
+        </Link>
       </aside>
       <div className="app__main">
         <div className="app__services" role="toolbar" aria-label="Services">
           <Link to="/accounts" className="app__service" title="View, search and filter the chart of accounts">
             Chart of Accounts
           </Link>
-          {/* shortcut: journalizing is Sprint 3, link it to its page once that exists */}
-          <button type="button" className="app__service" disabled title="Journalizing: create and review journal entries (coming in the next release)">
+          <Link to="/journal" className="app__service" title="Journalizing: create and review journal entries">
             Journalize
-          </button>
+          </Link>
           <Link to="/event-log" className="app__service" title="View the before and after images of every change">
             Event Log
           </Link>
+          <CalculatorButton />
           <HelpButton />
         </div>
         <UserMenu user={user} onSignOut={logout} />

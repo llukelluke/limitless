@@ -133,3 +133,9 @@ export async function createAccount(request, account, fields = {}) {
   expect(response.status()).toBe(201)
   return response.json()
 }
+
+// Saves the final screen when E2E_EVIDENCE_DIR is set (screenshots for the test-case document).
+export async function evidence(page, name) {
+  await expect(page.locator('.async-status', { hasText: 'Loading…' })).toHaveCount(0)
+  if (process.env.E2E_EVIDENCE_DIR) await page.screenshot({ path: `${process.env.E2E_EVIDENCE_DIR}/${name}.png` })
+}

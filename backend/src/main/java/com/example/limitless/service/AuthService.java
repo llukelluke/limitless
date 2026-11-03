@@ -30,6 +30,10 @@ public class AuthService {
     // noRollbackFor: a failed login throws, but the failed-attempt count and suspension must still be saved
     @Transactional(noRollbackFor = AuthenticationException.class)
     public User login(String username, String password) {
+        // A blank field is a typo, not a guess: refuse it without counting a failed attempt.
+        if (username == null || username.isBlank() || password == null || password.isEmpty()) {
+            throw new AuthenticationException("Please enter your username and password.", HttpStatus.BAD_REQUEST);
+        }
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AuthenticationException("Invalid username or password.", HttpStatus.UNAUTHORIZED));
 
@@ -57,6 +61,12 @@ public class AuthService {
         if (!passwordMatches) {
             handleFailedAttempt(user);
             throw new AuthenticationException("Invalid username or password.", HttpStatus.UNAUTHORIZED);
+        }
+
+        java.time.LocalDateTime tempExpiry = user.getTempPasswordExpiresAt();
+        if (tempExpiry != null && tempExpiry.isBefore(java.time.LocalDateTime.now())) {
+            throw new AuthenticationException(
+                    "Your temporary password has expired. Ask an administrator for a new one.", HttpStatus.FORBIDDEN);
         }
 
         // Successful login resets the failed-attempt counter

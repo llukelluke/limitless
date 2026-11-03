@@ -11,11 +11,6 @@
   width: 130px;
 }
 
-.table-actions {
-  display: inline-flex;
-  gap: 14px;
-  white-space: nowrap;
-}
 
 .data-table td:has(.event-images[open]) ~ td,
 .data-table tr:has(.event-images[open]) td {
@@ -89,4 +84,12 @@
 
 .event-images__changed td {
   background: rgba(226, 194, 117, 0.25);
+}
+
+.toolbar__date {
+  width: 160px;
+}
+
+.ledger-summary + .toolbar {
+  margin: 28px 0 8px;
 }

@@ -6,11 +6,11 @@ test.describe('Reports, dashboard and email', () => {
     const user = await createUser(request, uniquePerson('Report'), 'MANAGER')
     await signInAsAdmin(page)
     await page.goto('/admin/reports')
-    await page.getByRole('link', { name: 'View Report →' }).first().click()
+    await page.locator('.report-card').filter({ hasText: 'ALL USERS' }).getByRole('link', { name: 'View Report →' }).click()
     await expect(page).toHaveURL(/\/admin\/reports\/users$/)
     const row = page.getByRole('row', { name: new RegExp(user.username) })
     await expect(row).toContainText('Manager')
-    await expect(row).toContainText('Valid')
+    await expect(row).toContainText('Temporary, expires') // a new user's password is temporary for 24 hours
   })
 
   test('TC-RPT-02/03 (P/N): Expired Passwords report matches the API', async ({ page, request }) => {

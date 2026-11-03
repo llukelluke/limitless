@@ -1,5 +1,6 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { STATUSES, STATUS_TONES, compareValues, labelFor } from '../constants.js'
 import caretIcon from '../assets/brand/caret.svg'
 import lockIcon from '../assets/brand/lock.svg'
 import './AdminUI.css'
@@ -132,7 +133,20 @@ export function FormActions({ children }) {
 }
 
 // `columns`: [{ key, header, width?, render? }]
-export function DataTable({ columns, rows, rowKey = 'id', caption, empty = 'Nothing to show yet.' }) {
+// A column sorts by `sortValue(row)` or `row[key]`; `sortable: false` (or a table-wide sortable={false}) turns it off.
+// Clicking a header sorts ascending, then descending; until then rows keep the order they were given.
+// `footer` (column key → content) adds a totals row that never sorts.
+export function DataTable({ columns, rows, rowKey = 'id', caption, empty = 'Nothing to show yet.', sortable = true, footer }) {
+  const [sort, setSort] = useState(null)
+  const valueOf = (column) => column.sortValue ?? ((row) => row[column.key])
+  const canSort = (column) =>
+    sortable && column.sortable !== false && (column.sortValue || rows.some((row) => row[column.key] !== undefined))
+  const active = sort && columns.find((column) => column.key === sort.key && canSort(column))
+  const shown = active
+    ? [...rows].sort((a, b) => compareValues(valueOf(active)(a), valueOf(active)(b)) * (sort.dir === 'asc' ? 1 : -1))
+    : rows
+  const toggle = (key) => setSort((s) => ({ key, dir: s?.key === key && s.dir === 'asc' ? 'desc' : 'asc' }))
+
   return (
     <div className="data-table__scroll">
       <table className="data-table">
@@ -144,22 +158,38 @@ export function DataTable({ columns, rows, rowKey = 'id', caption, empty = 'Noth
         </colgroup>
         <thead>
           <tr>
-            {columns.map((column) => (
-              <th key={column.key} scope="col">
-                {column.header}
-              </th>
-            ))}
+            {columns.map((column) => {
+              const dir = active?.key === column.key ? sort.dir : null
+              return (
+                <th
+                  key={column.key}
+                  scope="col"
+                  aria-sort={dir ? (dir === 'asc' ? 'ascending' : 'descending') : undefined}
+                >
+                  {canSort(column) ? (
+                    <button type="button" className="data-table__sort" title="Sort by this column" onClick={() => toggle(column.key)}>
+                      {column.header}
+                      <span className="data-table__sort-icon" aria-hidden="true">
+                        {dir === 'asc' ? '▲' : dir === 'desc' ? '▼' : '↕'}
+                      </span>
+                    </button>
+                  ) : (
+                    column.header
+                  )}
+                </th>
+              )
+            })}
           </tr>
         </thead>
         <tbody>
-          {rows.length === 0 && (
+          {shown.length === 0 && (
             <tr>
               <td colSpan={columns.length} className="data-table__empty">
                 {empty}
               </td>
             </tr>
           )}
-          {rows.map((row) => (
+          {shown.map((row) => (
             <tr key={row[rowKey]}>
               {columns.map((column) => (
                 <td key={column.key}>{column.render ? column.render(row) : row[column.key]}</td>
@@ -167,6 +197,15 @@ export function DataTable({ columns, rows, rowKey = 'id', caption, empty = 'Noth
             </tr>
           ))}
         </tbody>
+        {footer && (
+          <tfoot>
+            <tr>
+              {columns.map((column) => (
+                <td key={column.key}>{footer[column.key]}</td>
+              ))}
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   )
@@ -182,6 +221,50 @@ export function StatCard({ label, value, linkTo, linkLabel }) {
       </Link>
     </article>
   )
+}
+
+// Print button for report pages; the print stylesheet in index.css hides navigation and controls.
+export function PrintButton() {
+  return (
+    <button type="button" className="btn btn--secondary btn--sm" title="Print this report" onClick={() => window.print()}>
+      Print
+    </button>
+  )
+}
+
+// Report title-row actions: Print, then the back link.
+export function ReportActions({ back = '/reports' }) {
+  return (
+    <span className="table-actions">
+      <PrintButton />
+      <BackLink to={back}>Back to Reports</BackLink>
+    </span>
+  )
+}
+
+// "Printed / generated" line under a report title; also says which filters were applied.
+export function ReportMeta({ children }) {
+  return (
+    <p className="report-meta">
+      Generated {new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+      {children && <> · {children}</>}
+    </p>
+  )
+}
+
+// Coloured status pill; `status` picks the colour from STATUS_TONES, `children` is the label shown.
+export function StatusBadge({ status, children, className = '' }) {
+  return <span className={`status-badge status-badge--${STATUS_TONES[status] ?? 'neutral'} ${className}`}>{children}</span>
+}
+
+// User account status: Active green, Pending yellow, Suspended / Deactivated red.
+export function UserStatus({ user }) {
+  return <StatusBadge status={user.status}>{labelFor(STATUSES, user.status)}</StatusBadge>
+}
+
+// Chart of accounts status: Active in green, Inactive in red.
+export function AccountStatus({ account }) {
+  return <StatusBadge status={account.active ? 'ACTIVE' : 'INACTIVE'}>{account.active ? 'Active' : 'Inactive'}</StatusBadge>
 }
 
 export function ReportCard({ label, description, linkTo }) {

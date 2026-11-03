@@ -1,0 +1,98 @@
+/* Stacked lines inside one table cell; credits are indented as on paper */
+.journal-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal-lines li + li {
+  margin-top: 4px;
+}
+
+.journal-lines__credit {
+  display: inline-block;
+  padding-left: 24px;
+}
+
+/* ---------- New entry form ---------- */
+.journal-side {
+  display: grid;
+  gap: 12px;
+}
+
+.journal-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.journal-line--credit {
+  padding-left: 40px;
+}
+
+.journal-line__account {
+  flex: 1 1 280px;
+  max-width: 420px;
+}
+
+.journal-line__account select {
+  width: 100%;
+}
+
+.journal-line__amount {
+  width: 150px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.journal-side__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+}
+
+.journal-side__total {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.journal-side__total strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.journal-description,
+.journal-reject .field__textarea {
+  height: 90px;
+}
+
+/* Success / error message at the top of the entry page */
+.form-body > .form-feedback:first-child {
+  margin: 0 0 24px;
+}
+
+.journal-files {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+
+.journal-files__input {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+/* Error messages are red (sprint requirement); Alert's error tone uses --error-ink */
+.journal-problems {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.journal-reject {
+  display: grid;
+  gap: 10px;
+  max-width: 560px;
+  margin-bottom: 32px;
+}

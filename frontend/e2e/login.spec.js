@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { alert, approvedUser, createUser, setPassword, signIn, signInAsAdmin, signOut, uniquePerson } from './helpers.js'
+import { ADMIN, alert, approvedUser, createUser, evidence, setPassword, signIn, signInAsAdmin, signOut, uniquePerson } from './helpers.js'
 
 test.describe('Login and account lockout', () => {
   test('TC-LOGIN-01 (P): administrator signs in to the dashboard with username shown', async ({ page }) => {
@@ -27,10 +27,28 @@ test.describe('Login and account lockout', () => {
     await expect(password).toHaveAttribute('type', 'password')
   })
 
-  test('TC-LOGIN-04 (N): empty form is rejected', async ({ page }) => {
+  test('TC-LOGIN-04 (N): empty form is rejected, with the error next to each field', async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('button', { name: 'Sign In' }).click()
-    await expect(alert(page)).toHaveText('Please enter your username and password.')
+    const errors = page.locator('.auth-field__error')
+    await expect(errors).toHaveText(['Enter your username.', 'Enter your password.'])
+    await expect(errors.first()).toHaveCSS('color', 'rgb(255, 179, 170)')
+    await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('aria-invalid', 'true')
+    // Filling the username leaves only the password error
+    await page.getByLabel('Username', { exact: true }).fill(ADMIN.username)
+    await page.getByRole('button', { name: 'Sign In' }).click()
+    await expect(errors).toHaveText(['Enter your password.'])
+    await evidence(page, 'L04')
+  })
+
+  test('TC-LOGIN-11 (N): the server refuses an empty password without counting a failed attempt', async ({ request }) => {
+    for (let i = 0; i < 4; i++) {
+      const response = await request.post('/api/auth/login', { data: { username: ADMIN.username, password: '' } })
+      expect(response.status()).toBe(400)
+      expect((await response.json()).message).toBe('Please enter your username and password.')
+    }
+    // Four empty tries would have suspended the account if they counted; the real password still works
+    expect((await request.post('/api/auth/login', { data: ADMIN })).ok()).toBeTruthy()
   })
 
   test('TC-LOGIN-05 (N): wrong password is rejected', async ({ page }) => {

@@ -106,6 +106,8 @@ class UserServiceTest {
         assertThat(response.user().status()).isEqualTo("ACTIVATED");
         assertThat(response.user().passwordExpiry()).isEqualTo(LocalDate.now().plusDays(90));
         assertThat(PasswordService.meetsRules(response.temporaryPassword())).isTrue();
+        assertThat(response.user().tempPasswordExpiresAt())
+                .isBetween(java.time.LocalDateTime.now().plusHours(23), java.time.LocalDateTime.now().plusHours(24));
         verify(userRepository).save(any(User.class));
     }
 

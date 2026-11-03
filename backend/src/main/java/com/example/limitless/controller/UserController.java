@@ -55,6 +55,12 @@ public class UserController {
         return UserResponse.from(userService.suspendUser(id, req));
     }
 
+    /** Issues a new 24-hour temporary password, e.g. after the previous one expired. Shown to the admin once. */
+    @PostMapping("/{id}/temporary-password")
+    public java.util.Map<String, String> temporaryPassword(@PathVariable Integer id) {
+        return java.util.Map.of("temporary_password", userService.issueTemporaryPassword(id));
+    }
+
     // Reports
     @GetMapping("/reports/all")
     public List<UserResponse> reportAll() {

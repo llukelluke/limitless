@@ -65,7 +65,9 @@ public class SecurityConfig {
                         // 7. Admin-only user management (your existing rules)
                         .requestMatchers("/api/auth/access-requests/**", "/api/users/**").hasRole("ADMINISTRATOR")
 
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/**").authenticated()
+                        // Everything else is the React app's files and pages (see SpaConfig)
+                        .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(form -> form.disable())

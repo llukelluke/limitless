@@ -372,14 +372,6 @@ Authenticates a user with username and password. *(Sprint items 1, 5, 13)*
   "message": "Invalid username or password."
 }
 ```
-**Response 400 Bad Request:**\
-*Returned when the username or password is empty. It is not counted as a failed attempt.*
-```json
-{
-  "error": "Bad Request",
-  "message": "Please enter your username and password."
-}
-```
 **Response 403 Forbidden:**\
 *Returned when the account is suspended or deactivated.*
 ```json
@@ -388,7 +380,6 @@ Authenticates a user with username and password. *(Sprint items 1, 5, 13)*
   "message": "This account is suspended."
 }
 ```
-*Also returned when the user signs in with a temporary password more than 24 hours old: `"Your temporary password has expired. Ask an administrator for a new one."`*
 **Response 429 Too Many Requests:**\
 *Returned on the attempt that pushes the user over the 3 failed-login limit; the account is suspended as a result.*
 ```json
@@ -604,21 +595,6 @@ Sets a new password using a valid reset token. *(Sprint items 10, 11, 12)*
   "message": "This password has been used before. Please choose a different password."
 }
 ```
-
----
-
-## POST /api/users/{id}/temporary-password
-Replaces the user's password with a new temporary one that expires in 24 hours (e.g. after the old one expired). Administrator only. The password is returned once; only its hash is stored.
-
-**Response 200 OK:**
-```json
-{
-  "temporary_password": "Kq7!mzP2xa"
-}
-```
-*Temporary passwords from `POST /api/users`, an approved access request, or this endpoint all expire 24 hours after they are issued. User objects carry `"temp_password_expires_at": "2026-11-04T14:45:00"` (local time) while a temporary password is in use, and `null` once the user sets their own password.*
-
-**Response 404 Not Found:** the user doesn't exist.
 
 ---
 
@@ -902,8 +878,8 @@ Deactivates an account. Administrator only. The event log records a `DEACTIVATE`
 
 ---
 
-## GET /api/event-log
-Returns the event log, newest first. Available to all logged-in roles. Optional query params: `table_name` and `record_id` (use both together, e.g. `?table_name=accounts&record_id=1`).
+## GET /api/event-logs
+Returns the event log, newest first. Available to all logged-in roles. Optional query params: `table` and `record_id` (use both together, e.g. `?table=accounts&record_id=1`).
 
 **Response 200 OK:**
 ```json
@@ -982,12 +958,14 @@ Lists journal entries, newest first. All params optional.
 | Query param | Meaning |
 |---|---|
 | `status` | `DRAFT`, `PENDING`, `APPROVED`, `REJECTED` (your own drafts only) |
+| `type` | `REGULAR` or `ADJUSTING`. Use `type=ADJUSTING` for the Adjusting Entries pages. Anything else is a 400. |
 | `from`, `to` | entry date range, `yyyy-MM-dd`, inclusive |
 | `search` | matches an account name on any line, **or** an amount on any line, **or** an exact entry date (`yyyy-MM-dd`) |
 
 Without `status`, it returns every non-draft entry plus your own drafts. **Response 200:** an array of journal entry objects.
 
 ## GET /api/journal-entries/pending-count
+Optional query param `type=ADJUSTING` (or `REGULAR`) counts only that type.
 **Response 200:** `{ "count": 3 }`. Use it for the manager's "waiting for approval" badge.
 
 ## GET /api/journal-entries/{id}
@@ -1070,9 +1048,100 @@ The account's ledger: every **approved** journal entry line for that account, wi
 ---
 
 ## Event logs for accounts
-Already available from Sprint 2: `GET /api/event-log?table_name=accounts&record_id={accountId}`. Approving a journal entry also writes a `MODIFY` event for each account whose balance changed, with before and after images, the approving manager's `user_id`, and the time. Journal entries are logged too, under `table_name=journal_entries`.
+Already available from Sprint 2: `GET /api/event-logs?table=accounts&record_id={accountId}`. Approving a journal entry also writes a `MODIFY` event for each account whose balance changed, with before and after images, the approving manager's `user_id`, and the time. Journal entries are logged too, under `table=journal_entries`.
 
 ---
 
-## Statements Module
-*Not yet scoped for the current sprint — to be added once requirements for this module are finalized.*
+## Adjusting Entries (Sprint 4)
+Adjusting entries are journal entries with `"entry_type": "ADJUSTING"`. They use the same endpoints, rules and workflow as every other entry (create or edit as a draft, attach source documents, cancel before submitting, submit, manager approves or rejects, errors come from the `error_messages` table). Nothing new to build on the backend except the `type` filter above.
+
+| Page / feature | Call |
+|---|---|
+| Manager: adjusting entries waiting for approval | `GET /api/journal-entries?type=ADJUSTING&status=PENDING` |
+| Manager: approved adjusting entries | `GET /api/journal-entries?type=ADJUSTING&status=APPROVED` |
+| Manager: rejected adjusting entries | `GET /api/journal-entries?type=ADJUSTING&status=REJECTED` |
+| Accountant: status of everything they submitted | the same three calls (every non-draft entry is visible to every role) |
+| Filter by date | add `&from=yyyy-MM-dd&to=yyyy-MM-dd` |
+| Search by account name, amount, or date | add `&search=...` |
+| Badge for the manager | `GET /api/journal-entries/pending-count?type=ADJUSTING` |
+| Approve | `PUT /api/journal-entries/{id}/approve` (manager only) |
+| Reject | `PUT /api/journal-entries/{id}/reject` with `{ "comment": "reason" }`. The reason is required (**400**, `JRN_017`, if it is blank). The accountant sees it in the entry's `comment`. |
+
+Once approved, the entry shows in the account ledgers right away, and in the financial statements, because the statements are built live from approved entries.
+
+**Clickable links (frontend):** account name or number → `GET /api/accounts/{id}/ledger` (each statement row carries `account_id` and `account_number`). A ledger row's `post_reference` → `GET /api/journal-entries/{post_reference}`.
+
+---
+
+## Statements Module (Sprint 4, manager only)
+All statements are built from **approved** journal entries only, so drafts, pending and rejected entries never appear. Every call below needs the manager's token (**403** for the administrator and accountants).
+
+`{type}` is one of: `trial-balance`, `income-statement`, `balance-sheet`, `retained-earnings`.
+
+**Choosing the date.** Pass one of:
+* `date=2026-04-30`, everything up to and including that day, from the start of the books.
+* `from=2026-04-01&to=2026-04-30`, a date range.
+
+With no dates it uses today. `from` without `to` is a **400** (`STM_001`), and `from` after `to` is a **400** (`STM_002`). An unknown `{type}` is a **400** (`STM_003`).
+
+How each statement uses the dates:
+* **Trial balance** and **balance sheet** are "as of" the end date (`date`, or `to` of a range).
+* **Income statement** and **retained earnings statement** cover the period. With only `date`, they cover everything up to that day (`from` comes back `null`).
+* Accounts with a zero balance (or zero activity) are left out.
+
+### GET /api/statements/{type}
+Returns the statement as JSON for the frontend to render.
+```json
+{
+  "type": "income-statement",
+  "title": "Income Statement",
+  "from": "2026-04-01",
+  "to": "2026-04-30",
+  "sections": [
+    { "title": "Revenues", "total": 13425.00, "rows": [
+        { "account_id": 14, "account_number": "4010", "name": "Service Revenue", "subcategory": "Operating Revenue",
+          "debit": null, "credit": null, "amount": 13425.00 } ] },
+    { "title": "Expenses", "total": 8900.00, "rows": [ ... ] }
+  ],
+  "totals": { "total_revenues": 13425.00, "total_expenses": 8900.00, "net_income": 4525.00 },
+  "balanced": true,
+  "generated_at": "2026-11-10T18:30:00"
+}
+```
+What is in `sections` and `totals` for each type:
+
+| type | sections | totals keys |
+|---|---|---|
+| `trial-balance` | one section, "Accounts"; each row has `debit` **or** `credit` (the other is `null`) | `total_debits`, `total_credits` |
+| `income-statement` | "Revenues", "Expenses"; rows use `amount` | `total_revenues`, `total_expenses`, `net_income` |
+| `balance-sheet` | "Assets", "Liabilities", "Stockholders' Equity"; rows use `amount` and carry a `subcategory` to group by. Contra accounts such as accumulated depreciation are **negative**. Retained Earnings is added to equity: its account balance + net income to date − dividends. | `total_assets`, `total_liabilities`, `total_equity`, `total_liabilities_and_equity` |
+| `retained-earnings` | one section; rows have `name` and `amount` and no `account_id`: Beginning, Add: Net income, Less: Dividends, (Other changes, only if non-zero), Ending | `beginning_retained_earnings`, `net_income`, `dividends`, `other_changes`, `ending_retained_earnings` |
+
+`balanced` is `false` when the statement does not tie out (trial balance: debits ≠ credits; balance sheet: assets ≠ liabilities + equity). Show a warning in red when that happens. It is always `true` for the other two.
+
+### GET /api/statements/{type}/html (print)
+Same parameters. Returns a clean, self-contained HTML page (`text/html`) with print styling. For **Print**, open this URL in a new tab and call `window.print()`, or fetch it with the token and write it into a new window. The frontend can also just style the JSON itself and print that.
+
+### POST /api/statements/{type}/save
+Same parameters. Saves the statement exactly as it is now (as an HTML file on the server) and records who saved it and when. **201:**
+```json
+{ "id": 3, "statement_type": "BALANCE_SHEET", "period_start": null, "period_end": "2026-04-30",
+  "generated_by": 4, "generated_by_name": "Jaina Proudmoore", "generated_at": "2026-11-10T18:31:02" }
+```
+
+### GET /api/statements/saved
+Saved statements, newest first (array of the object above).
+
+### GET /api/statements/saved/{id}/html
+The saved statement as an HTML page. **404** `STM_005` if the id doesn't exist, `STM_006` if the file is missing.
+
+### POST /api/statements/{type}/email
+Same date parameters in the query string. Body:
+```json
+{ "recipient_user_id": 5, "subject": "optional", "message": "optional note shown above the statement" }
+```
+The recipient must be an active user (**400/404** `STM_004` otherwise). Sends the formatted statement in the email body. **200:** `{ "message": "Email sent." }`. Like the other emails it is only logged to the console if no Resend key is set. The recipient list for the dropdown is `GET /api/email/recipients`.
+
+**Migration:** `V9__statements.sql` (saved statement type becomes a plain text column so the retained earnings statement can be stored; adds the `STM_001`–`STM_006` messages).
+
+*Closing entries are not part of this sprint. If you post them later, the income statement for a period that includes the closing date will show the closing amounts.*

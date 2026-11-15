@@ -55,6 +55,8 @@ public class SecurityConfig {
                                 "/api/journal-entries/*/approve", "/api/journal-entries/*/reject")
                         .hasRole("MANAGER")
 
+                        .requestMatchers("/api/statements/**").hasRole("MANAGER")
+
                         // 5. Create, edit, cancel, submit, attach: manager or accountant
                         .requestMatchers("/api/journal-entries/**")
                         .hasAnyRole("MANAGER", "ACCOUNTANT")

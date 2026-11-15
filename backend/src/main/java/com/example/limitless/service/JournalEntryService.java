@@ -126,7 +126,7 @@ public class JournalEntryService {
             BigDecimal amt = line.getAmount();
             boolean debit = line.getSide() == JournalEntryLine.Side.DEBIT;
             if (debit) a.setDebit(nz(a.getDebit()).add(amt)); else a.setCredit(nz(a.getCredit()).add(amt));
-            boolean increases = (a.getSide() == Account.normalSide.LEFT) == debit;
+            boolean increases = (a.getSide() == Account.Side.LEFT) == debit;
             a.setBalance(increases ? nz(a.getBalance()).add(amt) : nz(a.getBalance()).subtract(amt));
         }
         for (Account a : touched.values()) {
@@ -214,13 +214,30 @@ public class JournalEntryService {
 
     @Transactional(readOnly = true)
     public long pendingCount() {
-        return entries.countByStatus(JournalEntry.JournalStatus.SUBMITTED);
+        return pendingCount(null);
+    }
+
+    /** type: null/blank = all entries, otherwise REGULAR or ADJUSTING. */
+    @Transactional(readOnly = true)
+    public long pendingCount(String type) {
+        JournalEntry.JournalEntryType ty = parseTypeFilter(type);
+        return ty == null
+                ? entries.countByStatus(JournalEntry.JournalStatus.SUBMITTED)
+                : entries.countByStatusAndEntryType(JournalEntry.JournalStatus.SUBMITTED, ty);
     }
 
     /** Lists entries. status: DRAFT | PENDING | APPROVED | REJECTED. search: account name, amount, or date. */
     @Transactional(readOnly = true)
     public List<JournalEntryResponse> list(String status, LocalDate from, LocalDate to, String search, User actor) {
+        return list(status, null, from, to, search, actor);
+    }
+
+    /** type: null/blank = all entries, otherwise REGULAR or ADJUSTING. */
+    @Transactional(readOnly = true)
+    public List<JournalEntryResponse> list(String status, String type, LocalDate from, LocalDate to,
+                                           String search, User actor) {
         JournalEntry.JournalStatus st = parseStatus(status);
+        JournalEntry.JournalEntryType ty = parseTypeFilter(type);
         final Integer me = actor.getId();
 
         Specification<JournalEntry> spec = (root, query, cb) -> {
@@ -229,6 +246,7 @@ public class JournalEntryService {
             ps.add(cb.or(cb.notEqual(root.get("status"), JournalEntry.JournalStatus.DRAFT),
                     cb.equal(root.get("createdBy").get("id"), me)));
             if (st != null) ps.add(cb.equal(root.get("status"), st));
+            if (ty != null) ps.add(cb.equal(root.get("entryType"), ty));
             if (from != null) ps.add(cb.greaterThanOrEqualTo(root.<LocalDate>get("entryDate"), from));
             if (to != null) ps.add(cb.lessThanOrEqualTo(root.<LocalDate>get("entryDate"), to));
             if (search != null && !search.isBlank()) {
@@ -296,7 +314,7 @@ public class JournalEntryService {
                 Optional<Account> acct = accounts.findById(line.accountId());
                 if (acct.isEmpty()) {
                     out.add(issue("JRN_007", "line", n));
-                } else if (!Boolean.TRUE.equals(acct.get().getIsActive())) {
+                } else if (!Boolean.TRUE.equals(acct.get().getActive())) {
                     out.add(issue("JRN_008", "line", n, "account", acct.get().getName()));
                 }
             }
@@ -403,6 +421,15 @@ public class JournalEntryService {
     private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO.setScale(2) : v; }
 
     private static String money(BigDecimal v) { return String.format(Locale.US, "%,.2f", v); }
+
+    private JournalEntry.JournalEntryType parseTypeFilter(String s) {
+        if (s == null || s.isBlank()) return null;
+        try {
+            return JournalEntry.JournalEntryType.valueOf(s.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new UserException(HttpStatus.BAD_REQUEST, msgs.get("JRN_002")); // "Entry type must be REGULAR or ADJUSTING."
+        }
+    }
 
     private JournalEntry.JournalStatus parseStatus(String s) {
         if (s == null || s.isBlank()) return null;

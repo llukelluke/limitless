@@ -42,16 +42,17 @@ public class JournalEntryController {
     @GetMapping
     public List<JournalEntryResponse> list(
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) String search,
             Authentication auth) {
-        return service.list(status, from, to, search, actor(auth));
+        return service.list(status, type, from, to, search, actor(auth));
     }
 
     @GetMapping("/pending-count")
-    public Map<String, Object> pendingCount() {
-        return Map.of("count", service.pendingCount());
+    public Map<String, Object> pendingCount(@RequestParam(required = false) String type) {
+        return Map.of("count", service.pendingCount(type));
     }
 
     @GetMapping("/{id}")

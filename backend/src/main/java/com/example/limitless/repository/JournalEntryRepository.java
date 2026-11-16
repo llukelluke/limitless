@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface JournalEntryRepository extends JpaRepository<JournalEntry, Integer>,
         JpaSpecificationExecutor<JournalEntry> {
     long countByStatus(JournalEntry.JournalStatus status);
+
+    long countByStatusAndEntryType(JournalEntry.JournalStatus status, JournalEntry.JournalEntryType type);
 }

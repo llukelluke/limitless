@@ -13,8 +13,10 @@ import java.time.Duration;
 
 /**
  * Sends email through Resend's HTTP API (works on Railway, which blocks SMTP
- * on most plans). If RESEND_API_KEY is not set, it just logs the email like
- * before, so local dev still works with no setup.
+ * on most plans). If email.resend-api-key is not set, it just logs the email,
+ * so local dev still works with no setup.
+ *
+ * Sprint 4: added sendHtml(...) for emailing financial statements. send(...) is unchanged.
  */
 @Service
 public class EmailService {
@@ -36,9 +38,19 @@ public class EmailService {
         this.overrideTo = overrideTo;
     }
 
+    /** Plain-text email. */
     public void send(String to, String subject, String body) {
+        deliver(to, subject, "\"text\":" + q(body), body);
+    }
+
+    /** HTML email with a plain-text fallback. */
+    public void sendHtml(String to, String subject, String html, String text) {
+        deliver(to, subject, "\"html\":" + q(html) + ",\"text\":" + q(text), text);
+    }
+
+    private void deliver(String to, String subject, String contentJson, String logBody) {
         if (apiKey == null || apiKey.isBlank()) {
-            log.info("\n=== EMAIL (not sent, no API key) ===\nTo: {}\nSubject: {}\n\n{}\n=============", to, subject, body);
+            log.info("\n=== EMAIL (not sent, no API key) ===\nTo: {}\nSubject: {}\n\n{}\n=============", to, subject, logBody);
             return;
         }
         // Demo mode: send everything to one inbox, noting the real recipient
@@ -47,7 +59,7 @@ public class EmailService {
             to = overrideTo;
         }
         String json = "{\"from\":" + q(from) + ",\"to\":[" + q(to) + "],\"subject\":" + q(subject)
-                + ",\"text\":" + q(body) + "}";
+                + "," + contentJson + "}";
         try {
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.resend.com/emails"))

@@ -1142,6 +1142,6 @@ Same date parameters in the query string. Body:
 ```
 The recipient must be an active user (**400/404** `STM_004` otherwise). Sends the formatted statement in the email body. **200:** `{ "message": "Email sent." }`. Like the other emails it is only logged to the console if no Resend key is set. The recipient list for the dropdown is `GET /api/email/recipients`.
 
-**Migration:** `V9__statements.sql` (saved statement type becomes a plain text column so the retained earnings statement can be stored; adds the `STM_001`–`STM_006` messages).
+**Migration:** `V10__statements.sql` (saved statement type becomes a plain text column so the retained earnings statement can be stored; adds the `STM_001`–`STM_006` messages).
 
 *Closing entries are not part of this sprint. If you post them later, the income statement for a period that includes the closing date will show the closing amounts.*

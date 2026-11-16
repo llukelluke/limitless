@@ -455,7 +455,7 @@ test.describe('Journal entries: view, filter and search', () => {
     await page.goto('/journal')
     await onlySeeded(page)
     const [A, B, M] = [W.accountant, W.accountant2, W.manager].map(fullName)
-    await expect(page.locator('tbody tr td:nth-child(7)')).toHaveText([B, A, A, M, B, A])
+    await expect(page.locator('tbody tr td:nth-child(8)')).toHaveText([B, A, A, M, B, A])
     await page.getByRole('link', { name: ref(W.e3), exact: true }).first().click()
     await expect(page.getByLabel('PREPARED BY')).toHaveValue(M)
   })

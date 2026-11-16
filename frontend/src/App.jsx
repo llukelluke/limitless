@@ -16,6 +16,7 @@ import EditUser from './pages/admin/EditUser.jsx'
 import { PendingRequests, ReviewRequest } from './pages/admin/AccessRequests.jsx'
 import { AllUsersReport, ExpiredPasswordsReport, UsersByStatusReport } from './pages/admin/Reports.jsx'
 import { ChartOfAccountsReport, EventLogReport, JournalReport, ReportsHome } from './pages/reports/Reports.jsx'
+import Statements from './pages/reports/Statements.jsx'
 import WhatsNew from './pages/whats-new/WhatsNew.jsx'
 import Email from './pages/admin/Email.jsx'
 import ChartOfAccounts from './pages/accounts/ChartOfAccounts.jsx'
@@ -59,6 +60,13 @@ function App() {
           <Route path="/reports/journal" element={<JournalReport />} />
           <Route path="/reports/event-log" element={<EventLogReport />} />
           <Route path="/whats-new" element={<WhatsNew />} />
+        </Route>
+      </Route>
+
+      {/* Financial statements are manager only (the API answers 403 for everyone else) */}
+      <Route element={<RequireAuth role="MANAGER" />}>
+        <Route element={<AppLayout />}>
+          <Route path="/reports/statements" element={<Statements />} />
         </Route>
       </Route>
 

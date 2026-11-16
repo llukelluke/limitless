@@ -35,6 +35,17 @@ export function ReportsHome() {
   return (
     <>
       <PageHeader eyebrow="REPORTS" title="Reports" subtitle="View and print reports. Every report has a Print button." />
+      {user.role === 'MANAGER' && (
+        <Panel title="FINANCIAL STATEMENTS" className="page-panel">
+          <div className="report-cards">
+            <ReportCard
+              label="FINANCIAL STATEMENTS"
+              description="Trial balance, income statement, balance sheet and retained earnings statement for a date or date range. Save, email or print."
+              linkTo="/reports/statements"
+            />
+          </div>
+        </Panel>
+      )}
       <Panel title="FINANCIAL REPORTS" className="page-panel">
         <div className="report-cards">
           <ReportCard label="CHART OF ACCOUNTS" description="Every account with its category, normal side, debits, credits and balance." linkTo="/reports/accounts" />

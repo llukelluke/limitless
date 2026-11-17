@@ -32,7 +32,7 @@ test.describe('Login and account lockout', () => {
     await page.getByRole('button', { name: 'Sign In' }).click()
     const errors = page.locator('.auth-field__error')
     await expect(errors).toHaveText(['Enter your username.', 'Enter your password.'])
-    await expect(errors.first()).toHaveCSS('color', 'rgb(255, 179, 170)')
+    await expect(errors.first()).toHaveCSS('color', 'rgb(180, 35, 24)')
     await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('aria-invalid', 'true')
     // Filling the username leaves only the password error
     await page.getByLabel('Username', { exact: true }).fill(ADMIN.username)

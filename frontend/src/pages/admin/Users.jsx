@@ -9,7 +9,7 @@ import { userColumns } from './columns.jsx'
 
 const columns = [
   ...userColumns,
-  { key: 'action', header: 'ACTION', render: (user) => <Link to={`/admin/users/${user.id}`}>Edit →</Link> },
+  { key: 'action', header: 'Action', render: (user) => <Link to={`/admin/users/${user.id}`}>Edit →</Link> },
 ]
 
 const matchesSearch = (user, term) =>
@@ -42,7 +42,7 @@ export default function Users() {
       <PageHeader title="User Management" subtitle="Manage user accounts, roles, and access." />
 
       <Panel
-        title="USERS"
+        title="Users"
         className="page-panel"
         action={
           <Link to="/admin/users/new" className="btn btn--primary btn--sm" title="Create a new user account">
@@ -51,7 +51,7 @@ export default function Users() {
         }
       >
         <div className="toolbar" role="search">
-          <ToolbarField label="SEARCH">
+          <ToolbarField label="Search">
             <input
               className="toolbar__search"
               type="search"
@@ -62,7 +62,7 @@ export default function Users() {
               onChange={(event) => setSearch(event.target.value)}
             />
           </ToolbarField>
-          <ToolbarField label="ROLE">
+          <ToolbarField label="Role">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -73,7 +73,7 @@ export default function Users() {
               onChange={(event) => setFilter('role', event.target.value)}
             />
           </ToolbarField>
-          <ToolbarField label="STATUS">
+          <ToolbarField label="Status">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"

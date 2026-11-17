@@ -1,41 +1,68 @@
-/* Design tokens from the Limitless Figma file (03 - Final Screens & Prototype) */
+/* Limitless design system: navy brand sidebar, light content, one readable sans-serif.
+   Colors meet WCAG AA (4.5:1) for text on the surfaces they are used on. */
 :root {
-  --navy-950: #000719;
-  --navy-900: #000728;
-  --navy-850: #000b26;
-  --navy-800: #000740;
-  --navy-card: #071229;
-
-  --gold-100: #e2c275;
-  --gold-300: #c5a059;
-  --gold-600: #9a7b3e;
-  --gold-border: rgba(197, 160, 89, 0.2);
-  --gold-gradient: linear-gradient(90deg, var(--gold-100) 0%, var(--gold-300) 50%, var(--gold-600) 100%);
-  --gold-shadow: drop-shadow(0 8px 12px rgba(197, 160, 89, 0.2));
-
-  --paper: #f7f4ec;
-  --paper-card: #efebe1;
-  --paper-line: #d8d3c8;
-  --paper-input: #d8d3c8;
-  --paper-readonly: #eae7df;
-  --ink: #000740;
-  /* Muted, placeholder and gold-on-cream text are darkened to meet WCAG AA (4.5:1) on every cream surface */
-  --ink-muted: #555866;
-  --ink-placeholder: #555866;
+  /* Brand */
+  --navy-950: #070f24;
+  --navy-900: #0b1736;
+  --navy-800: #13224a;
+  --navy-700: #1c2f5f;
+  --gold-100: #e6c77f;
+  --gold-300: #d4ae5e;
   --gold-ink: #7a5c22;
-  --error-ink: #8a1f12;
-  --avatar: #d9d9d9;
 
-  --white: #fff;
-  --white-50: rgba(255, 255, 255, 0.5);
-  --white-25: rgba(255, 255, 255, 0.25);
+  /* Content surfaces */
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #f8f9fc;
+  --border: #e2e6ee;
+  --border-strong: #c3cad8;
 
-  --serif: 'Cormorant Garamond', Georgia, serif;
+  /* Text */
+  --text: #18213a;
+  --text-2: #4a5468;
+  --text-3: #626c80;
+
+  /* Actions and states */
+  --primary: #1d3f91;
+  --primary-hover: #16326f;
+  --primary-soft: #eaf0fd;
+  --link: #1d4fc4;
+  --success: #1c6b34;
+  --success-bg: #e7f5ec;
+  --warning: #7a5000;
+  --warning-bg: #fff4d6;
+  --error-ink: #b42318;
+  --error-bg: #fdeceb;
+  --error-border: #f2b8b2;
+  --focus-ring: 0 0 0 3px rgba(29, 79, 196, 0.28);
+
+  /* Shape and depth */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow: 0 4px 14px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 16px 40px rgba(16, 24, 40, 0.18);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fast: 140ms;
+  --med: 240ms;
+
   --sans: 'Geist', system-ui, 'Segoe UI', Roboto, sans-serif;
 
+  /* Older names still used by a few components */
+  --ink: var(--text);
+  --ink-muted: var(--text-2);
+  --ink-placeholder: var(--text-3);
+  --paper: var(--surface);
+  --paper-line: var(--border);
+
   font-family: var(--sans);
-  color: var(--white);
-  background: var(--navy-950);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -51,7 +78,7 @@
 body {
   margin: 0;
   min-height: 100svh;
-  background: var(--navy-950);
+  background: var(--bg);
 }
 
 #root {
@@ -78,7 +105,7 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--gold-100);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 
@@ -87,29 +114,54 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 24px;
-  border-radius: 4px;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   font-family: var(--sans);
+  font-size: 14px;
   font-weight: 600;
-  text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
+  transition:
+    background-color var(--fast) ease,
+    border-color var(--fast) ease,
+    color var(--fast) ease,
+    box-shadow var(--fast) ease,
+    transform var(--fast) var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
 }
 
 .btn--primary {
-  border: 0;
-  background: var(--gold-gradient);
-  color: var(--navy-950);
-  font-size: 13px;
-  filter: var(--gold-shadow);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-hover);
 }
 
 .btn--secondary {
-  border: 1px solid var(--gold-300);
-  background: transparent;
-  color: var(--gold-100);
-  font-size: 12px;
+  border-color: var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  border-color: var(--text-3);
+  background: var(--surface-2);
 }
 
 .btn--block {
@@ -117,55 +169,111 @@ textarea {
 }
 
 .btn--lg {
-  height: 56px;
-}
-
-.btn--lg.btn--secondary {
-  height: 54px;
-  font-weight: 500;
+  height: 48px;
+  font-size: 15px;
 }
 
 .btn--sm {
-  height: 40px;
-  min-width: 120px;
+  height: 38px;
   padding: 0 14px;
 }
 
-.btn--sm.btn--primary {
-  color: #000;
-}
-
-.btn--sm.btn--secondary {
-  min-width: 116px;
-}
-
 .btn:disabled {
-  opacity: 0.6;
-  cursor: progress;
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ---------- Text links ---------- */
 .text-link {
-  color: var(--gold-100);
-  font-size: 12px;
-  text-decoration: underline;
-  text-underline-position: from-font;
-  background: none;
-  border: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 0;
+  border: 0;
+  background: none;
+  color: var(--link);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
   cursor: pointer;
+  transition: color var(--fast) ease;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .text-link--muted {
-  color: var(--white-50);
+  color: var(--text-2);
 }
 
 .text-link--strong {
-  font-size: 14px;
   font-weight: 600;
 }
 
-/* Printing: only the page's report content, black on white, no navigation or controls. */
+.back-link svg {
+  transition: transform var(--fast) var(--ease);
+}
+
+.back-link:hover svg {
+  transform: translateX(-3px);
+}
+
+/* ---------- Motion ---------- */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Everyone who asks their system for less motion gets none */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Errors: any field with an error is outlined in red (fields set aria-invalid) ---------- */
+input[aria-invalid='true'],
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: var(--error-ink) !important;
+  box-shadow: 0 0 0 1px var(--error-ink);
+}
+
+input[aria-invalid='true']:focus,
+select[aria-invalid='true']:focus,
+textarea[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.22);
+}
+
+/* ---------- Printing: only the page's report content, black on white ---------- */
 .print-only {
   display: none;
 }
@@ -178,12 +286,15 @@ textarea {
   html,
   body,
   .app,
-  .app__main {
+  .app__main,
+  .app__content {
     background: #fff !important;
     color: #000;
+    animation: none !important;
   }
 
   .app__sidebar,
+  .app__topbar,
   .app__services,
   .user-menu,
   .no-print,
@@ -198,11 +309,11 @@ textarea {
     display: block;
   }
 
-  .app__main {
-    padding: 0;
+  .app__main,
+  .app__content {
+    padding: 0 !important;
   }
 
-  .page-header__eyebrow,
   .page-header__title,
   .page-header__subtitle {
     color: #000 !important;
@@ -212,6 +323,7 @@ textarea {
     border: 0;
     border-radius: 0;
     padding: 0;
+    box-shadow: none;
     background: #fff;
   }
 
@@ -235,20 +347,4 @@ textarea {
     color: #000;
     text-decoration: none;
   }
-}
-
-/* Any field with an error is outlined in red (fields set aria-invalid when they have one) */
-input[aria-invalid='true'],
-select[aria-invalid='true'],
-textarea[aria-invalid='true'] {
-  border-color: var(--error-ink) !important;
-  box-shadow: 0 0 0 1px var(--error-ink);
-}
-
-/* Auth screens: the underline lives on the wrapper, and dark red is unreadable on the dark surface */
-.auth-field__control:has([aria-invalid='true']) {
-  border-bottom-color: #ff8073 !important;
-}
-.auth-field__input[aria-invalid='true'] {
-  box-shadow: none;
 }

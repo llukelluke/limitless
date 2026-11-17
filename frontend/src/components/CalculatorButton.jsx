@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Calculator } from 'lucide-react'
 import { AccountantCalculator } from '@pluperfect/react-accountant-calculator'
 import '@pluperfect/react-accountant-calculator/styles.css'
 import './CalculatorButton.css'
@@ -15,7 +16,8 @@ export default function CalculatorButton() {
         title="Open a calculator (it floats above the page and can be dragged)"
         onClick={() => setOpen((value) => !value)}
       >
-        Calculator
+        <Calculator size={16} aria-hidden="true" />
+        <span>Calculator</span>
       </button>
       <AccountantCalculator
         open={open}

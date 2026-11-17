@@ -21,8 +21,8 @@ import {
 
 test.describe.configure({ mode: 'serial' })
 
-const ERROR_RED = 'rgb(138, 31, 18)'
-const AUTH_ERROR_RED = 'rgb(255, 128, 115)'
+const ERROR_RED = 'rgb(180, 35, 24)'
+const AUTH_ERROR_RED = 'rgb(180, 35, 24)'
 const PERIOD_END = '2026-09-30'
 const W = {}
 const fullName = (u) => `${u.first} ${u.last}`
@@ -234,7 +234,7 @@ test.describe('Financial statements', () => {
     expect((await api(request, W.accountant.token, 'GET', '/statements/trial-balance?date=2026-09-30')).status).toBe(403)
     await as(page, W.accountant)
     await page.goto('/reports')
-    await expect(page.getByText('FINANCIAL STATEMENTS', { exact: true })).toHaveCount(0)
+    await expect(page.getByText('Financial statements', { exact: true })).toHaveCount(0)
     await page.goto('/reports/statements')
     await expect(page).not.toHaveURL(/\/reports\/statements$/)
     await evidence(page, 'TC-FS-11')
@@ -278,7 +278,7 @@ test.describe('Adjusting entries', () => {
   test('TC-ADJ-01 (P): accountant prepares an adjusting entry from the journal form', async ({ page }) => {
     await as(page, W.accountant)
     await page.goto('/journal/new')
-    await page.getByLabel('TYPE', { exact: true }).selectOption('ADJUSTING')
+    await page.getByLabel('Type', { exact: true }).selectOption('ADJUSTING')
     await page.locator('input[type=date]').first().fill(PERIOD_END)
     await page.getByLabel('Account for debit line 1').selectOption({ label: label(W.rent) })
     await page.getByLabel('Amount for debit line 1').fill('10.00')
@@ -286,7 +286,7 @@ test.describe('Adjusting entries', () => {
     await page.getByLabel('Amount for credit line 1').fill('10.00')
     await page.getByRole('button', { name: 'Submit for Approval' }).click()
     await expect(page).toHaveURL(/\/journal\/\d+$/)
-    await expect(page.getByLabel('TYPE', { exact: true })).toHaveValue('Adjusting')
+    await expect(page.getByLabel('Type', { exact: true })).toHaveValue('Adjusting')
     W.formAdj = Number(page.url().split('/').pop())
     await evidence(page, 'TC-ADJ-01')
   })
@@ -354,6 +354,103 @@ test.describe('Adjusting entries', () => {
 })
 
 // ---------------------------------------------------------------------------------------------------------------
+test.describe('Adjusting entries: approval, notification, status and filters', () => {
+  test('TC-ADJ-08 (N): rejecting an adjusting entry needs a reason; with one, it is rejected and the reason kept', async ({ page, request }) => {
+    const id = await submitEntry(request, W.accountant, { date: '2026-08-31', type: 'ADJUSTING', description: 'Depreciation', lines: [[W.rent, 'DEBIT', 15], [W.payable, 'CREDIT', 15]] })
+    const blank = await api(request, W.manager.token, 'PUT', `/journal-entries/${id}/reject`, { comment: ' ' })
+    expect(blank.status).toBe(400)
+    expect(blank.body.message).toBe('A reason is required when rejecting a journal entry.')
+    await as(page, W.manager)
+    await page.goto(`/journal/${id}`)
+    await page.getByRole('button', { name: 'Reject' }).click()
+    await expect(page.getByRole('button', { name: 'Confirm Rejection' })).toBeDisabled()
+    await page.getByLabel(/Reason for rejection/i).fill('Use the depreciation account, not rent.')
+    await page.getByRole('button', { name: 'Confirm Rejection' }).click()
+    await expect(page.locator('.alert--success')).toHaveText('Entry rejected.')
+    await expect(page.getByLabel('Comment', { exact: true })).toHaveValue('Use the depreciation account, not rent.')
+    await expect(page.getByLabel('Type', { exact: true })).toHaveValue('Adjusting')
+    await evidence(page, 'TC-ADJ-08')
+  })
+
+  test('TC-ADJ-09 (P): managers are notified when an adjusting entry is submitted for approval', async ({ page, request }) => {
+    const before = (await api(request, W.manager.token, 'GET', '/journal-entries/pending-count?type=ADJUSTING')).body.count
+    const id = await submitEntry(request, W.accountant, { date: '2026-08-15', type: 'ADJUSTING', description: 'Prepaid insurance used', lines: [[W.rent, 'DEBIT', 20], [W.payable, 'CREDIT', 20]] })
+    expect((await api(request, W.manager.token, 'GET', '/journal-entries/pending-count?type=ADJUSTING')).body.count).toBe(before + 1)
+    // Email to every manager (logged by the backend when no email API key is set)
+    if (process.env.E2E_BACKEND_LOG) {
+      await expect.poll(() => readFileSync(process.env.E2E_BACKEND_LOG, 'utf8')).toContain(`Adjusting journal entry #${id} needs your approval`)
+    }
+    await as(page, W.manager)
+    await page.goto('/home')
+    await expect(page.locator('.app__main')).toContainText(`${before + 1} of them ${before + 1 === 1 ? 'is an adjusting entry' : 'are adjusting entries'}`)
+    await evidence(page, 'TC-ADJ-09')
+  })
+
+  test('TC-ADJ-10 (P/N): pending adjusting entries can be filtered by date', async ({ page }) => {
+    await as(page, W.manager)
+    await page.goto('/journal?status=SUBMITTED&type=ADJUSTING')
+    await page.getByLabel('Search by account name, amount or date').fill(W.tag)
+    await page.getByLabel('From date').fill('2026-09-01')
+    await page.getByLabel('To date').fill('2026-09-30')
+    for (const id of [W.pendingAdj, W.formAdj]) await expect(page.getByRole('link', { name: `JE-${id}` })).toBeVisible()
+    await expect(page.locator('tbody')).not.toContainText('Aug.')
+    await evidence(page, 'TC-ADJ-10')
+    await page.getByLabel('From date').fill('2026-10-01')
+    await page.getByLabel('To date').fill('2026-10-31')
+    await expect(page.locator('.data-table__empty')).toBeVisible()
+  })
+
+  test('TC-ADJ-11 (P/N): an adjusting entry can be reset or cancelled before submitting, but not deleted after', async ({ page, request }) => {
+    await as(page, W.accountant)
+    await page.goto('/journal/new')
+    await page.getByLabel('Type', { exact: true }).selectOption('ADJUSTING')
+    await page.getByLabel('Account for debit line 1').selectOption({ label: label(W.rent) })
+    await page.getByLabel('Amount for debit line 1').fill('5.00')
+    await page.getByRole('button', { name: 'Reset' }).click()
+    await expect(page.getByLabel('Type', { exact: true })).toHaveValue('REGULAR')
+    await expect(page.getByLabel('Account for debit line 1')).toHaveValue('')
+    await page.getByLabel('Type', { exact: true }).selectOption('ADJUSTING')
+    await page.getByRole('button', { name: 'Cancel' }).click()
+    await expect(page).toHaveURL(/\/journal$/)
+    // Once submitted it stays: no delete button, and the server refuses
+    await page.goto(`/journal/${W.formAdj}`)
+    for (const name of ['Delete', 'Edit', 'Cancel']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0)
+    expect((await api(request, W.accountant.token, 'DELETE', `/journal-entries/${W.formAdj}`)).status).toBe(409)
+    await evidence(page, 'TC-ADJ-11')
+  })
+
+  test('TC-ADJ-12 (P): an accountant sees the status of adjusting entries prepared by others', async ({ page }) => {
+    await as(page, W.accountant2)
+    await page.goto('/journal?type=ADJUSTING')
+    await page.getByLabel('Search by account name, amount or date').fill(W.tag)
+    const row = (id) => page.locator('tbody tr', { has: page.getByRole('link', { name: `JE-${id}`, exact: true }) })
+    await expect(row(W.pendingAdj)).toContainText('Pending')
+    await expect(row(W.adj)).toContainText('Approved')
+    await expect(row(W.rejected)).toContainText('Rejected')
+    await evidence(page, 'TC-ADJ-12')
+  })
+
+  test('TC-ADJ-13 (N): an unbalanced adjusting entry shows a red error and cannot be submitted until fixed', async ({ page }) => {
+    await as(page, W.accountant)
+    await page.goto('/journal/new')
+    await page.getByLabel('Type', { exact: true }).selectOption('ADJUSTING')
+    await page.getByLabel('Account for debit line 1').selectOption({ label: label(W.rent) })
+    await page.getByLabel('Amount for debit line 1').fill('30.00')
+    await page.getByLabel('Account for credit line 1').selectOption({ label: label(W.payable) })
+    await page.getByLabel('Amount for credit line 1').fill('25.00')
+    await page.getByRole('button', { name: 'Submit for Approval' }).click()
+    const problems = page.locator('.form-feedback .alert')
+    await expect(problems).toContainText('Total debits (30.00) must equal total credits (25.00). The difference is 5.00.')
+    await expect(problems).toHaveCSS('color', ERROR_RED)
+    await expect(page.getByRole('button', { name: 'Submit for Approval' })).toBeDisabled()
+    await evidence(page, 'TC-ADJ-13')
+    await page.getByLabel('Amount for credit line 1').fill('30.00')
+    await expect(problems).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Submit for Approval' })).toBeEnabled()
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------
 test.describe('Reports link to ledgers', () => {
   test('TC-LNK-01 (P): Chart of Accounts report links each account to its ledger', async ({ page }) => {
     await as(page, W.accountant)
@@ -391,6 +488,53 @@ test.describe('Reports link to ledgers', () => {
   })
 })
 
+test.describe('Chart of accounts and ledger: account numbers and post references', () => {
+  test('TC-LNK-06 (P): clicking an account number on the chart of accounts opens its ledger', async ({ page }) => {
+    await as(page, W.accountant)
+    await page.goto('/accounts')
+    await page.getByLabel('Search by account name or number').fill(String(W.cash.number))
+    await page.getByRole('link', { name: String(W.cash.number), exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/accounts/${W.cash.id}/ledger$`))
+    await evidence(page, 'TC-LNK-06')
+  })
+
+  test('TC-LNK-07 (P): the post reference (PR) on an adjusting posting opens that adjusting entry', async ({ page }) => {
+    await as(page, W.manager)
+    await page.goto(`/accounts/${W.payable.id}/ledger`)
+    const row = page.locator('tbody tr', { hasText: 'Accrued rent' })
+    await expect(row).toContainText(`JE-${W.adj}`)
+    await row.getByRole('link', { name: `JE-${W.adj}` }).click()
+    await expect(page).toHaveURL(new RegExp(`/journal/${W.adj}$`))
+    await expect(page.getByLabel('Type', { exact: true })).toHaveValue('Adjusting')
+    await evidence(page, 'TC-LNK-07')
+  })
+
+  test('TC-LNK-08 (P/N): the ledger searches by account name or amount and filters by date, with an accurate balance', async ({ page }) => {
+    await as(page, W.manager)
+    await page.goto(`/accounts/${W.cash.id}/ledger`)
+    const rows = page.locator('tbody tr')
+    // Opening balance 1,000 → +800 → −300
+    await expect(rows.filter({ hasText: 'Consulting revenue' })).toContainText('$1,800.00')
+    await expect(rows.last()).toContainText('$1,500.00')
+    const search = page.getByLabel('Search by account name, amount, description or post reference')
+    await search.fill('Service Revenue')
+    await expect(rows.filter({ hasText: `JE-${W.e1}` })).toBeVisible()
+    await expect(rows.filter({ hasText: `JE-${W.e2}` })).toHaveCount(0)
+    await search.fill('300')
+    await expect(rows.filter({ hasText: `JE-${W.e2}` })).toBeVisible()
+    await expect(rows.filter({ hasText: `JE-${W.e1}` })).toHaveCount(0)
+    await search.fill('')
+    await page.getByLabel('From date').fill('2026-09-08')
+    await page.getByLabel('To date').fill('2026-09-30')
+    await expect(rows.filter({ hasText: `JE-${W.e2}` })).toBeVisible()
+    await expect(rows.filter({ hasText: `JE-${W.e1}` })).toHaveCount(0)
+    await evidence(page, 'TC-LNK-08')
+    await search.fill('No such account')
+    await expect(rows).toHaveCount(1)
+    await expect(rows.first()).toContainText('Opening balance')
+  })
+})
+
 // ---------------------------------------------------------------------------------------------------------------
 test.describe('Errors: red fields and cursor on the first one', () => {
   test('TC-ERR-01 (N): sign-in with blank fields highlights both and puts the cursor in Username', async ({ page }) => {
@@ -411,7 +555,7 @@ test.describe('Errors: red fields and cursor on the first one', () => {
     await expect(page.locator('.alert--error')).toHaveText('First name, last name, email address, and role are required.')
     await expectRedAndFocused(page.getByLabel('FIRST NAME'))
     for (const name of ['LAST NAME', 'EMAIL ADDRESS', 'ROLE']) await expect(page.getByLabel(name)).toHaveAttribute('aria-invalid', 'true')
-    await expect(page.getByLabel('ADDRESS', { exact: true })).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByLabel('Address', { exact: true })).not.toHaveAttribute('aria-invalid', 'true')
     await evidence(page, 'TC-ERR-02')
   })
 
@@ -421,7 +565,7 @@ test.describe('Errors: red fields and cursor on the first one', () => {
     await page.getByLabel('FIRST NAME').fill('Pat')
     await page.getByRole('button', { name: 'Create User' }).click()
     await expectRedAndFocused(page.getByLabel('LAST NAME'))
-    await page.getByLabel('ADDRESS', { exact: true }).focus()
+    await page.getByLabel('Address', { exact: true }).focus()
     await page.getByRole('button', { name: 'Create User' }).click()
     await expect(page.getByLabel('LAST NAME')).toBeFocused()
     await expect(page.getByLabel('FIRST NAME')).not.toHaveAttribute('aria-invalid', 'true')
@@ -448,12 +592,12 @@ test.describe('Errors: red fields and cursor on the first one', () => {
     await page.addInitScript((value) => localStorage.setItem('limitless.session', value), JSON.stringify(await adminSession(request)))
     await page.goto('/accounts/new')
     await page.getByLabel('ACCOUNT NAME').fill(`Petty Cash ${W.tag}`)
-    await page.getByLabel('CATEGORY *', { exact: true }).selectOption('Asset')
+    await page.getByLabel('Category *', { exact: true }).selectOption('Asset')
     await page.getByLabel('ACCOUNT NUMBER').fill('2001')
     await page.getByLabel('ACCOUNT NUMBER').press('Enter')
     await expect(page.getByText('Asset account numbers must start with 1.')).toBeVisible()
     await expectRedAndFocused(page.getByLabel('ACCOUNT NUMBER'))
-    await expect(page.getByLabel('CATEGORY *', { exact: true })).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByLabel('Category *', { exact: true })).not.toHaveAttribute('aria-invalid', 'true')
     await evidence(page, 'TC-ERR-05')
   })
 
@@ -618,7 +762,7 @@ test.describe('Email: any role to any role, with attachments', () => {
     await expect(page.locator('.alert--error')).toBeVisible()
     expect((await message.boundingBox()).width).toBe(before)
     expect(before).toBeGreaterThan(600)
-    expect((await page.getByLabel('SUBJECT').boundingBox()).width).toBeLessThan(200)
+    expect((await page.getByLabel('SUBJECT').boundingBox()).width).toBeLessThan(before / 1.5)
     await evidence(page, 'TC-EML-10')
   })
 

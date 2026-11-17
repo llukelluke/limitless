@@ -34,31 +34,31 @@ export function ReportsHome() {
   const { user } = useAuth()
   return (
     <>
-      <PageHeader eyebrow="REPORTS" title="Reports" subtitle="View and print reports. Every report has a Print button." />
+      <PageHeader title="Reports" subtitle="View and print reports. Every report has a Print button." />
       {user.role === 'MANAGER' && (
-        <Panel title="FINANCIAL STATEMENTS" className="page-panel">
+        <Panel title="Financial statements" className="page-panel">
           <div className="report-cards">
             <ReportCard
-              label="FINANCIAL STATEMENTS"
+              label="Financial statements"
               description="Trial balance, income statement, balance sheet and retained earnings statement for a date or date range. Save, email or print."
               linkTo="/reports/statements"
             />
           </div>
         </Panel>
       )}
-      <Panel title="FINANCIAL REPORTS" className="page-panel">
+      <Panel title="Financial reports" className="page-panel">
         <div className="report-cards">
-          <ReportCard label="CHART OF ACCOUNTS" description="Every account with its category, normal side, debits, credits and balance." linkTo="/reports/accounts" />
-          <ReportCard label="JOURNAL ENTRIES" description="Journal entries by status and date range, with totals." linkTo="/reports/journal" />
-          <ReportCard label="EVENT LOG" description="Every change to accounts and journal entries, by date and user." linkTo="/reports/event-log" />
+          <ReportCard label="Chart of accounts" description="Every account with its category, normal side, debits, credits and balance." linkTo="/reports/accounts" />
+          <ReportCard label="Journal entries" description="Journal entries by status and date range, with totals." linkTo="/reports/journal" />
+          <ReportCard label="Event log" description="Every change to accounts and journal entries, by date and user." linkTo="/reports/event-log" />
         </div>
       </Panel>
       {isAdmin(user) && (
-        <Panel title="USER REPORTS" className="page-panel">
+        <Panel title="User reports" className="page-panel">
           <div className="report-cards">
-            <ReportCard label="ALL USERS" description="View all registered users and account information." linkTo="/admin/reports/users" />
-            <ReportCard label="USERS BY STATUS & ROLE" description="User counts by role and status, plus suspended and deactivated users." linkTo="/admin/reports/users-by-status" />
-            <ReportCard label="EXPIRED PASSWORDS" description="View users with expired passwords requiring attention." linkTo="/admin/reports/expired-passwords" />
+            <ReportCard label="All users" description="View all registered users and account information." linkTo="/admin/reports/users" />
+            <ReportCard label="Users by status & role" description="User counts by role and status, plus suspended and deactivated users." linkTo="/admin/reports/users-by-status" />
+            <ReportCard label="Expired passwords" description="View users with expired passwords requiring attention." linkTo="/admin/reports/expired-passwords" />
           </div>
         </Panel>
       )}
@@ -67,16 +67,16 @@ export function ReportsHome() {
 }
 
 const accountColumns = [
-  { key: 'number', header: 'NUMBER', width: '9%', render: (a) => <Link to={`/accounts/${a.id}/ledger`} title={`Open the ledger for ${a.name}`}>{a.number}</Link> },
-  { key: 'name', header: 'ACCOUNT', width: '17%', render: (a) => <Link to={`/accounts/${a.id}/ledger`} title={`Open the ledger for ${a.name}`}>{a.name}</Link> },
-  { key: 'category', header: 'CATEGORY', width: '9%' },
-  { key: 'subcategory', header: 'SUBCATEGORY', width: '13%' },
-  { key: 'normal_side', header: 'NORMAL SIDE', width: '8%', render: (a) => labelFor(NORMAL_SIDES, a.normal_side) },
+  { key: 'number', header: 'Number', width: '9%', render: (a) => <Link to={`/accounts/${a.id}/ledger`} title={`Open the ledger for ${a.name}`}>{a.number}</Link> },
+  { key: 'name', header: 'Account', width: '17%', render: (a) => <Link to={`/accounts/${a.id}/ledger`} title={`Open the ledger for ${a.name}`}>{a.name}</Link> },
+  { key: 'category', header: 'Category', width: '9%' },
+  { key: 'subcategory', header: 'Subcategory', width: '13%' },
+  { key: 'normal_side', header: 'Normal side', width: '8%', render: (a) => labelFor(NORMAL_SIDES, a.normal_side) },
   money('debit', 'DEBITS', '11%'),
   money('credit', 'CREDITS', '11%'),
   money('balance', 'BALANCE', '11%'),
-  { key: 'statement', header: 'STATEMENT', width: '6%', render: (a) => labelFor(STATEMENTS, a.statement) },
-  { key: 'status', header: 'STATUS', render: (a) => <AccountStatus account={a} />, sortValue: (a) => a.active },
+  { key: 'statement', header: 'Statement', width: '6%', render: (a) => labelFor(STATEMENTS, a.statement) },
+  { key: 'status', header: 'Status', render: (a) => <AccountStatus account={a} />, sortValue: (a) => a.active },
 ]
 
 export function ChartOfAccountsReport() {
@@ -84,8 +84,8 @@ export function ChartOfAccountsReport() {
   const rows = [...(data ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.number - b.number)
   return (
     <>
-      <PageHeader eyebrow="REPORTS" title="Chart of Accounts Report" subtitle="Every account in the chart of accounts." />
-      <Panel title="CHART OF ACCOUNTS" className="page-panel" action={<ReportActions />}>
+      <PageHeader title="Chart of Accounts Report" subtitle="Every account in the chart of accounts." />
+      <Panel title="Chart of accounts" className="page-panel" action={<ReportActions />}>
         <ReportMeta>{rows.length} accounts</ReportMeta>
         <AsyncContent loading={loading} error={error}>
           <DataTable
@@ -102,11 +102,11 @@ export function ChartOfAccountsReport() {
 }
 
 const journalColumns = [
-  { key: 'id', header: 'REF', width: '7%', render: (e) => <Link to={`/journal/${e.id}`}>JE-{e.id}</Link> },
-  { key: 'entry_date', header: 'DATE', width: '11%', render: (e) => formatDate(e.entry_date) },
+  { key: 'id', header: 'Ref', width: '7%', render: (e) => <Link to={`/journal/${e.id}`}>JE-{e.id}</Link> },
+  { key: 'entry_date', header: 'Date', width: '11%', render: (e) => formatDate(e.entry_date) },
   {
     key: 'accounts',
-    header: 'ACCOUNTS (DEBITS FIRST)',
+    header: 'Accounts (debits first)',
     width: '30%',
     sortValue: (e) => sortedLines(e)[0]?.account_name,
     render: (e) =>
@@ -118,9 +118,9 @@ const journalColumns = [
         </Fragment>
       )),
   },
-  { key: 'entry_type', header: 'TYPE', width: '9%', render: (e) => (e.entry_type === 'ADJUSTING' ? 'Adjusting' : 'Regular') },
-  { key: 'status', header: 'STATUS', width: '10%', render: (e) => <StatusBadge status={e.status}>{labelFor(JOURNAL_STATUSES, e.status)}</StatusBadge> },
-  { key: 'created_by_name', header: 'PREPARED BY', width: '14%' },
+  { key: 'entry_type', header: 'Type', width: '9%', render: (e) => (e.entry_type === 'ADJUSTING' ? 'Adjusting' : 'Regular') },
+  { key: 'status', header: 'Status', width: '10%', render: (e) => <StatusBadge status={e.status}>{labelFor(JOURNAL_STATUSES, e.status)}</StatusBadge> },
+  { key: 'created_by_name', header: 'Prepared by', width: '14%' },
   money('total_debits', 'DEBITS', '9.5%'),
   money('total_credits', 'CREDITS', '9.5%'),
 ]
@@ -139,10 +139,10 @@ export function JournalReport() {
     : 'all dates'
   return (
     <>
-      <PageHeader eyebrow="REPORTS" title="Journal Entries Report" subtitle="Journal entries by status and date range." />
-      <Panel title="JOURNAL ENTRIES" className="page-panel" action={<ReportActions />}>
+      <PageHeader title="Journal Entries Report" subtitle="Journal entries by status and date range." />
+      <Panel title="Journal entries" className="page-panel" action={<ReportActions />}>
         <div className="toolbar" role="search">
-          <ToolbarField label="STATUS">
+          <ToolbarField label="Status">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -153,10 +153,10 @@ export function JournalReport() {
               onChange={set('status')}
             />
           </ToolbarField>
-          <ToolbarField label="FROM">
+          <ToolbarField label="From">
             <input className="toolbar__search toolbar__date" type="date" aria-label="From date" title="Only entries on or after this date" value={filters.from} onChange={set('from')} />
           </ToolbarField>
-          <ToolbarField label="TO">
+          <ToolbarField label="To">
             <input className="toolbar__search toolbar__date" type="date" aria-label="To date" title="Only entries on or before this date" value={filters.to} onChange={set('to')} />
           </ToolbarField>
         </div>
@@ -178,13 +178,13 @@ export function JournalReport() {
 }
 
 const eventColumns = [
-  { key: 'id', header: 'EVENT ID', width: '9%' },
-  { key: 'changed_at', header: 'DATE / TIME', width: '18%', render: (e) => formatDateTime(e.changed_at) },
-  { key: 'username', header: 'USER', width: '17%', render: (e) => `${e.username ?? '—'} (ID ${e.user_id})` },
-  { key: 'action', header: 'ACTION', width: '11%', render: (e) => ACTIONS[e.action] ?? e.action },
+  { key: 'id', header: 'Event ID', width: '9%' },
+  { key: 'changed_at', header: 'Date / time', width: '18%', render: (e) => formatDateTime(e.changed_at) },
+  { key: 'username', header: 'User', width: '17%', render: (e) => `${e.username ?? '—'} (ID ${e.user_id})` },
+  { key: 'action', header: 'Action', width: '11%', render: (e) => ACTIONS[e.action] ?? e.action },
   {
     key: 'record',
-    header: 'RECORD',
+    header: 'Record',
     width: '17%',
     sortValue: (e) => `${e.table_name} ${String(e.record_id).padStart(10, '0')}`,
     render: (e) =>
@@ -196,7 +196,7 @@ const eventColumns = [
   },
   {
     key: 'changed',
-    header: 'FIELDS CHANGED',
+    header: 'Fields changed',
     sortValue: (e) => changedFields(e).join(', '),
     render: (e) => changedFields(e).join(', ') || (e.action === 'ADD' ? 'New record' : '—'),
   },
@@ -207,8 +207,8 @@ export function EventLogReport() {
   const rows = data ?? []
   return (
     <>
-      <PageHeader eyebrow="REPORTS" title="Event Log Report" subtitle="Every addition, change and deactivation, newest first." />
-      <Panel title="EVENT LOG" className="page-panel" action={<ReportActions />}>
+      <PageHeader title="Event Log Report" subtitle="Every addition, change and deactivation, newest first." />
+      <Panel title="Event log" className="page-panel" action={<ReportActions />}>
         <ReportMeta>{rows.length} events</ReportMeta>
         <AsyncContent loading={loading} error={error}>
           <DataTable columns={eventColumns} rows={rows} caption="Event log report" empty="No changes recorded yet." />

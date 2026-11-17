@@ -71,15 +71,15 @@ function StatementTable({ statement }) {
         </colgroup>
         <thead>
           <tr>
-            <th scope="col">NUMBER</th>
-            <th scope="col">ACCOUNT</th>
+            <th scope="col">Number</th>
+            <th scope="col">Account</th>
             {trial ? (
               <>
-                <th scope="col"><span className="num">DEBIT</span></th>
-                <th scope="col"><span className="num">CREDIT</span></th>
+                <th scope="col"><span className="num">Debit</span></th>
+                <th scope="col"><span className="num">Credit</span></th>
               </>
             ) : (
-              <th scope="col"><span className="num">AMOUNT</span></th>
+              <th scope="col"><span className="num">Amount</span></th>
             )}
           </tr>
         </thead>
@@ -181,7 +181,7 @@ function EmailStatement({ type, dates, title }) {
 
   return (
     <form className="toolbar no-print" onSubmit={send} noValidate>
-      <ToolbarField label="EMAIL TO">
+      <ToolbarField label="Email to">
         <Select
           wrapClassName="select--inline"
           className="toolbar__filter"
@@ -193,7 +193,7 @@ function EmailStatement({ type, dates, title }) {
           onChange={(event) => setForm((f) => ({ ...f, recipient: event.target.value }))}
         />
       </ToolbarField>
-      <ToolbarField label="NOTE">
+      <ToolbarField label="Note">
         <input
           className="toolbar__search"
           placeholder="Optional note"
@@ -211,19 +211,19 @@ function EmailStatement({ type, dates, title }) {
 }
 
 const savedColumns = (onOpen) => [
-  { key: 'statement_type', header: 'STATEMENT', width: '26%', render: (s) => SAVED_NAMES[s.statement_type] ?? s.statement_type },
+  { key: 'statement_type', header: 'Statement', width: '26%', render: (s) => SAVED_NAMES[s.statement_type] ?? s.statement_type },
   {
     key: 'period',
-    header: 'PERIOD',
+    header: 'Period',
     width: '26%',
     sortValue: (s) => s.period_end,
     render: (s) => (s.period_start ? `${formatDate(s.period_start)} to ${formatDate(s.period_end)}` : `As of ${formatDate(s.period_end)}`),
   },
-  { key: 'generated_by_name', header: 'SAVED BY', width: '18%' },
-  { key: 'generated_at', header: 'SAVED AT', width: '18%', render: (s) => formatDateTime(s.generated_at) },
+  { key: 'generated_by_name', header: 'Saved by', width: '18%' },
+  { key: 'generated_at', header: 'Saved at', width: '18%', render: (s) => formatDateTime(s.generated_at) },
   {
     key: 'view',
-    header: 'ACTION',
+    header: 'Action',
     sortable: false,
     render: (s) => (
       <button type="button" className="text-link" title="Open the statement as it was saved" onClick={() => onOpen(s.id)}>
@@ -271,9 +271,9 @@ export default function Statements() {
 
   return (
     <>
-      <PageHeader eyebrow="REPORTS" title="Financial Statements" subtitle="Built from approved journal entries only." />
+      <PageHeader title="Financial Statements" subtitle="Built from approved journal entries only." />
       <Panel
-        title={title.toUpperCase()}
+        title={title}
         className="page-panel"
         action={
           <span className="table-actions">
@@ -286,7 +286,7 @@ export default function Statements() {
         }
       >
         <div className="toolbar" role="search">
-          <ToolbarField label="STATEMENT">
+          <ToolbarField label="Statement">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -297,7 +297,7 @@ export default function Statements() {
               onChange={(event) => setType(event.target.value)}
             />
           </ToolbarField>
-          <ToolbarField label="PERIOD">
+          <ToolbarField label="Period">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -309,15 +309,15 @@ export default function Statements() {
             />
           </ToolbarField>
           {period === 'date' ? (
-            <ToolbarField label="DATE">
+            <ToolbarField label="Date">
               <input className="toolbar__search toolbar__date" type="date" aria-label="As of date" title="Everything up to and including this date" value={range.date} onChange={setDate('date')} />
             </ToolbarField>
           ) : (
             <>
-              <ToolbarField label="FROM">
+              <ToolbarField label="From">
                 <input className="toolbar__search toolbar__date" type="date" aria-label="From date" title="Start of the period" value={range.from} onChange={setDate('from')} />
               </ToolbarField>
-              <ToolbarField label="TO">
+              <ToolbarField label="To">
                 <input className="toolbar__search toolbar__date" type="date" aria-label="To date" title="End of the period" value={range.to} onChange={setDate('to')} />
               </ToolbarField>
             </>
@@ -338,7 +338,7 @@ export default function Statements() {
               </h2>
               <ReportMeta>Approved journal entries only</ReportMeta>
               {!statement.balanced && (
-                <Alert>
+                <Alert focus={false}>
                   {type === 'trial-balance'
                     ? 'This trial balance does not balance: total debits do not equal total credits.'
                     : 'This balance sheet does not balance: total assets do not equal total liabilities and stockholders’ equity.'}
@@ -350,7 +350,7 @@ export default function Statements() {
         </AsyncContent>
       </Panel>
 
-      <Panel title="SAVED STATEMENTS" className="page-panel no-print">
+      <Panel title="Saved statements" className="page-panel no-print">
         <AsyncContent loading={saved.loading && !saved.data} error={saved.error}>
           <DataTable columns={savedColumns(open)} rows={saved.data ?? []} caption="Saved statements" empty="No statements saved yet." />
         </AsyncContent>

@@ -1,108 +1,105 @@
 .auth {
   display: flex;
   min-height: 100svh;
-  background: var(--navy-950);
+  background: var(--bg);
 }
 
+/* Navy brand panel on the left */
 .auth__brand {
-  flex: 0 0 600px;
+  flex: 0 0 min(520px, 42vw);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 64px;
-  border-right: 1px solid var(--gold-border);
   background:
-    linear-gradient(123.69deg, rgba(0, 11, 38, 0) 25%, var(--navy-950) 75%),
-    var(--navy-850);
+    radial-gradient(120% 80% at 20% 10%, rgba(230, 199, 127, 0.12), transparent 60%),
+    linear-gradient(160deg, var(--navy-800) 0%, var(--navy-950) 80%);
 }
 
 .auth__emblem-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
   width: 100%;
+  animation: fade-up 600ms var(--ease) both;
 }
 
 .auth__emblem {
-  width: 400px;
+  width: 320px;
   max-width: 100%;
 }
 
 .auth__wordmark {
-  width: 273px;
+  width: 240px;
   max-width: 100%;
 }
 
 .auth__brand-spacer {
-  height: 29px;
+  height: 24px;
 }
 
+/* Form panel */
 .auth__panel {
+  position: relative;
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
-  padding: 80px 120px;
   min-width: 0;
+  padding: 72px 48px;
 }
 
 /* Arriving from the splash: the login screen fades in as the logo fades out */
-@media (prefers-reduced-motion: no-preference) {
-  .auth--fade-in {
-    animation: auth-fade-in 500ms ease-out both;
-  }
-}
-
-@keyframes auth-fade-in {
-  from {
-    opacity: 0;
-  }
+.auth--fade-in {
+  animation: fade-in 500ms ease-out both;
 }
 
 .auth__help {
   position: absolute;
-  top: 24px;
-  right: 24px;
+  top: 20px;
+  right: 20px;
 }
 
 /* ---------- Form building blocks shared by the auth screens ---------- */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 48px;
-  width: 560px;
+  gap: 32px;
+  width: 480px;
   max-width: 100%;
-  min-height: 640px;
+  padding: 36px 36px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: fade-up var(--med) var(--ease) both;
 }
 
 .auth-form__header {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .auth-form__title {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: 64px;
-  line-height: 1.15;
-  color: var(--white);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .auth-form__subtitle {
-  font-weight: 300;
-  font-size: 20px;
-  line-height: 24px;
-  color: var(--white-50);
+  font-size: 16px;
+  color: var(--text-2);
 }
 
 .auth-form__fields {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 18px;
 }
 
 .auth-form__row {
@@ -114,14 +111,15 @@
 .auth-form__actions {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
 }
 
 .auth-form__assist {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12px;
+  gap: 12px;
+  font-size: 14px;
 }
 
 .auth-form__assist--end {
@@ -133,15 +131,23 @@
 }
 
 .auth-form__muted {
-  font-weight: 300;
-  color: var(--white-25);
+  color: var(--text-2);
 }
 
-/* Underlined input field */
+.auth-form__section {
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Labelled input in a bordered box */
 .auth-field {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .auth-field__label-row {
@@ -151,76 +157,109 @@
 }
 
 .auth-field__label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--gold-100);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
 }
 
-.auth-field__control,
 .auth-field__prompt {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.auth-field__control {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--gold-border);
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  transition:
+    border-color var(--fast) ease,
+    box-shadow var(--fast) ease;
 }
 
-.auth-field__prompt {
-  font-weight: 300;
-  font-size: 15px;
-  color: var(--white);
-}
-
-.auth-field__input {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-weight: 300;
-  font-size: 15px;
-  color: var(--white);
-  outline: none;
-  color-scheme: dark;
-}
-
-.auth-field__input::placeholder {
-  color: var(--white-25);
+.auth-field__control:hover {
+  border-color: var(--text-3);
 }
 
 .auth-field__control:focus-within {
-  border-bottom-color: var(--gold-300);
+  border-color: var(--link);
+  box-shadow: var(--focus-ring);
+}
+
+/* Errors: the box (not the bare input) turns red */
+.auth-field__control:has([aria-invalid='true']) {
+  border-color: var(--error-ink);
+  box-shadow: 0 0 0 1px var(--error-ink);
+}
+
+.auth-field__input,
+.auth-field__input[aria-invalid='true'] {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  box-shadow: none !important;
+}
+
+.auth-field__input::placeholder {
+  color: var(--text-3);
 }
 
 .auth-field__toggle {
   display: flex;
-  padding: 0;
+  padding: 4px;
   border: 0;
+  border-radius: var(--radius-sm);
   background: none;
   cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--fast) ease;
 }
 
-.auth-field__toggle img {
-  width: 20px;
-  height: 20px;
+.auth-field__toggle:hover {
+  opacity: 1;
+}
+
+.auth-field__toggle {
+  color: var(--text-2);
+}
+
+.auth-field__error {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--error-ink);
+  animation: fade-in var(--fast) ease;
+}
+
+.auth-form .text-link {
+  font-size: 14px;
 }
 
 /* Confirmation screens (05, 09) */
 .auth-check {
-  font-size: 128px;
+  font-size: 72px;
   line-height: 1;
-  color: var(--gold-100);
+  color: var(--success);
   text-align: center;
+  animation: pop-in 400ms var(--ease) both;
 }
 
 .auth-confirm {
-  gap: 36px;
+  gap: 24px;
 }
 
 .auth-confirm__note {
   font-size: 15px;
-  color: var(--white);
+  color: var(--text);
 }
 
 .auth-requirements {
@@ -231,19 +270,12 @@
 }
 
 .auth-requirements__text {
-  font-weight: 300;
-  font-size: 15px;
-  color: var(--white-50);
+  font-size: 14px;
+  color: var(--text-2);
 }
 
-@media (max-width: 1200px) {
-  .auth__brand {
-    flex-basis: 420px;
-  }
-
-  .auth__panel {
-    padding: 64px 48px;
-  }
+.auth-updated .btn {
+  margin-top: 16px;
 }
 
 @media (max-width: 900px) {
@@ -253,21 +285,21 @@
 
   .auth__brand {
     flex-basis: auto;
-    padding: 32px 16px;
-    border-right: 0;
-    border-bottom: 1px solid var(--gold-border);
+    padding: 28px 16px;
   }
 
   .auth__emblem-container {
+    flex-direction: row;
+    justify-content: center;
     gap: 16px;
   }
 
   .auth__emblem {
-    width: 160px;
+    width: 72px;
   }
 
   .auth__wordmark {
-    width: 180px;
+    width: 160px;
   }
 
   .auth__brand-spacer {
@@ -275,49 +307,20 @@
   }
 
   .auth__panel {
-    padding: 40px 16px;
+    padding: 32px 16px;
+  }
+
+  .auth__help {
+    top: 12px;
+    right: 12px;
   }
 
   .auth-form {
-    min-height: 0;
-  }
-
-  .auth-form__title {
-    font-size: 44px;
+    padding: 24px 20px;
   }
 
   .auth-form__row {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 18px;
   }
-}
-
-/* 09 keeps the Sign In button low in the panel, as in the design */
-.auth-updated {
-  gap: 0;
-}
-
-.auth-updated .btn {
-  margin-top: 278px;
-}
-
-@media (max-width: 900px) {
-  .auth-updated .btn {
-    margin-top: 48px;
-  }
-}
-
-.auth-form__section {
-  margin-top: 8px;
-  padding-top: 24px;
-  border-top: 1px solid var(--gold-border);
-  font-family: var(--serif);
-  font-size: 24px;
-  color: var(--white);
-}
-
-.auth-field__error {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: #ffb3aa;
 }

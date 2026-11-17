@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { CircleHelp, X } from 'lucide-react'
 import './HelpButton.css'
 
 // Help for the whole application, organized by topic. Shown from every page.
@@ -28,7 +29,7 @@ const TOPICS = [
     body: [
       'The Chart of Accounts lists every account with its number, name, category, subcategory, normal side, balance and statement.',
       'Search by account name or number, or filter by category, subcategory, statement, status and balance range.',
-      'Click an account name to open its ledger. Click "View" to see all of the account\'s details and its change history.',
+      'Click an account name or number to open its ledger. Click "View" to see all of the account\'s details and its change history.',
     ],
   },
   {
@@ -44,7 +45,7 @@ const TOPICS = [
     title: 'Ledgers',
     body: [
       'Each account has a ledger showing its opening balance and every approved journal entry that changed it, with a running balance.',
-      'Click the post reference (PR) to open the journal entry. Filter by date, or search by amount, description or post reference.',
+      'Click the post reference (PR), for example JE-12, to open the journal entry that made the posting. Filter by date or date range, or search by account name or number, amount, description or post reference.',
     ],
   },
   {
@@ -90,7 +91,8 @@ export default function HelpButton({ className = '' }) {
         title="Help: how to use Limitless, organized by topic"
         onClick={() => dialogRef.current?.showModal()}
       >
-        ? Help
+        <CircleHelp size={16} aria-hidden="true" />
+        <span>Help</span>
       </button>
       <dialog
         ref={dialogRef}
@@ -100,14 +102,15 @@ export default function HelpButton({ className = '' }) {
         onClick={(event) => event.target === dialogRef.current && dialogRef.current.close()}
       >
         <div className="help-dialog__head">
-          <h2 className="panel__title">HELP</h2>
+          <h2 className="panel__title">Help</h2>
           <button
             type="button"
             className="text-link text-link--strong"
             title="Close help"
             onClick={() => dialogRef.current?.close()}
           >
-            Close ✕
+            <X size={16} aria-hidden="true" />
+            Close
           </button>
         </div>
         <div className="help-dialog__body">
@@ -125,7 +128,7 @@ export default function HelpButton({ className = '' }) {
               </button>
             ))}
           </nav>
-          <article className="help-dialog__content">
+          <article className="help-dialog__content" key={topic}>
             <h3 className="help-dialog__title">{TOPICS[topic].title}</h3>
             {TOPICS[topic].body.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>

@@ -16,8 +16,8 @@ test.describe('User management', () => {
     await page.getByLabel('LAST NAME').fill(person.last)
     await page.getByLabel('EMAIL ADDRESS').fill(person.email)
     await page.getByLabel('DATE OF BIRTH').fill('1998-03-03')
-    await page.getByLabel('ADDRESS', { exact: true }).fill('789 Example Road')
-    await page.getByLabel('ROLE', { exact: true }).selectOption('ACCOUNTANT')
+    await page.getByLabel('Address', { exact: true }).fill('789 Example Road')
+    await page.getByLabel('Role', { exact: true }).selectOption('ACCOUNTANT')
     await page.getByRole('button', { name: 'Create User' }).click()
     await expect(alert(page)).toContainText('Temporary password')
     const password = await page.locator('.secret').innerText()
@@ -49,7 +49,7 @@ test.describe('User management', () => {
     await page.getByLabel('FIRST NAME').fill('Other')
     await page.getByLabel('LAST NAME').fill('Person')
     await page.getByLabel('EMAIL ADDRESS').fill(person.email)
-    await page.getByLabel('ROLE', { exact: true }).selectOption('MANAGER')
+    await page.getByLabel('Role', { exact: true }).selectOption('MANAGER')
     await page.getByRole('button', { name: 'Create User' }).click()
     await expect(alert(page)).toHaveText('A user with this email address already exists.')
   })
@@ -96,13 +96,13 @@ test.describe('User management', () => {
     })
 
     test('TC-USR-08/09 (P): address and role changes are saved', async ({ page }) => {
-      await page.getByLabel('ADDRESS', { exact: true }).fill('42 Updated Ave')
-      await page.getByLabel('ROLE', { exact: true }).selectOption('MANAGER')
+      await page.getByLabel('Address', { exact: true }).fill('42 Updated Ave')
+      await page.getByLabel('Role', { exact: true }).selectOption('MANAGER')
       await save(page)
       await expect(alert(page)).toHaveText('Changes saved.')
       await page.reload()
-      await expect(page.getByLabel('ADDRESS', { exact: true })).toHaveValue('42 Updated Ave')
-      await expect(page.getByLabel('ROLE', { exact: true })).toHaveValue('MANAGER')
+      await expect(page.getByLabel('Address', { exact: true })).toHaveValue('42 Updated Ave')
+      await expect(page.getByLabel('Role', { exact: true })).toHaveValue('MANAGER')
     })
 
     test('TC-USR-10 (N): first name is required', async ({ page }) => {

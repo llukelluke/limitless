@@ -1,7 +1,7 @@
 // Sprint 1 and 2 feedback: calculator, sorting, printable reports, What's New, temporary passwords.
 // Runs against the real backend, like the other specs.
 import { expect, test } from '@playwright/test'
-import { ADMIN, adminToken, createAccount, createUser, evidence, signIn, signInAsAdmin, uniqueAccount, uniquePerson } from './helpers.js'
+import { ADMIN, adminToken, api, createAccount, createUser, evidence, signIn, signInAsAdmin, submitEntry, uniqueAccount, uniquePerson } from './helpers.js'
 
 // Signs in through the API and stores the session the way the login page does.
 async function as(page, request, credentials) {
@@ -41,7 +41,7 @@ test.describe('Sorting', () => {
     const names = page.locator('tbody tr td:nth-child(2)')
     await expect(names).toHaveCount(3)
 
-    const balance = page.getByRole('columnheader', { name: /BALANCE/ })
+    const balance = page.getByRole('columnheader', { name: /Balance/i })
     await balance.getByRole('button').click()
     await expect(balance).toHaveAttribute('aria-sort', 'ascending')
     await expect(names).toHaveText([`${tag} 25`, `${tag} 300`, `${tag} 1000`]) // by amount, not as text
@@ -67,7 +67,7 @@ test.describe('Reports', () => {
     await as(page, request, { username: accountant.username, password: accountant.password })
     await page.goto('/home')
     await page.getByRole('link', { name: 'Reports', exact: true }).click()
-    await expect(page.locator('.report-card__label')).toHaveText(['CHART OF ACCOUNTS', 'JOURNAL ENTRIES', 'EVENT LOG'])
+    await expect(page.locator('.report-card__label')).toHaveText(['Chart of accounts', 'Journal entries', 'Event log'])
     await evidence(page, 'F03')
     await page.goto('/admin/reports/users')
     await expect(page).not.toHaveURL(/\/admin\/reports\/users$/) // user reports are admin only
@@ -116,6 +116,13 @@ test.describe('Reports', () => {
   })
 
   test('TC-REP-09 (P/N): the journal report filters by status and date and totals the entries', async ({ page, request }) => {
+    // Its own approved entry, so the report has a row on any database
+    const manager = await createUser(request, uniquePerson('Rae'), 'MANAGER')
+    const { token } = await (await request.post('/api/auth/login', { data: { username: manager.username, password: manager.password } })).json()
+    const cash = await createAccount(request, uniqueAccount('RepCash'))
+    const revenue = await createAccount(request, uniqueAccount('RepRev', '4'), { category: 'Revenue', subcategory: 'Revenue', normal_side: 'RIGHT', statement: 'INCOME_STATEMENT' })
+    const id = await submitEntry(request, { token }, { date: '2026-10-01', lines: [[cash, 'DEBIT', 10], [revenue, 'CREDIT', 10]] })
+    expect((await api(request, token, 'PUT', `/journal-entries/${id}/approve`)).status).toBe(200)
     await as(page, request, ADMIN)
     await page.goto('/reports/journal')
     await page.getByLabel('Filter by status').selectOption('APPROVED')
@@ -169,8 +176,8 @@ test.describe('Temporary passwords', () => {
 })
 
 test.describe('Status colours', () => {
-  const GREEN = 'rgb(227, 241, 223)'
-  const RED = 'rgb(251, 227, 223)'
+  const GREEN = 'rgb(231, 245, 236)'
+  const RED = 'rgb(253, 236, 235)'
   const badge = (row) => row.locator('.status-badge')
 
   test('TC-UI-12 (P/N): user accounts show Active in green and Suspended / Deactivated in red', async ({ page, request }) => {

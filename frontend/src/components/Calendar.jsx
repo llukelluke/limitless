@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatDate, todayIso } from '../constants.js'
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import './Calendar.css'
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -46,23 +47,20 @@ export default function Calendar() {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-          <rect x="1.5" y="3" width="13" height="11.5" rx="2" fill="none" stroke="currentColor" />
-          <path d="M1.5 6.5h13M5 1.5v3M11 1.5v3" stroke="currentColor" />
-        </svg>
+        <CalendarDays size={15} aria-hidden="true" />
         {formatDate(todayIso())}
       </button>
       {open && (
         <div className="calendar__popup" role="dialog" aria-label="Calendar">
           <div className="calendar__head">
             <button type="button" className="calendar__nav" title="Previous month" onClick={() => shift(-1)}>
-              ‹
+              <ChevronLeft size={18} aria-hidden="true" />
             </button>
             <span className="calendar__month">
               {MONTH_NAMES[month.index]} {month.year}
             </span>
             <button type="button" className="calendar__nav" title="Next month" onClick={() => shift(1)}>
-              ›
+              <ChevronRight size={18} aria-hidden="true" />
             </button>
           </div>
           <div className="calendar__grid">

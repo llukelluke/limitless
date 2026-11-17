@@ -36,7 +36,7 @@ export function JournalStatus({ status }) {
 const columns = [
   {
     key: 'id',
-    header: 'REF',
+    header: 'Ref',
     width: '8%',
     render: (e) => (
       <Link to={`/journal/${e.id}`} title="Open this journal entry">
@@ -44,10 +44,10 @@ const columns = [
       </Link>
     ),
   },
-  { key: 'entry_date', header: 'DATE', width: '11%', render: (e) => formatDate(e.entry_date) },
+  { key: 'entry_date', header: 'Date', width: '11%', render: (e) => formatDate(e.entry_date) },
   {
     key: 'accounts',
-    header: 'ACCOUNTS',
+    header: 'Accounts',
     sortValue: (e) => sortedLines(e)[0]?.account_name,
     width: '22%',
     render: (e) =>
@@ -57,14 +57,14 @@ const columns = [
         </Link>
       )),
   },
-  { key: 'debit', header: <span className="num">DEBIT</span>, width: '11%', sortValue: (e) => e.total_debits, render: (e) => lineCells(e, amount('DEBIT')) },
-  { key: 'credit', header: <span className="num">CREDIT</span>, width: '11%', sortValue: (e) => e.total_credits, render: (e) => lineCells(e, amount('CREDIT')) },
-  { key: 'entry_type', header: 'TYPE', width: '9%', render: (e) => labelFor(ENTRY_TYPES, e.entry_type) },
-  { key: 'status', header: 'STATUS', width: '10%', render: (e) => <JournalStatus status={e.status} /> },
-  { key: 'created_by_name', header: 'PREPARED BY', width: '11%' },
+  { key: 'debit', header: <span className="num">Debit</span>, width: '11%', sortValue: (e) => e.total_debits, render: (e) => lineCells(e, amount('DEBIT')) },
+  { key: 'credit', header: <span className="num">Credit</span>, width: '11%', sortValue: (e) => e.total_credits, render: (e) => lineCells(e, amount('CREDIT')) },
+  { key: 'entry_type', header: 'Type', width: '9%', render: (e) => labelFor(ENTRY_TYPES, e.entry_type) },
+  { key: 'status', header: 'Status', width: '10%', render: (e) => <JournalStatus status={e.status} /> },
+  { key: 'created_by_name', header: 'Prepared by', width: '11%' },
   {
     key: 'action',
-    header: 'ACTION',
+    header: 'Action',
     render: (e) => (
       <Link to={`/journal/${e.id}`} title="View this journal entry">
         View →
@@ -100,13 +100,12 @@ export default function JournalList() {
   return (
     <>
       <PageHeader
-        eyebrow="JOURNALIZING"
         title="Journal"
         subtitle="Journal entries and their approval status. Approved entries post to the ledger."
       />
 
       <Panel
-        title="JOURNAL ENTRIES"
+        title="Journal entries"
         className="page-panel"
         action={
           !isAdmin(user) && (
@@ -117,7 +116,7 @@ export default function JournalList() {
         }
       >
         <div className="toolbar" role="search">
-          <ToolbarField label="STATUS">
+          <ToolbarField label="Status">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -128,7 +127,7 @@ export default function JournalList() {
               onChange={setParam('status')}
             />
           </ToolbarField>
-          <ToolbarField label="TYPE">
+          <ToolbarField label="Type">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -139,7 +138,7 @@ export default function JournalList() {
               onChange={setParam('type')}
             />
           </ToolbarField>
-          <ToolbarField label="SEARCH">
+          <ToolbarField label="Search">
             <input
               className="toolbar__search"
               type="search"
@@ -150,10 +149,10 @@ export default function JournalList() {
               onChange={set('search')}
             />
           </ToolbarField>
-          <ToolbarField label="FROM">
+          <ToolbarField label="From">
             <input className="toolbar__search toolbar__date" type="date" aria-label="From date" title="Only entries on or after this date" value={filters.from} onChange={set('from')} />
           </ToolbarField>
-          <ToolbarField label="TO">
+          <ToolbarField label="To">
             <input className="toolbar__search toolbar__date" type="date" aria-label="To date" title="Only entries on or before this date" value={filters.to} onChange={set('to')} />
           </ToolbarField>
           {filtered && (

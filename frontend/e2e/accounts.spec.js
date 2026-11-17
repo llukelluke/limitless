@@ -11,7 +11,7 @@ import {
 } from './helpers.js'
 
 // Form label, ignoring the * that marks required fields (screen readers skip it; Playwright reads it).
-const fieldByLabel = (page, text) => page.getByLabel(new RegExp(`^${text}( \\*)?$`))
+const fieldByLabel = (page, text) => page.getByLabel(new RegExp(`^${text}( \\*)?$`, 'i'))
 
 // Fills the Add/Edit Account form. Only the keys given are changed.
 async function fillAccount(page, values) {
@@ -78,7 +78,7 @@ test.describe('Chart of accounts — administrator', () => {
     await expect(alert(page)).toHaveText('Account added.')
     await expect(page.getByLabel('ACCOUNT NUMBER')).toHaveValue(account.number)
     await expect(page.getByLabel('INITIAL BALANCE')).toHaveValue('$1,250.50')
-    await expect(page.getByLabel('BALANCE', { exact: true })).toHaveValue('$1,250.50')
+    await expect(page.getByLabel('Balance', { exact: true })).toHaveValue('$1,250.50')
     await expect(page.getByLabel('DEBIT')).toHaveValue('$0.00')
     await expect(page.getByLabel('NORMAL SIDE')).toHaveValue('Debit')
     await expect(page.getByLabel('ORDER')).toHaveValue('01')
@@ -170,7 +170,7 @@ test.describe('Chart of accounts — administrator', () => {
     await page.getByRole('button', { name: 'Save Changes' }).click()
     await expect(alert(page)).toHaveText('Changes saved.')
     await expect(page.getByLabel('ACCOUNT NAME')).toHaveValue(renamed)
-    await expect(page.getByLabel('BALANCE', { exact: true })).toHaveValue('$75.00')
+    await expect(page.getByLabel('Balance', { exact: true })).toHaveValue('$75.00')
 
     await page.getByRole('link', { name: 'Event Log', exact: true }).first().click()
     const row = page.getByRole('row').filter({ hasText: `Account #${account.id}` }).filter({ hasText: 'Modified' })
@@ -217,7 +217,7 @@ test.describe('Chart of accounts — administrator', () => {
     await page.getByRole('button', { name: 'Deactivate' }).click()
     await expect(alert(page)).toHaveText('Account deactivated.')
     await expect(page.locator('.status-badge')).toHaveText('Inactive')
-    await expect(page.locator('.status-badge')).toHaveCSS('background-color', 'rgb(251, 227, 223)') // red
+    await expect(page.locator('.status-badge')).toHaveCSS('background-color', 'rgb(253, 236, 235)') // red
     await expect(page.getByRole('cell', { name: 'Deactivated', exact: true })).toBeVisible()
     await page.getByRole('heading', { name: 'CHANGE HISTORY' }).scrollIntoViewIfNeeded()
   })
@@ -336,8 +336,8 @@ test.describe('Sprint 2 page layout', () => {
       expect(box.y).toBeLessThan(100)
       await expect(page.locator('.app__logo img').first()).toBeVisible()
       const services = page.getByRole('toolbar', { name: 'Services' })
-      for (const name of ['Chart of Accounts', 'Journalize', 'Event Log', '? Help']) {
-        await expect(services.getByRole(name === '? Help' ? 'button' : 'link', { name })).toBeVisible()
+      for (const name of ['Chart of Accounts', 'Journalize', 'Event Log', 'Help']) {
+        await expect(services.getByRole(name === 'Help' ? 'button' : 'link', { name })).toBeVisible()
       }
     }
 
@@ -352,7 +352,7 @@ test.describe('Sprint 2 page layout', () => {
 
   test('TC-UI-10 (P): help is organized by topic', async ({ page }) => {
     await page.goto('/login')
-    await page.getByRole('button', { name: '? Help' }).click()
+    await page.getByRole('button', { name: 'Help', exact: true }).click()
     const help = page.getByRole('dialog', { name: 'Help' })
     await expect(help).toBeVisible()
     await help.getByRole('button', { name: 'Chart of Accounts' }).click()

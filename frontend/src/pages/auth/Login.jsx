@@ -64,7 +64,7 @@ export default function Login() {
       </div>
 
       <div className="auth-form__actions">
-        <Alert surface="dark">{error}</Alert>
+        <Alert>{error}</Alert>
         <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} title={"Sign in to Limitless"}>
           {submitting ? 'Signing In…' : 'Sign In'}
         </button>

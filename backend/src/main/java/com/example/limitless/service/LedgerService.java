@@ -34,7 +34,8 @@ public class LedgerService {
     /**
      * The balance is always computed over the whole history so it stays correct when a date filter
      * hides earlier rows. opening_balance is the balance just before the first visible row.
-     * search matches an amount, a description, or a post reference (journal entry id).
+     * search matches an amount, a description, a post reference (12 or JE-12), or the name or number of any account
+     * on the journal entry (e.g. "Revenue" in the Cash ledger finds cash received for revenue).
      */
     @Transactional(readOnly = true)
     public LedgerResponse ledger(Integer accountId, LocalDate from, LocalDate to, String search) {
@@ -64,7 +65,8 @@ public class LedgerService {
             if (!needle.isEmpty()) {
                 String desc = l.getEntry().getDescription() == null ? "" : l.getEntry().getDescription().toLowerCase(Locale.ROOT);
                 boolean match = desc.contains(needle)
-                        || String.valueOf(l.getEntry().getId()).equals(needle)
+                        || String.valueOf(l.getEntry().getId()).equals(needle.replaceFirst("^je-", ""))
+                        || accountsOn(l.getEntry()).contains(needle)
                         || (searchAmount != null && l.getAmount().compareTo(searchAmount) == 0);
                 if (!match) continue;
             }
@@ -85,5 +87,15 @@ public class LedgerService {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    /** Names and numbers of every account on the entry, lower case, for the ledger search. */
+    private static String accountsOn(JournalEntry entry) {
+        StringBuilder sb = new StringBuilder();
+        for (JournalEntryLine line : entry.getLines()) {
+            Account a = line.getAccount();
+            if (a != null) sb.append(a.getName()).append(' ').append(a.getNumber()).append('\n');
+        }
+        return sb.toString().toLowerCase(Locale.ROOT);
     }
 }

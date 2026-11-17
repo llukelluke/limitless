@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import eyeIcon from '../assets/brand/eye.png'
+import { Eye, EyeOff } from 'lucide-react'
 import useFocusFirstError from '../hooks/useFocusFirstError.js'
 
 export function AuthHeader({ title, subtitle }) {
@@ -46,7 +46,7 @@ export function AuthField({ label, labelAction, prompt, error, type = 'text', ..
             title={revealed ? "Hide password" : "Show password"}
             onClick={() => setRevealed((value) => !value)}
           >
-            <img src={eyeIcon} alt="" width="20" height="20" />
+            {revealed ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
           </button>
         )}
       </div>

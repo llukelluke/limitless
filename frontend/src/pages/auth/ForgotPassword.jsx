@@ -70,7 +70,7 @@ export function ResetPassword() {
       </div>
 
       <div className="auth-form__actions">
-        <Alert surface="dark">{error}</Alert>
+        <Alert>{error}</Alert>
         <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} title={"Save your new password"}>
           {submitting ? 'Saving…' : 'Reset Password'}
         </button>

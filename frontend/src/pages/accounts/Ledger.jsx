@@ -9,14 +9,14 @@ import './Accounts.css'
 
 const money = (key) => ({
   key,
-  header: <span className="num">{key.toUpperCase()}</span>,
+  header: <span className="num">{key[0].toUpperCase() + key.slice(1)}</span>,
   width: '15%',
   render: (row) => <span className="num">{row[key] === null ? '' : formatMoney(row[key])}</span>,
 })
 
 const columns = [
-  { key: 'date', header: 'DATE', width: '14%', render: (row) => formatDate(row.date) },
-  { key: 'description', header: 'DESCRIPTION', width: '33%' },
+  { key: 'date', header: 'Date', width: '14%', render: (row) => formatDate(row.date) },
+  { key: 'description', header: 'Description', width: '33%' },
   {
     key: 'pr',
     header: 'PR',
@@ -59,13 +59,12 @@ export default function Ledger() {
   return (
     <>
       <PageHeader
-        eyebrow="LEDGER"
         title={account ? `${account.number} · ${account.name}` : 'Ledger'}
         subtitle="Every posting to this account, with a running balance."
       />
 
       <Panel
-        title="LEDGER"
+        title="Ledger"
         className="page-panel"
         action={<BackLink to="/accounts">Back to Chart of Accounts</BackLink>}
       >
@@ -74,38 +73,38 @@ export default function Ledger() {
             <>
               <dl className="ledger-summary">
                 <div>
-                  <dt>NORMAL SIDE</dt>
+                  <dt>Normal side</dt>
                   <dd>{labelFor(NORMAL_SIDES, account.normal_side)}</dd>
                 </div>
                 <div>
-                  <dt>TOTAL DEBITS</dt>
+                  <dt>Total debits</dt>
                   <dd>{formatMoney(account.debit)}</dd>
                 </div>
                 <div>
-                  <dt>TOTAL CREDITS</dt>
+                  <dt>Total credits</dt>
                   <dd>{formatMoney(account.credit)}</dd>
                 </div>
                 <div>
-                  <dt>BALANCE</dt>
+                  <dt>Balance</dt>
                   <dd>{formatMoney(account.balance)}</dd>
                 </div>
               </dl>
               <div className="toolbar" role="search">
-                <ToolbarField label="SEARCH">
+                <ToolbarField label="Search">
                   <input
                     className="toolbar__search"
                     type="search"
-                    placeholder="Amount, description or PR"
-                    aria-label="Search by amount, description or post reference"
-                    title="Search by amount, description or post reference"
+                    placeholder="Account, amount, description or PR"
+                    aria-label="Search by account name, amount, description or post reference"
+                    title="Search by account name or number, amount, description or post reference"
                     value={filters.search}
                     onChange={set('search')}
                   />
                 </ToolbarField>
-                <ToolbarField label="FROM">
+                <ToolbarField label="From">
                   <input className="toolbar__search toolbar__date" type="date" aria-label="From date" title="Only postings on or after this date" value={filters.from} onChange={set('from')} />
                 </ToolbarField>
-                <ToolbarField label="TO">
+                <ToolbarField label="To">
                   <input className="toolbar__search toolbar__date" type="date" aria-label="To date" title="Only postings on or before this date" value={filters.to} onChange={set('to')} />
                 </ToolbarField>
                 {filtered && (

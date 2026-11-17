@@ -17,10 +17,19 @@ const STATUS_OPTIONS = [
 ]
 
 const baseColumns = [
-  { key: 'number', header: 'NUMBER', width: '9%' },
+  {
+    key: 'number',
+    header: 'Number',
+    width: '9%',
+    render: (account) => (
+      <Link to={`/accounts/${account.id}/ledger`} title={`Open the ledger for ${account.name}`}>
+        {account.number}
+      </Link>
+    ),
+  },
   {
     key: 'name',
-    header: 'ACCOUNT NAME',
+    header: 'Account name',
     width: '18%',
     render: (account) => (
       <Link to={`/accounts/${account.id}/ledger`} title={`Open the ledger for ${account.name}`}>
@@ -28,22 +37,22 @@ const baseColumns = [
       </Link>
     ),
   },
-  { key: 'category', header: 'CATEGORY', width: '10%' },
-  { key: 'subcategory', header: 'SUBCATEGORY', width: '14%' },
-  { key: 'normal_side', header: 'NORMAL SIDE', width: '10%', render: (a) => labelFor(NORMAL_SIDES, a.normal_side) },
+  { key: 'category', header: 'Category', width: '10%' },
+  { key: 'subcategory', header: 'Subcategory', width: '14%' },
+  { key: 'normal_side', header: 'Normal side', width: '10%', render: (a) => labelFor(NORMAL_SIDES, a.normal_side) },
   {
     key: 'balance',
-    header: <span className="num">BALANCE</span>,
+    header: <span className="num">Balance</span>,
     width: '13%',
     render: (a) => <span className="num">{formatMoney(a.balance)}</span>,
   },
-  { key: 'statement', header: 'STATEMENT', width: '9%', render: (a) => labelFor(STATEMENTS, a.statement) },
-  { key: 'status', header: 'STATUS', width: '8%', render: (a) => <AccountStatus account={a} />, sortValue: (a) => a.active },
+  { key: 'statement', header: 'Statement', width: '9%', render: (a) => labelFor(STATEMENTS, a.statement) },
+  { key: 'status', header: 'Status', width: '8%', render: (a) => <AccountStatus account={a} />, sortValue: (a) => a.active },
 ]
 
 const actionColumn = (admin) => ({
   key: 'action',
-  header: 'ACTION',
+  header: 'Action',
   render: (account) => (
     <span className="table-actions">
       <Link to={`/accounts/${account.id}`} title={`View the details of ${account.name}`}>
@@ -93,13 +102,12 @@ export default function ChartOfAccounts() {
   return (
     <>
       <PageHeader
-        eyebrow="CHART OF ACCOUNTS"
         title="Chart of Accounts"
         subtitle={admin ? 'Add, view, edit, and deactivate accounts.' : 'View accounts and their ledgers.'}
       />
 
       <Panel
-        title="ACCOUNTS"
+        title="Accounts"
         className="page-panel"
         action={
           <span className="table-actions">
@@ -119,7 +127,7 @@ export default function ChartOfAccounts() {
         }
       >
         <div className="toolbar" role="search">
-          <ToolbarField label="SEARCH">
+          <ToolbarField label="Search">
             <input
               className="toolbar__search"
               type="search"
@@ -130,7 +138,7 @@ export default function ChartOfAccounts() {
               onChange={set('search')}
             />
           </ToolbarField>
-          <ToolbarField label="CATEGORY">
+          <ToolbarField label="Category">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -141,7 +149,7 @@ export default function ChartOfAccounts() {
               onChange={set('category')}
             />
           </ToolbarField>
-          <ToolbarField label="SUBCATEGORY">
+          <ToolbarField label="Subcategory">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -152,7 +160,7 @@ export default function ChartOfAccounts() {
               onChange={set('subcategory')}
             />
           </ToolbarField>
-          <ToolbarField label="STATEMENT">
+          <ToolbarField label="Statement">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -163,7 +171,7 @@ export default function ChartOfAccounts() {
               onChange={set('statement')}
             />
           </ToolbarField>
-          <ToolbarField label="STATUS">
+          <ToolbarField label="Status">
             <Select
               wrapClassName="select--inline"
               className="toolbar__filter"
@@ -174,7 +182,7 @@ export default function ChartOfAccounts() {
               onChange={set('status')}
             />
           </ToolbarField>
-          <ToolbarField label="MIN BALANCE">
+          <ToolbarField label="Min balance">
             <input
               className="toolbar__search toolbar__amount"
               inputMode="decimal"
@@ -185,7 +193,7 @@ export default function ChartOfAccounts() {
               onChange={set('min')}
             />
           </ToolbarField>
-          <ToolbarField label="MAX BALANCE">
+          <ToolbarField label="Max balance">
             <input
               className="toolbar__search toolbar__amount"
               inputMode="decimal"

@@ -1,15 +1,13 @@
 import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { STATUSES, STATUS_TONES, compareValues, labelFor } from '../constants.js'
-import caretIcon from '../assets/brand/caret.svg'
-import lockIcon from '../assets/brand/lock.svg'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ChevronDown, Lock, Printer } from 'lucide-react'
 import useFocusFirstError from '../hooks/useFocusFirstError.js'
 import './AdminUI.css'
 
-export function PageHeader({ eyebrow = 'USER ADMINISTRATION', title, subtitle }) {
+export function PageHeader({ title, subtitle }) {
   return (
     <header className="page-header">
-      <p className="page-header__eyebrow">{eyebrow}</p>
       <h1 className="page-header__title">{title}</h1>
       {subtitle && <p className="page-header__subtitle">{subtitle}</p>}
     </header>
@@ -33,8 +31,9 @@ export function Panel({ title, action, children, className = '', as: Tag = 'sect
 
 export function BackLink({ to, children }) {
   return (
-    <Link to={to} className="text-link text-link--strong">
-      ← {children}
+    <Link to={to} className="text-link text-link--strong back-link">
+      <ArrowLeft size={16} aria-hidden="true" />
+      {children}
     </Link>
   )
 }
@@ -59,7 +58,7 @@ export function Select({ options, className = '', wrapClassName = '', ...selectP
           </option>
         ))}
       </select>
-      <img className="select__caret" src={caretIcon} alt="" width="8.66" height="6.75" />
+      <ChevronDown className="select__caret" size={16} aria-hidden="true" />
     </span>
   )
 }
@@ -101,7 +100,7 @@ export function Field({ label, options, readOnly, hint, error, className = '', .
       </label>
       <div className="field__wrap">
         {control}
-        {readOnly && <img className="field__lock" src={lockIcon} alt="" width="12.5" height="13.67" />}
+        {readOnly && <Lock className="field__lock" size={14} aria-hidden="true" />}
       </div>
       {error ? (
         <p className="field__error" id={describedBy}>
@@ -171,8 +170,8 @@ export function DataTable({ columns, rows, rowKey = 'id', caption, empty = 'Noth
                   {canSort(column) ? (
                     <button type="button" className="data-table__sort" title="Sort by this column" onClick={() => toggle(column.key)}>
                       {column.header}
-                      <span className="data-table__sort-icon" aria-hidden="true">
-                        {dir === 'asc' ? '▲' : dir === 'desc' ? '▼' : '↕'}
+                      <span className={`data-table__sort-icon ${dir ? 'data-table__sort-icon--active' : ''}`} aria-hidden="true">
+                        {dir === 'asc' ? <ArrowUp size={14} /> : dir === 'desc' ? <ArrowDown size={14} /> : <ArrowUpDown size={14} />}
                       </span>
                     </button>
                   ) : (
@@ -219,7 +218,8 @@ export function StatCard({ label, value, linkTo, linkLabel }) {
       <h2 className="stat-card__label">{label}</h2>
       <p className="stat-card__value">{value}</p>
       <Link to={linkTo} className="stat-card__link">
-        {linkLabel} →
+        {linkLabel}
+        <ArrowRight size={16} aria-hidden="true" />
       </Link>
     </article>
   )
@@ -229,6 +229,7 @@ export function StatCard({ label, value, linkTo, linkLabel }) {
 export function PrintButton() {
   return (
     <button type="button" className="btn btn--secondary btn--sm" title="Print this report" onClick={() => window.print()}>
+      <Printer size={16} aria-hidden="true" />
       Print
     </button>
   )

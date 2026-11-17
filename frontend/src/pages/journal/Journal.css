@@ -27,6 +27,10 @@
   gap: 12px;
 }
 
+.journal-line {
+  animation: fade-up var(--med) var(--ease);
+}
+
 .journal-line--credit {
   padding-left: 40px;
 }
@@ -54,8 +58,8 @@
 }
 
 .journal-side__total {
-  font-size: 13px;
-  color: var(--ink-muted);
+  font-size: 14px;
+  color: var(--text-2);
 }
 
 .journal-side__total strong {
@@ -74,14 +78,54 @@
 }
 
 .journal-files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin: 10px 0 0;
-  padding-left: 18px;
-  font-size: 13px;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.journal-files li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  animation: pop-in var(--fast) var(--ease);
 }
 
 .journal-files__input {
   margin-top: 8px;
-  font-size: 13px;
+  font-size: 14px;
+}
+
+.journal-files__input::file-selector-button {
+  height: 36px;
+  margin-right: 12px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color var(--fast) ease;
+}
+
+.journal-files__input::file-selector-button:hover {
+  background: var(--surface-2);
+}
+
+.journal-files__input[aria-invalid='true'] {
+  padding: 4px;
+  border: 1px solid var(--error-ink);
+  border-radius: 8px;
 }
 
 /* Error messages are red (sprint requirement); Alert's error tone uses --error-ink */

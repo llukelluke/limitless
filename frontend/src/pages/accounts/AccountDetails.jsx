@@ -75,7 +75,7 @@ export default function AccountDetails() {
                 <Link
                   to={admin ? '/admin/email' : '/email'}
                   className="btn btn--secondary btn--sm"
-                  title={admin ? 'Email a manager or accountant' : 'Email a manager or administrator'}
+                  title="Email another Limitless user"
                 >
                   Email User
                 </Link>

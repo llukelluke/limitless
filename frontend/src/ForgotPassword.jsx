@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './ForgotPassword.css'
 import { requestPasswordReset } from './api/passwordApi'
+import useFocusFirstError from './hooks/useFocusFirstError.js'
 
 function ForgotPassword() {
   const navigate = useNavigate()
@@ -16,6 +17,7 @@ function ForgotPassword() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  useFocusFirstError(error)
 
   const handleEmailSubmit = (event) => {
     event.preventDefault()
@@ -98,6 +100,7 @@ function ForgotPassword() {
               type="email"
               placeholder="Enter your email"
               value={email}
+              aria-invalid={error && !email.trim() ? true : undefined}
               onChange={(event) => setEmail(event.target.value)}
             />
 
@@ -140,6 +143,7 @@ function ForgotPassword() {
             type="text"
             placeholder="Enter your username"
             value={username}
+            aria-invalid={error && !username.trim() ? true : undefined}
             onChange={(event) => setUsername(event.target.value)}
             disabled={loading}
           />
@@ -152,6 +156,7 @@ function ForgotPassword() {
             id="verification-email"
             type="email"
             value={email}
+            aria-invalid={error && !email.trim() ? true : undefined}
             onChange={(event) => setEmail(event.target.value)}
             disabled={loading}
           />
@@ -165,6 +170,7 @@ function ForgotPassword() {
             type="text"
             placeholder="Enter your answer"
             value={securityAnswer1}
+            aria-invalid={error && !securityAnswer1.trim() ? true : undefined}
             onChange={(event) => setSecurityAnswer1(event.target.value)}
             disabled={loading}
           />
@@ -178,6 +184,7 @@ function ForgotPassword() {
             type="text"
             placeholder="Enter your answer"
             value={securityAnswer2}
+            aria-invalid={error && !securityAnswer2.trim() ? true : undefined}
             onChange={(event) => setSecurityAnswer2(event.target.value)}
             disabled={loading}
           />
@@ -191,6 +198,7 @@ function ForgotPassword() {
             type="text"
             placeholder="Enter your answer"
             value={securityAnswer3}
+            aria-invalid={error && !securityAnswer3.trim() ? true : undefined}
             onChange={(event) => setSecurityAnswer3(event.target.value)}
             disabled={loading}
           />

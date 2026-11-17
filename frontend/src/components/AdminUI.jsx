@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { STATUSES, STATUS_TONES, compareValues, labelFor } from '../constants.js'
 import caretIcon from '../assets/brand/caret.svg'
 import lockIcon from '../assets/brand/lock.svg'
+import useFocusFirstError from '../hooks/useFocusFirstError.js'
 import './AdminUI.css'
 
 export function PageHeader({ eyebrow = 'USER ADMINISTRATION', title, subtitle }) {
@@ -70,6 +71,7 @@ export function Field({ label, options, readOnly, hint, error, className = '', .
   // The error replaces the hint, and screen readers announce whichever is shown
   const describedBy = error || hint ? `${id}-note` : undefined
   const a11y = { 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy }
+  useFocusFirstError(error)
 
   let control
   if (options) {

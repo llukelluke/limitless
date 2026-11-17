@@ -236,3 +236,19 @@ textarea {
     text-decoration: none;
   }
 }
+
+/* Any field with an error is outlined in red (fields set aria-invalid when they have one) */
+input[aria-invalid='true'],
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: var(--error-ink) !important;
+  box-shadow: 0 0 0 1px var(--error-ink);
+}
+
+/* Auth screens: the underline lives on the wrapper, and dark red is unreadable on the dark surface */
+.auth-field__control:has([aria-invalid='true']) {
+  border-bottom-color: #ff8073 !important;
+}
+.auth-field__input[aria-invalid='true'] {
+  box-shadow: none;
+}

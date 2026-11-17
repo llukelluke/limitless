@@ -28,7 +28,7 @@ const MEMBER_NAV = [
   { label: 'Home', to: '/home', match: [], exact: '/home', title: 'Your home page' },
   ...ACCOUNTING_NAV,
   { label: 'Reports', to: '/reports', match: ['/reports'], title: 'View and print financial reports' },
-  { label: 'Email', to: '/email', match: ['/email'], title: 'Email a manager or administrator' },
+  { label: 'Email', to: '/email', match: ['/email'], title: 'Email another Limitless user' },
 ]
 
 function isActive(item, pathname) {

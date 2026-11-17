@@ -188,6 +188,7 @@ function EmailStatement({ type, dates, title }) {
           aria-label="Email recipient"
           title="Who receives this statement"
           options={options}
+          aria-invalid={feedback?.tone === 'error' && !form.recipient ? true : undefined}
           value={form.recipient}
           onChange={(event) => setForm((f) => ({ ...f, recipient: event.target.value }))}
         />

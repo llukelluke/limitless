@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import Alert from '../../components/Alert.jsx'
 import { BackLink, Field, FormActions, FormSection, PageHeader, Panel } from '../../components/AdminUI.jsx'
-import { ROLES, formValues } from '../../constants.js'
+import { ROLES, formValues, requiredErrors } from '../../constants.js'
 
 const roleOptions = [{ value: '', label: 'Select Role' }, ...ROLES]
 
@@ -11,6 +11,7 @@ const roleOptions = [{ value: '', label: 'Select Role' }, ...ROLES]
 export default function CreateUser() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [created, setCreated] = useState(null)
 
@@ -18,7 +19,9 @@ export default function CreateUser() {
     event.preventDefault()
     const form = event.currentTarget
     const values = formValues(form)
-    if (!values.first_name || !values.last_name || !values.email_address || !values.role) {
+    const missing = requiredErrors(values, ['first_name', 'last_name', 'email_address', 'role'])
+    setFieldErrors(missing)
+    if (Object.keys(missing).length) {
       setError('First name, last name, email address, and role are required.')
       return
     }
@@ -49,12 +52,12 @@ export default function CreateUser() {
       >
         <div className="form-body">
           <FormSection title="ACCOUNT INFORMATION">
-            <Field label="FIRST NAME" name="first_name" placeholder="Enter first name..." />
-            <Field label="LAST NAME" name="last_name" placeholder="Enter last name..." />
-            <Field label="EMAIL ADDRESS" name="email_address" type="email" placeholder="Enter email..." />
+            <Field label="FIRST NAME" name="first_name" error={fieldErrors.first_name} placeholder="Enter first name..." />
+            <Field label="LAST NAME" name="last_name" error={fieldErrors.last_name} placeholder="Enter last name..." />
+            <Field label="EMAIL ADDRESS" name="email_address" type="email" error={fieldErrors.email_address} placeholder="Enter email..." />
             <Field label="DATE OF BIRTH" name="birth_date" type="date" />
             <Field label="ADDRESS" name="home_address" placeholder="Enter address..." />
-            <Field label="ROLE" name="role" options={roleOptions} defaultValue="" />
+            <Field label="ROLE" name="role" error={fieldErrors.role} options={roleOptions} defaultValue="" />
             <Field
               label="USERNAME"
               value="Generated automatically"

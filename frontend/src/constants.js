@@ -114,6 +114,9 @@ export function passwordProblems(password) {
 }
 
 // FormData → plain object, trimming text and turning empty strings into null.
+// { key: 'Required.' } for each key with no value, ready to pass to each field's `error`.
+export const requiredErrors = (values, keys) => Object.fromEntries(keys.filter((key) => !values[key]).map((key) => [key, 'Required.']))
+
 export function formValues(form) {
   return Object.fromEntries(
     [...new FormData(form).entries()].map(([key, value]) => {

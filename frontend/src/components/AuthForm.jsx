@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import eyeIcon from '../assets/brand/eye.png'
+import useFocusFirstError from '../hooks/useFocusFirstError.js'
 
 export function AuthHeader({ title, subtitle }) {
   return (
@@ -16,6 +17,7 @@ export function AuthField({ label, labelAction, prompt, error, type = 'text', ..
   const id = useId()
   const [revealed, setRevealed] = useState(false)
   const isPassword = type === 'password'
+  useFocusFirstError(error)
 
   return (
     <div className="auth-field">

@@ -7,7 +7,8 @@ import AsyncContent from '../../components/AsyncContent.jsx'
 import { BackLink, Field, FormActions, FormSection, PageHeader, Panel, Select } from '../../components/AdminUI.jsx'
 import { formatMoney, isAdmin, parseMoney, todayIso } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
-import { ATTACHMENT_TYPES, ENTRY_TYPES, toRequest } from '../../journal.js'
+import useFocusFirstError from '../../hooks/useFocusFirstError.js'
+import { ATTACHMENT_TYPES, ENTRY_TYPES, invalidFields, toRequest } from '../../journal.js'
 import './Journal.css'
 
 let nextKey = 0
@@ -35,7 +36,10 @@ export function ProblemList({ problems }) {
   )
 }
 
-function SideSection({ side, title, lines, accountOptions, onChange, onAdd, onRemove }) {
+const invalid = (flag) => (flag ? true : undefined)
+
+// `offset`: where this side's lines start in the request (debits first, then credits), to match the server's line numbers.
+function SideSection({ side, title, lines, offset, bad, accountOptions, onChange, onAdd, onRemove }) {
   const own = lines.filter((line) => line.side === side)
   const total = own.reduce((sum, line) => sum + (parseMoney(line.amount) || 0), 0)
   const label = side.toLowerCase()
@@ -50,6 +54,7 @@ function SideSection({ side, title, lines, accountOptions, onChange, onAdd, onRe
             aria-label={`Account for ${label} line ${index + 1}`}
             title="Only accounts in the chart of accounts can be used"
             options={accountOptions}
+            aria-invalid={invalid(bad.has(`${offset + index}.account_id`))}
             value={line.account_id}
             onChange={(event) => onChange(line.key, 'account_id', event.target.value)}
           />
@@ -59,6 +64,7 @@ function SideSection({ side, title, lines, accountOptions, onChange, onAdd, onRe
             placeholder="0.00"
             aria-label={`Amount for ${label} line ${index + 1}`}
             title={`Amount to ${label}`}
+            aria-invalid={invalid(bad.has(`${offset + index}.amount`) || bad.has('amounts'))}
             value={line.amount}
             onChange={(event) => onChange(line.key, 'amount', event.target.value)}
           />
@@ -99,6 +105,10 @@ export default function JournalForm() {
   const [problems, setProblems] = useState([])
   const [busy, setBusy] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  // Bumped when Submit finds problems; live re-checks while typing must not move the cursor.
+  const [focusTick, setFocusTick] = useState(0)
+  useFocusFirstError(focusTick)
+  const bad = attempted ? invalidFields(problems) : new Set()
 
   // After the first Submit, re-check with the server as the user types so errors clear once fixed.
   useEffect(() => {
@@ -146,7 +156,10 @@ export default function JournalForm() {
     try {
       const check = await api.validateJournalEntry(body)
       setProblems(check.errors)
-      if (!check.valid) return setBusy(false)
+      if (!check.valid) {
+        setFocusTick((tick) => tick + 1)
+        return setBusy(false)
+      }
       // The backend saves a draft, takes files one at a time, then submits it for approval.
       saved = await api.createJournalEntry(body)
       for (const file of files) await api.uploadAttachment(saved.id, file)
@@ -155,8 +168,10 @@ export default function JournalForm() {
     } catch (err) {
       // Don't leave a half-made draft behind; the user fixes the problem and submits again.
       if (saved) await api.cancelJournalEntry(saved.id).catch(() => {})
-      if (err.errors?.length) setProblems(err.errors)
-      else setSubmitError(err.message)
+      if (err.errors?.length) {
+        setProblems(err.errors)
+        setFocusTick((tick) => tick + 1)
+      } else setSubmitError(err.message)
       setBusy(false)
     }
   }
@@ -176,7 +191,7 @@ export default function JournalForm() {
         <AsyncContent loading={loading} error={error}>
           <div className="form-body">
             <FormSection title="ENTRY">
-              <Field label="DATE" type="date" required value={draft.entry_date} onChange={set('entry_date')} />
+              <Field label="DATE" type="date" required aria-invalid={invalid(bad.has('entry_date'))} value={draft.entry_date} onChange={set('entry_date')} />
               <Field label="TYPE" options={ENTRY_TYPES} value={draft.entry_type} onChange={set('entry_type')} />
               <div className="field field--wide">
                 <label className="field__label" htmlFor={descriptionId}>
@@ -186,6 +201,7 @@ export default function JournalForm() {
                   id={descriptionId}
                   className="field__textarea journal-description"
                   placeholder="Optional"
+                  aria-invalid={invalid(bad.has('description'))}
                   value={draft.description}
                   onChange={set('description')}
                 />
@@ -201,6 +217,8 @@ export default function JournalForm() {
                 side={side}
                 title={title}
                 lines={draft.lines}
+                offset={side === 'DEBIT' ? 0 : draft.lines.filter((line) => line.side === 'DEBIT').length}
+                bad={bad}
                 accountOptions={accountOptions}
                 onChange={changeLine}
                 onAdd={addLine}

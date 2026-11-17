@@ -80,7 +80,8 @@
   padding-left: 33px;
 }
 
-.email-form > .field:not(:last-child) {
+/* Recipient and subject stay short; the message and attachments take the full width */
+.email-form > .field--narrow {
   width: 159px;
 }
 
@@ -541,7 +542,7 @@
     padding-left: 0;
   }
 
-  .email-form > .field:not(:last-child) {
+  .email-form > .field--narrow {
     width: 100%;
   }
 

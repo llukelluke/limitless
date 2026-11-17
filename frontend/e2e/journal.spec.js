@@ -2,7 +2,7 @@
 // beforeAll creates this run's own users, accounts and entries, so the suite can be re-run on the same database.
 // E2E_EVIDENCE_DIR=… keeps a screenshot per test for the test-case document.
 import { expect, test } from '@playwright/test'
-import { ADMIN, adminToken, createAccount, createUser, evidence, uniqueAccount, uniquePerson } from './helpers.js'
+import { ADMIN, adminToken, api, as, createAccount, createUser, evidence, recordCalls, submitEntry, uniqueAccount, uniquePerson } from './helpers.js'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -18,42 +18,8 @@ const label = (a) => `${a.number} · ${a.name}`
 const fullName = (u) => `${u.first} ${u.last}`
 const ref = (id) => `JE-${id}`
 
-async function api(request, token, method, path, data) {
-  const response = await request.fetch(`/api${path}`, { method, headers: { Authorization: `Bearer ${token}` }, data })
-  return { status: response.status(), body: await response.json().catch(() => null) }
-}
-
-// Create → upload → submit, the same calls the form makes. lines: [[account, 'DEBIT'|'CREDIT', amount], …]
-async function submitEntry(request, who, { date, lines, description = null, files = [] }) {
-  const body = { entry_date: date, entry_type: 'REGULAR', description, lines: lines.map(([a, side, amount]) => ({ account_id: a.id, side, amount })) }
-  const created = await api(request, who.token, 'POST', '/journal-entries', body)
-  expect(created.status, JSON.stringify(created.body)).toBe(201)
-  for (const name of files) {
-    const response = await request.post(`/api/journal-entries/${created.body.id}/attachments`, {
-      headers: { Authorization: `Bearer ${who.token}` },
-      multipart: { file: { name, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') } },
-    })
-    expect(response.status()).toBe(201)
-  }
-  expect((await api(request, who.token, 'POST', `/journal-entries/${created.body.id}/submit`)).status).toBe(200)
-  return created.body.id
-}
-
 const review = async (request, id, action, comment) =>
   expect((await api(request, W.manager.token, 'PUT', `/journal-entries/${id}/${action}`, comment && { comment })).status).toBe(200)
-
-// Signs `who` in with a real token, the way the login page stores it.
-async function as(page, who) {
-  const { token, ...user } = who.session
-  await page.addInitScript((value) => localStorage.setItem('limitless.session', value), JSON.stringify({ token, user }))
-}
-
-// Records the API calls the page makes, e.g. "POST /api/journal-entries".
-function recordCalls(page) {
-  const calls = []
-  page.on('request', (r) => r.url().includes('/api/') && calls.push(`${r.method()} ${new URL(r.url()).pathname}`))
-  return calls
-}
 
 async function line(page, side, n, account, amount) {
   const which = side.toLowerCase()
@@ -534,7 +500,7 @@ test.describe('Ledger', () => {
 })
 
 test.describe('Email and event log', () => {
-  test('TC-EM-01 (P/N): accountant emails a manager from the account page; other accountants are not offered', async ({ page }) => {
+  test('TC-EM-01 (P/N): accountant emails a manager from the account page; every other role, including accountants, is offered', async ({ page }) => {
     await as(page, W.accountant)
     const calls = recordCalls(page)
     await page.goto(`/accounts/${W.cash.id}`)
@@ -543,7 +509,7 @@ test.describe('Email and event log', () => {
     await expect(page.getByRole('option', { name: `${fullName(W.manager)} (Manager)` })).toBeAttached()
     const options =await page.getByLabel('RECIPIENT').locator('option').allTextContents()
     expect(options).toContain(`${fullName(W.manager)} (Manager)`)
-    expect(options.some((o) => o.startsWith(fullName(W.accountant2)))).toBeFalsy()
+    expect(options.some((o) => o.startsWith(fullName(W.accountant2)))).toBeTruthy()
     await page.getByLabel('RECIPIENT').selectOption({ label: `${fullName(W.manager)} (Manager)` })
     await page.getByLabel('SUBJECT').fill('Question about Cash')
     await page.getByLabel('MESSAGE').fill(`Can you review ${ref(W.e5)} today?`)

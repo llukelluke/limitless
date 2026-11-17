@@ -94,9 +94,9 @@ export default function Ledger() {
                   <input
                     className="toolbar__search"
                     type="search"
-                    placeholder="Amount, description or PR"
-                    aria-label="Search by amount, description or post reference"
-                    title="Search by amount, description or post reference"
+                    placeholder="Account, amount, description or PR"
+                    aria-label="Search by account name, amount, description or post reference"
+                    title="Search by account name or number, amount, description or post reference"
                     value={filters.search}
                     onChange={set('search')}
                   />

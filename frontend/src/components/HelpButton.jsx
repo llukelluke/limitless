@@ -29,7 +29,7 @@ const TOPICS = [
     body: [
       'The Chart of Accounts lists every account with its number, name, category, subcategory, normal side, balance and statement.',
       'Search by account name or number, or filter by category, subcategory, statement, status and balance range.',
-      'Click an account name to open its ledger. Click "View" to see all of the account\'s details and its change history.',
+      'Click an account name or number to open its ledger. Click "View" to see all of the account\'s details and its change history.',
     ],
   },
   {
@@ -45,7 +45,7 @@ const TOPICS = [
     title: 'Ledgers',
     body: [
       'Each account has a ledger showing its opening balance and every approved journal entry that changed it, with a running balance.',
-      'Click the post reference (PR) to open the journal entry. Filter by date, or search by amount, description or post reference.',
+      'Click the post reference (PR), for example JE-12, to open the journal entry that made the posting. Filter by date or date range, or search by account name or number, amount, description or post reference.',
     ],
   },
   {

@@ -1,7 +1,7 @@
 // Sprint 1 and 2 feedback: calculator, sorting, printable reports, What's New, temporary passwords.
 // Runs against the real backend, like the other specs.
 import { expect, test } from '@playwright/test'
-import { ADMIN, adminToken, createAccount, createUser, evidence, signIn, signInAsAdmin, uniqueAccount, uniquePerson } from './helpers.js'
+import { ADMIN, adminToken, api, createAccount, createUser, evidence, signIn, signInAsAdmin, submitEntry, uniqueAccount, uniquePerson } from './helpers.js'
 
 // Signs in through the API and stores the session the way the login page does.
 async function as(page, request, credentials) {
@@ -116,6 +116,13 @@ test.describe('Reports', () => {
   })
 
   test('TC-REP-09 (P/N): the journal report filters by status and date and totals the entries', async ({ page, request }) => {
+    // Its own approved entry, so the report has a row on any database
+    const manager = await createUser(request, uniquePerson('Rae'), 'MANAGER')
+    const { token } = await (await request.post('/api/auth/login', { data: { username: manager.username, password: manager.password } })).json()
+    const cash = await createAccount(request, uniqueAccount('RepCash'))
+    const revenue = await createAccount(request, uniqueAccount('RepRev', '4'), { category: 'Revenue', subcategory: 'Revenue', normal_side: 'RIGHT', statement: 'INCOME_STATEMENT' })
+    const id = await submitEntry(request, { token }, { date: '2026-10-01', lines: [[cash, 'DEBIT', 10], [revenue, 'CREDIT', 10]] })
+    expect((await api(request, token, 'PUT', `/journal-entries/${id}/approve`)).status).toBe(200)
     await as(page, request, ADMIN)
     await page.goto('/reports/journal')
     await page.getByLabel('Filter by status').selectOption('APPROVED')

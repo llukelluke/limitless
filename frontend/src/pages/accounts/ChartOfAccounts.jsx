@@ -17,7 +17,16 @@ const STATUS_OPTIONS = [
 ]
 
 const baseColumns = [
-  { key: 'number', header: 'Number', width: '9%' },
+  {
+    key: 'number',
+    header: 'Number',
+    width: '9%',
+    render: (account) => (
+      <Link to={`/accounts/${account.id}/ledger`} title={`Open the ledger for ${account.name}`}>
+        {account.number}
+      </Link>
+    ),
+  },
   {
     key: 'name',
     header: 'Account name',

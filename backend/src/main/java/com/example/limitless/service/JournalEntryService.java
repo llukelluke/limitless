@@ -478,11 +478,12 @@ public class JournalEntryService {
     private void notifyManagers(JournalEntry e, User submitter) {
         BigDecimal total = e.getLines().stream().filter(l -> l.getSide() == JournalEntryLine.Side.DEBIT)
                 .map(JournalEntryLine::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-        String body = displayName(submitter) + " submitted journal entry #" + e.getId() + " dated " + e.getEntryDate()
+        String kind = e.getEntryType() == JournalEntry.JournalEntryType.ADJUSTING ? "adjusting journal entry" : "journal entry";
+        String body = displayName(submitter) + " submitted " + kind + " #" + e.getId() + " dated " + e.getEntryDate()
                 + " for $" + money(total) + " and it is waiting for your approval.";
         for (User m : users.findByRole(User.UserRole.MANAGER)) {
             if (m.getStatus() == User.UserStatus.ACTIVATED && m.getEmailAddress() != null) {
-                email.send(m.getEmailAddress(), "Journal entry #" + e.getId() + " needs your approval", body);
+                email.send(m.getEmailAddress(), Character.toUpperCase(kind.charAt(0)) + kind.substring(1) + " #" + e.getId() + " needs your approval", body);
             }
         }
     }

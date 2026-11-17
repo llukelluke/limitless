@@ -93,6 +93,7 @@ export default function AppLayout() {
                 key={item.to}
                 to={item.to}
                 title={item.title}
+                aria-label={item.label}
                 className={`app__nav-link ${active ? 'app__nav-link--active' : ''}`}
                 aria-current={active ? 'page' : undefined}
               >

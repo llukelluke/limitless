@@ -465,7 +465,7 @@ test.describe('Ledger', () => {
     await as(page, W.accountant)
     await page.goto(`/accounts/${W.cash.id}/ledger`)
     const prs = page.locator('tbody tr td:nth-child(3)')
-    const search = page.getByLabel('Search by amount, description or post reference')
+    const search = page.getByLabel('Search by account name, amount, description or post reference')
     await page.getByLabel('From date').fill('2026-10-10')
     await expect(prs).toHaveText(['', ref(W.e2)])
     await expect(page.locator('tbody tr').first()).toContainText('$1,500.00') // opening balance as of the From date

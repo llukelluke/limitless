@@ -15,33 +15,32 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader
-        eyebrow="ADMINISTRATION"
         title="Administrator Dashboard"
         subtitle="Manage users, access requirements, and account activity."
       />
 
       <div className="stat-cards">
         <StatCard
-          label="TOTAL USERS"
+          label="Total users"
           value={count(all.filter(isSystemUser).length)}
           linkTo="/admin/users"
           linkLabel="View Users"
         />
         <StatCard
-          label="PENDING REQUESTS"
+          label="Pending requests"
           value={count(pending.length)}
           linkTo="/admin/access-requests"
           linkLabel="Review Requests"
         />
         <StatCard
-          label="SUSPENDED USERS"
+          label="Suspended users"
           value={count(all.filter((user) => user.status === 'SUSPENDED').length)}
           linkTo="/admin/users?status=SUSPENDED"
           linkLabel="View Users"
         />
       </div>
 
-      <Panel title="PENDING ACCESS REQUESTS" className="dashboard-requests">
+      <Panel title="Pending access requests" className="dashboard-requests">
         <AsyncContent loading={loading} error={error}>
           <DataTable
             columns={requestColumns}

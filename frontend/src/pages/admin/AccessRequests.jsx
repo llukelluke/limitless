@@ -17,7 +17,7 @@ export function PendingRequests() {
     <>
       <PageHeader title="Pending Access Requests" subtitle="Review and manage new user access requests." />
 
-      <Panel title="PENDING ACCESS REQUESTS" className="page-panel">
+      <Panel title="Pending access requests" className="page-panel">
         <AsyncContent loading={loading} error={error}>
           <DataTable
             columns={requestColumns}
@@ -70,7 +70,7 @@ export function ReviewRequest() {
 
       <Panel
         as="form"
-        title="REQUEST DETAILS"
+        title="Request details"
         className="page-panel panel--form"
         onSubmit={handleSubmit}
         action={<BackLink to="/admin/access-requests">Back to Requests</BackLink>}
@@ -79,19 +79,19 @@ export function ReviewRequest() {
           <AsyncContent loading={loading} error={error}>
             {request && (
               <>
-                <FormSection title="APPLICANT INFORMATION">
-                  <Field label="FIRST NAME" value={request.first_name ?? ''} readOnly />
-                  <Field label="LAST NAME" value={request.last_name ?? ''} readOnly />
-                  <Field label="EMAIL ADDRESS" value={request.email_address ?? ''} readOnly />
-                  <Field label="DATE OF BIRTH" value={formatDate(request.birth_date)} readOnly />
-                  <Field label="ADDRESS" value={request.home_address ?? ''} readOnly title={request.home_address} />
-                  <Field label="DATE REQUESTED" value={formatDate(request.created_at)} readOnly />
+                <FormSection title="Applicant information">
+                  <Field label="First name" value={request.first_name ?? ''} readOnly />
+                  <Field label="Last name" value={request.last_name ?? ''} readOnly />
+                  <Field label="Email address" value={request.email_address ?? ''} readOnly />
+                  <Field label="Date of birth" value={formatDate(request.birth_date)} readOnly />
+                  <Field label="Address" value={request.home_address ?? ''} readOnly title={request.home_address} />
+                  <Field label="Date requested" value={formatDate(request.created_at)} readOnly />
                 </FormSection>
 
                 {!done && (
-                  <FormSection title="ACCESS">
+                  <FormSection title="Access">
                     <Field
-                      label="ROLE IF APPROVED"
+                      label="Role if approved"
                       options={ROLES}
                       value={role}
                       onChange={(event) => setRole(event.target.value)}

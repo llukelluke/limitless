@@ -6,7 +6,7 @@ import { ADMIN, adminToken, api, as, createAccount, createUser, evidence, record
 
 test.describe.configure({ mode: 'serial' })
 
-const ERROR_RED = 'rgb(138, 31, 18)'
+const ERROR_RED = 'rgb(180, 35, 24)'
 const problems = (page) => page.locator('.form-feedback .alert')
 const submit = (page) => page.getByRole('button', { name: 'Submit for Approval' })
 const refs = (page) => page.locator('tbody tr td:first-child')
@@ -88,7 +88,7 @@ test.describe('Journal entries: create (accountant and manager)', () => {
     await line(page, 'DEBIT', 2, W.rent, '879.50')
     await line(page, 'CREDIT', 1, W.cash, '1,000')
     await expect(page.locator('.journal-side__total').first()).toHaveText('Total debits: $1,000.00')
-    await page.getByLabel(/ATTACH FILES/).setInputFiles([
+    await page.getByLabel(/Attach files/i).setInputFiles([
       { name: 'receipt.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF') },
       { name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from('png') },
     ])
@@ -205,7 +205,7 @@ test.describe('Journal entries: create (accountant and manager)', () => {
     await newEntry(page)
     await line(page, 'DEBIT', 1, W.cash, '50')
     await line(page, 'CREDIT', 1, W.revenue, '50')
-    await page.getByLabel(/ATTACH FILES/).setInputFiles([
+    await page.getByLabel(/Attach files/i).setInputFiles([
       { name: 'ledger.xlsx', mimeType: 'application/octet-stream', buffer: Buffer.from('x') },
       { name: 'setup.exe', mimeType: 'application/octet-stream', buffer: Buffer.from('x') },
     ])
@@ -265,7 +265,7 @@ test.describe('Journal entries: create (accountant and manager)', () => {
     await as(page, W.accountant)
     await page.goto(`/journal/${W.e5}`)
     await expect(page.locator('.journal-status')).toHaveText('Pending')
-    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(251, 239, 196)')
+    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(255, 244, 214)')
     for (const name of ['Delete', 'Edit', 'Approve', 'Reject']) await expect(page.getByRole('button', { name })).toHaveCount(0)
     expect((await api(request, W.accountant.token, 'DELETE', `/journal-entries/${W.e5}`)).status).toBe(409)
     expect((await api(request, W.accountant.token, 'PUT', `/journal-entries/${W.e5}/approve`)).status).toBe(403)
@@ -327,7 +327,7 @@ test.describe('Journal entries: manager approval', () => {
     await page.getByRole('button', { name: 'Approve' }).click()
     await expect(page.locator('.alert')).toHaveText('Entry approved and posted to the ledger.')
     await expect(page.locator('.journal-status')).toHaveText('Approved')
-    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(227, 241, 223)')
+    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(231, 245, 236)')
     await expect(page.getByLabel('REVIEWED BY')).toHaveValue(fullName(W.manager))
     await expect(page.getByRole('button', { name: 'Approve' })).toHaveCount(0)
     await evidence(page, 'S14')
@@ -339,7 +339,7 @@ test.describe('Journal entries: manager approval', () => {
     await page.goto(`/journal/${W.e6}`)
     await page.getByRole('button', { name: 'Reject' }).click()
     await expect(page.getByRole('button', { name: 'Confirm Rejection' })).toBeDisabled()
-    await page.getByLabel(/REASON FOR REJECTION/).fill('   ')
+    await page.getByLabel(/Reason for rejection/i).fill('   ')
     await expect(page.getByRole('button', { name: 'Confirm Rejection' })).toBeDisabled()
     expect(calls.some((c) => c.endsWith('/reject'))).toBeFalsy()
     // The server refuses it too
@@ -354,11 +354,11 @@ test.describe('Journal entries: manager approval', () => {
     await as(page, W.manager)
     await page.goto(`/journal/${id}`)
     await page.getByRole('button', { name: 'Reject' }).click()
-    await page.getByLabel(/REASON FOR REJECTION/).fill('Rent belongs in October, not November.')
+    await page.getByLabel(/Reason for rejection/i).fill('Rent belongs in October, not November.')
     await page.getByRole('button', { name: 'Confirm Rejection' }).click()
     await expect(page.locator('.alert')).toHaveText('Entry rejected.')
     await expect(page.locator('.journal-status')).toHaveText('Rejected')
-    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(251, 227, 223)')
+    await expect(page.locator('.journal-status')).toHaveCSS('background-color', 'rgb(253, 236, 235)')
     await expect(page.getByLabel('COMMENT')).toHaveValue('Rent belongs in October, not November.')
     await evidence(page, 'S16')
   })

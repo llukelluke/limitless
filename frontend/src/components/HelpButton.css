@@ -1,91 +1,112 @@
-.help-button {
-  height: 32px;
+/* On the sign-in screens the help button stands alone in the corner */
+.help-button:not(.app__service) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
   padding: 0 14px;
-  border: 1px solid var(--gold-300);
-  border-radius: 4px;
-  background: transparent;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--gold-100);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
   cursor: pointer;
+  transition:
+    border-color var(--fast) ease,
+    box-shadow var(--fast) ease;
 }
 
-.help-button:hover {
-  background: var(--navy-800);
+.help-button:not(.app__service):hover {
+  border-color: var(--text-3);
+  box-shadow: var(--shadow-sm);
 }
 
 .help-dialog {
-  width: min(760px, calc(100vw - 32px));
+  width: min(820px, calc(100vw - 32px));
   max-height: calc(100svh - 64px);
-  padding: 23px 22px 27px 34px;
-  border: 1px solid var(--paper-line);
-  border-radius: 12px;
-  background: var(--paper);
-  color: var(--ink);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--text);
+}
+
+.help-dialog[open] {
+  animation: pop-in var(--med) var(--ease);
 }
 
 .help-dialog::backdrop {
-  background: rgba(0, 7, 25, 0.7);
+  background: rgba(7, 15, 36, 0.45);
+  backdrop-filter: blur(2px);
+  animation: fade-in var(--med) ease;
 }
 
 .help-dialog__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
 }
 
 .help-dialog__body {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 220px 1fr;
   gap: 28px;
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 .help-dialog__topics {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .help-dialog__topic {
-  padding: 7px 10px;
+  padding: 9px 12px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: none;
-  font-size: 13px;
+  font-size: 14px;
+  color: var(--text-2);
   text-align: left;
-  color: var(--ink);
   cursor: pointer;
+  transition:
+    background-color var(--fast) ease,
+    color var(--fast) ease;
 }
 
 .help-dialog__topic:hover {
-  background: var(--paper-card);
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .help-dialog__topic--active,
 .help-dialog__topic--active:hover {
-  background: var(--paper-input);
+  background: var(--primary-soft);
   font-weight: 600;
+  color: var(--primary);
 }
 
 .help-dialog__content {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
+  animation: fade-in var(--med) ease;
 }
 
 .help-dialog__title {
-  font-family: var(--serif);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
 }
 
 @media (max-width: 720px) {
   .help-dialog {
-    padding: 20px 16px;
+    padding: 18px 16px;
   }
 
   .help-dialog__body {

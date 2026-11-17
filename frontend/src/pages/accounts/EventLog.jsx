@@ -22,9 +22,9 @@ function Images({ event }) {
       <table className="event-images__table">
         <thead>
           <tr>
-            <th scope="col">FIELD</th>
-            <th scope="col">BEFORE</th>
-            <th scope="col">AFTER</th>
+            <th scope="col">Field</th>
+            <th scope="col">Before</th>
+            <th scope="col">After</th>
           </tr>
         </thead>
         <tbody>
@@ -42,14 +42,14 @@ function Images({ event }) {
 }
 
 const columns = [
-  { key: 'id', header: 'EVENT ID', width: '8%' },
-  { key: 'changed_at', header: 'DATE / TIME', width: '17%', render: (e) => formatDateTime(e.changed_at) },
-  { key: 'username', header: 'USER', width: '13%', render: (e) => `${e.username ?? '—'} (ID ${e.user_id})` },
-  { key: 'action', header: 'ACTION', width: '10%', render: (e) => ACTIONS[e.action] ?? e.action },
+  { key: 'id', header: 'Event ID', width: '8%' },
+  { key: 'changed_at', header: 'Date / time', width: '17%', render: (e) => formatDateTime(e.changed_at) },
+  { key: 'username', header: 'User', width: '13%', render: (e) => `${e.username ?? '—'} (ID ${e.user_id})` },
+  { key: 'action', header: 'Action', width: '10%', render: (e) => ACTIONS[e.action] ?? e.action },
   {
     key: 'record',
     sortValue: (e) => `${e.table_name} ${String(e.record_id).padStart(10, '0')}`,
-    header: 'RECORD',
+    header: 'Record',
     width: '14%',
     render: (e) =>
       e.table_name === 'accounts' ? (
@@ -60,7 +60,7 @@ const columns = [
         `${e.table_name} #${e.record_id}`
       ),
   },
-  { key: 'images', header: 'BEFORE / AFTER', render: (e) => <Images event={e} /> },
+  { key: 'images', header: 'Before / after', render: (e) => <Images event={e} /> },
 ]
 
 // Events for one record (account details page) or for everything (Event Log page).
@@ -78,11 +78,10 @@ export default function EventLog() {
   return (
     <>
       <PageHeader
-        eyebrow="EVENT LOG"
         title="Event Log"
         subtitle="Every addition, change, and deactivation, with who made it and when."
       />
-      <Panel title="EVENTS" className="page-panel">
+      <Panel title="Events" className="page-panel">
         <EventLogTable />
       </Panel>
     </>

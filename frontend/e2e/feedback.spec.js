@@ -41,7 +41,7 @@ test.describe('Sorting', () => {
     const names = page.locator('tbody tr td:nth-child(2)')
     await expect(names).toHaveCount(3)
 
-    const balance = page.getByRole('columnheader', { name: /BALANCE/ })
+    const balance = page.getByRole('columnheader', { name: /Balance/i })
     await balance.getByRole('button').click()
     await expect(balance).toHaveAttribute('aria-sort', 'ascending')
     await expect(names).toHaveText([`${tag} 25`, `${tag} 300`, `${tag} 1000`]) // by amount, not as text
@@ -67,7 +67,7 @@ test.describe('Reports', () => {
     await as(page, request, { username: accountant.username, password: accountant.password })
     await page.goto('/home')
     await page.getByRole('link', { name: 'Reports', exact: true }).click()
-    await expect(page.locator('.report-card__label')).toHaveText(['CHART OF ACCOUNTS', 'JOURNAL ENTRIES', 'EVENT LOG'])
+    await expect(page.locator('.report-card__label')).toHaveText(['Chart of accounts', 'Journal entries', 'Event log'])
     await evidence(page, 'F03')
     await page.goto('/admin/reports/users')
     await expect(page).not.toHaveURL(/\/admin\/reports\/users$/) // user reports are admin only
@@ -169,8 +169,8 @@ test.describe('Temporary passwords', () => {
 })
 
 test.describe('Status colours', () => {
-  const GREEN = 'rgb(227, 241, 223)'
-  const RED = 'rgb(251, 227, 223)'
+  const GREEN = 'rgb(231, 245, 236)'
+  const RED = 'rgb(253, 236, 235)'
   const badge = (row) => row.locator('.status-badge')
 
   test('TC-UI-12 (P/N): user accounts show Active in green and Suspended / Deactivated in red', async ({ page, request }) => {

@@ -44,22 +44,22 @@ export default function CreateUser() {
 
       <Panel
         as="form"
-        title="CREATE USER"
+        title="Create user"
         className="page-panel panel--form"
         onSubmit={handleSubmit}
         noValidate
         action={<BackLink to="/admin/users">Back to Users</BackLink>}
       >
         <div className="form-body">
-          <FormSection title="ACCOUNT INFORMATION">
-            <Field label="FIRST NAME" name="first_name" error={fieldErrors.first_name} placeholder="Enter first name..." />
-            <Field label="LAST NAME" name="last_name" error={fieldErrors.last_name} placeholder="Enter last name..." />
-            <Field label="EMAIL ADDRESS" name="email_address" type="email" error={fieldErrors.email_address} placeholder="Enter email..." />
-            <Field label="DATE OF BIRTH" name="birth_date" type="date" />
-            <Field label="ADDRESS" name="home_address" placeholder="Enter address..." />
-            <Field label="ROLE" name="role" error={fieldErrors.role} options={roleOptions} defaultValue="" />
+          <FormSection title="Account information">
+            <Field label="First name" name="first_name" error={fieldErrors.first_name} placeholder="Enter first name..." />
+            <Field label="Last name" name="last_name" error={fieldErrors.last_name} placeholder="Enter last name..." />
+            <Field label="Email address" name="email_address" type="email" error={fieldErrors.email_address} placeholder="Enter email..." />
+            <Field label="Date of birth" name="birth_date" type="date" />
+            <Field label="Address" name="home_address" placeholder="Enter address..." />
+            <Field label="Role" name="role" error={fieldErrors.role} options={roleOptions} defaultValue="" />
             <Field
-              label="USERNAME"
+              label="Username"
               value="Generated automatically"
               readOnly
               className="field--stack"

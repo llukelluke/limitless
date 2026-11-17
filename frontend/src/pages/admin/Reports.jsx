@@ -34,8 +34,8 @@ export function AllUsersReport() {
 
 const expiredColumns = [
   ...userColumns.slice(0, 3),
-  { key: 'password_expiry', header: 'PASSWORD EXPIRED', width: '20%', render: (user) => formatDate(user.password_expiry) },
-  { key: 'status', header: 'ACCOUNT STATUS', render: (user) => <UserStatus user={user} />, sortValue: (user) => labelFor(STATUSES, user.status) },
+  { key: 'password_expiry', header: 'Password expired', width: '20%', render: (user) => formatDate(user.password_expiry) },
+  { key: 'status', header: 'Account status', render: (user) => <UserStatus user={user} />, sortValue: (user) => labelFor(STATUSES, user.status) },
 ]
 
 // 17 Expired Passwords Report
@@ -73,9 +73,9 @@ export function UsersByStatusReport() {
   const users = (data ?? []).filter(isSystemUser)
   const count = (role, status) => users.filter((u) => (!role || u.role === role) && (!status || u.status === status)).length
   const countColumns = [
-    { key: 'label', header: 'ROLE', width: '28%' },
-    ...ACCOUNT_STATUSES.map((s) => ({ key: s.value, header: <span className="num">{s.label.toUpperCase()}</span>, width: '18%', render: (r) => <span className="num">{r[s.value]}</span> })),
-    { key: 'total', header: <span className="num">TOTAL</span>, render: (r) => <span className="num">{r.total}</span> },
+    { key: 'label', header: 'Role', width: '28%' },
+    ...ACCOUNT_STATUSES.map((s) => ({ key: s.value, header: <span className="num">{s.label}</span>, width: '18%', render: (r) => <span className="num">{r[s.value]}</span> })),
+    { key: 'total', header: <span className="num">Total</span>, render: (r) => <span className="num">{r.total}</span> },
   ]
   const countRows = ROLES.map((role) => ({
     id: role.value,
@@ -90,12 +90,12 @@ export function UsersByStatusReport() {
   }
   const listColumns = [
     ...userColumns,
-    { key: 'suspension_end', header: 'SUSPENDED UNTIL', render: (u) => (u.status === 'SUSPENDED' ? formatDate(u.suspension_end) : '—') },
+    { key: 'suspension_end', header: 'Suspended until', render: (u) => (u.status === 'SUSPENDED' ? formatDate(u.suspension_end) : '—') },
   ]
   return (
     <>
       <PageHeader title="Users by Status & Role" subtitle="How many users hold each role, and who cannot sign in." />
-      <Panel title="USERS BY STATUS & ROLE" className="page-panel" action={<ReportActions back="/admin/reports" />}>
+      <Panel title="Users by status & role" className="page-panel" action={<ReportActions back="/admin/reports" />}>
         <ReportMeta>{users.length} users</ReportMeta>
         <AsyncContent loading={loading} error={error}>
           <DataTable columns={countColumns} rows={countRows} caption="User counts by role and status" footer={totals} />

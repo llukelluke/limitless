@@ -7,8 +7,8 @@ import './WhatsNew.css'
 export default function WhatsNew() {
   return (
     <>
-      <PageHeader eyebrow="UPDATES" title="What's New" subtitle="Every version of Limitless and what changed in it." />
-      <Panel title="RELEASE NOTES" className="page-panel">
+      <PageHeader title="What's New" subtitle="Every version of Limitless and what changed in it." />
+      <Panel title="Release notes" className="page-panel">
         <ol className="releases">
           {RELEASES.map((release) => (
             <li key={release.version} className="release">

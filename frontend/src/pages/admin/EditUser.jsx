@@ -86,7 +86,7 @@ export default function EditUser() {
 
       <Panel
         as="form"
-        title="USER DETAILS"
+        title="User details"
         className="page-panel panel--form"
         onSubmit={handleSubmit}
         noValidate
@@ -97,22 +97,22 @@ export default function EditUser() {
             {user && (
               // Re-mount the fields after each save so they show the stored values.
               <div key={JSON.stringify(user)}>
-                <FormSection title="ACCOUNT INFORMATION">
-                  <Field label="FIRST NAME" name="first_name" error={fieldErrors.first_name} defaultValue={user.first_name ?? ''} />
-                  <Field label="LAST NAME" name="last_name" error={fieldErrors.last_name} defaultValue={user.last_name ?? ''} />
-                  <Field label="EMAIL ADDRESS" name="email_address" type="email" error={fieldErrors.email_address} defaultValue={user.email_address ?? ''} />
-                  <Field label="USERNAME" value={user.username ?? ''} readOnly />
-                  <Field label="ADDRESS" name="home_address" defaultValue={user.home_address ?? ''} className="field--wide" />
-                  <Field label="DATE OF BIRTH" name="birth_date" type="date" defaultValue={user.birth_date ?? ''} />
-                  <Field label="PICTURE URL" name="picture" type="url" defaultValue={user.picture ?? ''} placeholder="https://…" />
-                  <Field label="ROLE" name="role" options={ROLES} defaultValue={user.role ?? 'ACCOUNTANT'} />
-                  <Field label="ACCOUNT STATUS" name="status" options={statusOptions} defaultValue={user.status} />
+                <FormSection title="Account information">
+                  <Field label="First name" name="first_name" error={fieldErrors.first_name} defaultValue={user.first_name ?? ''} />
+                  <Field label="Last name" name="last_name" error={fieldErrors.last_name} defaultValue={user.last_name ?? ''} />
+                  <Field label="Email address" name="email_address" type="email" error={fieldErrors.email_address} defaultValue={user.email_address ?? ''} />
+                  <Field label="Username" value={user.username ?? ''} readOnly />
+                  <Field label="Address" name="home_address" defaultValue={user.home_address ?? ''} className="field--wide" />
+                  <Field label="Date of birth" name="birth_date" type="date" defaultValue={user.birth_date ?? ''} />
+                  <Field label="Picture URL" name="picture" type="url" defaultValue={user.picture ?? ''} placeholder="https://…" />
+                  <Field label="Role" name="role" options={ROLES} defaultValue={user.role ?? 'ACCOUNTANT'} />
+                  <Field label="Account status" name="status" options={statusOptions} defaultValue={user.status} />
                 </FormSection>
 
-                <FormSection title="ACCOUNT ACCESS">
-                  <Field label="PASSWORD STATUS" value={passwordStatus(user)} readOnly className="field--stack" />
+                <FormSection title="Account access">
+                  <Field label="Password status" value={passwordStatus(user)} readOnly className="field--stack" />
                   <Field
-                    label="PASSWORD EXPIRATION"
+                    label="Password expiration"
                     value={user.password_expiry ? `Expires ${formatDate(user.password_expiry)}` : '—'}
                     readOnly
                     className="field--stack"
@@ -129,9 +129,9 @@ export default function EditUser() {
                   </div>
                 </FormSection>
 
-                <FormSection title="SCHEDULED SUSPENSION">
-                  <Field label="START DATE" name="suspension_start" type="date" error={fieldErrors.suspension_start} defaultValue={user.suspension_start ?? ''} />
-                  <Field label="EXPIRY DATE" name="suspension_end" type="date" error={fieldErrors.suspension_end} defaultValue={user.suspension_end ?? ''} />
+                <FormSection title="Scheduled suspension">
+                  <Field label="Start date" name="suspension_start" type="date" error={fieldErrors.suspension_start} defaultValue={user.suspension_start ?? ''} />
+                  <Field label="Expiry date" name="suspension_end" type="date" error={fieldErrors.suspension_end} defaultValue={user.suspension_end ?? ''} />
                 </FormSection>
               </div>
             )}

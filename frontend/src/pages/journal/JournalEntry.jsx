@@ -13,7 +13,7 @@ import './Journal.css'
 
 const money = (key) => ({
   key,
-  header: <span className="num">{key.toUpperCase()}</span>,
+  header: <span className="num">{key[0].toUpperCase() + key.slice(1)}</span>,
   width: '20%',
   render: (row) => <span className="num">{row[key] === null ? '' : formatMoney(row[key])}</span>,
 })
@@ -21,7 +21,7 @@ const money = (key) => ({
 const columns = [
   {
     key: 'account',
-    header: 'ACCOUNT',
+    header: 'Account',
     render: (row) =>
       row.account_id ? (
         <Link
@@ -82,12 +82,11 @@ export default function JournalEntry() {
   return (
     <>
       <PageHeader
-        eyebrow="JOURNALIZING"
         title={entry ? `Journal Entry JE-${entry.id}` : 'Journal Entry'}
         subtitle="Accounts debited and credited, source documents, and approval status."
       />
 
-      <Panel title="JOURNAL ENTRY" className="page-panel" action={<BackLink to="/journal">Back to Journal</BackLink>}>
+      <Panel title="Journal entry" className="page-panel" action={<BackLink to="/journal">Back to Journal</BackLink>}>
         <AsyncContent loading={loading && !entry} error={error}>
           {entry && (
             <div className="form-body">
@@ -123,7 +122,7 @@ export default function JournalEntry() {
               {canReview && rejecting && (
                 <div className="journal-reject">
                   <label className="field__label" htmlFor={commentId}>
-                    REASON FOR REJECTION <span className="field__required">*</span>
+                    Reason for rejection <span className="field__required">*</span>
                   </label>
                   <textarea
                     id={commentId}
@@ -149,24 +148,24 @@ export default function JournalEntry() {
                 </div>
               )}
 
-              <FormSection title="ENTRY">
+              <FormSection title="Entry">
                 <div className="field">
-                  <span className="field__label">STATUS</span>
+                  <span className="field__label">Status</span>
                   <JournalStatus status={entry.status} />
                 </div>
-                <Field label="DATE" value={formatDate(entry.entry_date)} readOnly />
-                <Field label="TYPE" value={labelFor(ENTRY_TYPES, entry.entry_type)} readOnly />
-                <Field label="PREPARED BY" value={entry.created_by_name ?? '—'} readOnly />
-                <Field label="SUBMITTED" value={formatDateTime(entry.created_at)} readOnly />
-                {entry.reviewed_by && <Field label="REVIEWED BY" value={entry.reviewed_by_name} readOnly />}
-                {entry.reviewed_at && <Field label="REVIEWED" value={formatDateTime(entry.reviewed_at)} readOnly />}
-                <Field label="DESCRIPTION" value={entry.description ?? '—'} readOnly className="field--wide" />
-                {entry.comment && <Field label="COMMENT" value={entry.comment} readOnly className="field--wide" />}
+                <Field label="Date" value={formatDate(entry.entry_date)} readOnly />
+                <Field label="Type" value={labelFor(ENTRY_TYPES, entry.entry_type)} readOnly />
+                <Field label="Prepared by" value={entry.created_by_name ?? '—'} readOnly />
+                <Field label="Submitted" value={formatDateTime(entry.created_at)} readOnly />
+                {entry.reviewed_by && <Field label="Reviewed by" value={entry.reviewed_by_name} readOnly />}
+                {entry.reviewed_at && <Field label="Reviewed" value={formatDateTime(entry.reviewed_at)} readOnly />}
+                <Field label="Description" value={entry.description ?? '—'} readOnly className="field--wide" />
+                {entry.comment && <Field label="Comment" value={entry.comment} readOnly className="field--wide" />}
               </FormSection>
 
               <DataTable sortable={false} columns={columns} rows={rows} caption={`Lines of journal entry JE-${entry.id}`} />
 
-              <FormSection title="SOURCE DOCUMENTS">
+              <FormSection title="Source documents">
                 {entry.attachments?.length ? (
                   <ul className="journal-files">
                     {entry.attachments.map((attachment) => (

@@ -1,7 +1,7 @@
 /* Money columns line up on the decimal point */
 .num {
   display: block;
-  padding-right: 20px;
+  padding-right: 4px;
   text-align: right;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -27,35 +27,37 @@
 
 /* Why Deactivate is disabled, shown as text (a hover tooltip alone is missed by keyboard and touch users) */
 .account-actions__note {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-muted);
-}
-
-.page-panel + .page-panel {
-  flex: 0 0 auto;
 }
 
 /* ---------- Ledger ---------- */
 .ledger-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 48px;
-  margin: 24px 0 0;
-  padding-left: 11px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 20px 0 0;
+}
+
+.ledger-summary > div {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
 }
 
 .ledger-summary dt {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--gold-ink);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
 }
 
 .ledger-summary dd {
   margin: 4px 0 0;
-  font-family: var(--serif);
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 600;
-  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
 /* ---------- Event log before/after images ---------- */
@@ -64,10 +66,18 @@
   font-weight: 600;
 }
 
+.event-images summary {
+  color: var(--link);
+}
+
+.event-images[open] .event-images__table {
+  animation: fade-in var(--med) ease;
+}
+
 .event-images__table {
   margin-top: 10px;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .data-table .event-images__table th,
@@ -83,7 +93,7 @@
 }
 
 .event-images__changed td {
-  background: rgba(226, 194, 117, 0.25);
+  background: var(--warning-bg);
 }
 
 .toolbar__date {
@@ -91,5 +101,5 @@
 }
 
 .ledger-summary + .toolbar {
-  margin: 28px 0 8px;
+  margin: 20px 0 4px;
 }

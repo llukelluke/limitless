@@ -51,13 +51,12 @@ export default function AccountDetails() {
   return (
     <>
       <PageHeader
-        eyebrow="CHART OF ACCOUNTS"
         title={account ? `${account.number} · ${account.name}` : 'Account'}
         subtitle="Account details and change history."
       />
 
       <Panel
-        title="ACCOUNT DETAILS"
+        title="Account details"
         className="page-panel"
         action={<BackLink to="/accounts">Back to Chart of Accounts</BackLink>}
       >
@@ -119,39 +118,39 @@ export default function AccountDetails() {
                 </div>
               )}
 
-              <FormSection title="ACCOUNT INFORMATION">
-                <Field label="ACCOUNT NAME" value={account.name} readOnly />
-                <Field label="ACCOUNT NUMBER" value={account.number} readOnly />
-                <Field label="CATEGORY" value={account.category ?? '—'} readOnly />
-                <Field label="SUBCATEGORY" value={account.subcategory ?? '—'} readOnly />
-                <Field label="NORMAL SIDE" value={labelFor(NORMAL_SIDES, account.normal_side)} readOnly />
-                <Field label="STATEMENT" value={statementName(account.statement)} readOnly />
-                <Field label="ORDER" value={formatOrder(account.order)} readOnly />
+              <FormSection title="Account information">
+                <Field label="Account name" value={account.name} readOnly />
+                <Field label="Account number" value={account.number} readOnly />
+                <Field label="Category" value={account.category ?? '—'} readOnly />
+                <Field label="Subcategory" value={account.subcategory ?? '—'} readOnly />
+                <Field label="Normal side" value={labelFor(NORMAL_SIDES, account.normal_side)} readOnly />
+                <Field label="Statement" value={statementName(account.statement)} readOnly />
+                <Field label="Order" value={formatOrder(account.order)} readOnly />
                 <div className="field">
-                  <span className="field__label">STATUS</span>
+                  <span className="field__label">Status</span>
                   <AccountStatus account={account} />
                 </div>
-                <Field label="DESCRIPTION" value={account.description ?? '—'} readOnly className="field--wide" />
+                <Field label="Description" value={account.description ?? '—'} readOnly className="field--wide" />
               </FormSection>
 
-              <FormSection title="BALANCES">
-                <Field label="INITIAL BALANCE" value={formatMoney(account.initial_balance)} readOnly />
-                <Field label="DEBIT" value={formatMoney(account.debit)} readOnly />
-                <Field label="CREDIT" value={formatMoney(account.credit)} readOnly />
-                <Field label="BALANCE" value={formatMoney(account.balance)} readOnly />
+              <FormSection title="Balances">
+                <Field label="Initial balance" value={formatMoney(account.initial_balance)} readOnly />
+                <Field label="Debit" value={formatMoney(account.debit)} readOnly />
+                <Field label="Credit" value={formatMoney(account.credit)} readOnly />
+                <Field label="Balance" value={formatMoney(account.balance)} readOnly />
               </FormSection>
 
-              <FormSection title="OTHER">
-                <Field label="DATE ADDED" value={formatDateTime(account.added_at)} readOnly />
-                <Field label="ADDED BY" value={account.added_by ?? `User ${account.user_id}`} readOnly />
-                <Field label="COMMENT" value={account.comment ?? '—'} readOnly className="field--wide" />
+              <FormSection title="Other">
+                <Field label="Date added" value={formatDateTime(account.added_at)} readOnly />
+                <Field label="Added by" value={account.added_by ?? `User ${account.user_id}`} readOnly />
+                <Field label="Comment" value={account.comment ?? '—'} readOnly className="field--wide" />
               </FormSection>
             </div>
           )}
         </AsyncContent>
       </Panel>
 
-      <Panel title="CHANGE HISTORY" className="page-panel">
+      <Panel title="Change history" className="page-panel">
         <EventLogTable key={logVersion} table="accounts" recordId={id} />
       </Panel>
     </>

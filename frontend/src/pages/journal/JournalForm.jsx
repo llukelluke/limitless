@@ -178,11 +178,11 @@ export default function JournalForm() {
 
   return (
     <>
-      <PageHeader eyebrow="JOURNALIZING" title="New Journal Entry" subtitle="Debits first, then credits. Totals must match." />
+      <PageHeader title="New Journal Entry" subtitle="Debits first, then credits. Totals must match." />
 
       <Panel
         as="form"
-        title="JOURNAL ENTRY"
+        title="Journal entry"
         className="page-panel"
         action={<BackLink to="/journal">Back to Journal</BackLink>}
         onSubmit={submit}
@@ -190,12 +190,12 @@ export default function JournalForm() {
       >
         <AsyncContent loading={loading} error={error}>
           <div className="form-body">
-            <FormSection title="ENTRY">
-              <Field label="DATE" type="date" required aria-invalid={invalid(bad.has('entry_date'))} value={draft.entry_date} onChange={set('entry_date')} />
-              <Field label="TYPE" options={ENTRY_TYPES} value={draft.entry_type} onChange={set('entry_type')} />
+            <FormSection title="Entry">
+              <Field label="Date" type="date" required aria-invalid={invalid(bad.has('entry_date'))} value={draft.entry_date} onChange={set('entry_date')} />
+              <Field label="Type" options={ENTRY_TYPES} value={draft.entry_type} onChange={set('entry_type')} />
               <div className="field field--wide">
                 <label className="field__label" htmlFor={descriptionId}>
-                  DESCRIPTION
+                  Description
                 </label>
                 <textarea
                   id={descriptionId}
@@ -209,8 +209,8 @@ export default function JournalForm() {
             </FormSection>
 
             {[
-              ['DEBIT', 'DEBITS'],
-              ['CREDIT', 'CREDITS'],
+              ['DEBIT', 'Debits'],
+              ['CREDIT', 'Credits'],
             ].map(([side, title]) => (
               <SideSection
                 key={side}
@@ -227,9 +227,9 @@ export default function JournalForm() {
             ))}
 
             <fieldset className="form-section">
-              <legend className="form-section__title">SOURCE DOCUMENTS</legend>
+              <legend className="form-section__title">Source documents</legend>
               <label className="field__label" htmlFor={fileId}>
-                ATTACH FILES (PDF, WORD, EXCEL, CSV, JPG, PNG)
+                Attach files (PDF, Word, Excel, CSV, JPG, PNG)
               </label>
               <input
                 id={fileId}

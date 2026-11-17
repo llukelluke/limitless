@@ -79,26 +79,25 @@ export default function Email() {
   return (
     <>
       <PageHeader
-        eyebrow={admin ? undefined : 'EMAIL'}
         title="Email Users"
         subtitle="Send messages to registered Limitless users."
       />
 
-      <Panel as="form" title="SEND EMAIL" className="page-panel" onSubmit={handleSubmit} noValidate>
+      <Panel as="form" title="Send email" className="page-panel" onSubmit={handleSubmit} noValidate>
         <div className="form-body email-form">
           <Field
             key={users ? 'loaded' : 'loading'}
-            label="RECIPIENT"
+            label="Recipient"
             className="field--narrow"
             name="recipient_id"
             options={recipientOptions}
             defaultValue={searchParams.get('to') ?? ''}
             error={fieldErrors.recipient_id}
           />
-          <Field label="SUBJECT" name="subject" className="field--narrow" error={fieldErrors.subject} placeholder="Enter Subject..." />
+          <Field label="Subject" name="subject" className="field--narrow" error={fieldErrors.subject} placeholder="Enter Subject..." />
           <div className="field">
             <label className="field__label" htmlFor={messageId}>
-              MESSAGE
+              Message
             </label>
             <textarea
               id={messageId}
@@ -110,7 +109,7 @@ export default function Email() {
           </div>
           <div className="field">
             <label className="field__label" htmlFor={fileId}>
-              ATTACHMENTS (PDF, WORD, EXCEL, CSV, JPG, PNG)
+              Attachments (PDF, Word, Excel, CSV, JPG, PNG)
             </label>
             <input
               id={fileId}

@@ -78,7 +78,7 @@ export default function RequestAccess() {
       </div>
 
       <div className="auth-form__actions">
-        <Alert surface="dark">{error}</Alert>
+        <Alert>{error}</Alert>
         <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} title={"Send your access request to an administrator"}>
           {submitting ? 'Submitting…' : 'Submit Request'}
         </button>

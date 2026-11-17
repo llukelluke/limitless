@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { CircleHelp, X } from 'lucide-react'
 import './HelpButton.css'
 
 // Help for the whole application, organized by topic. Shown from every page.
@@ -90,7 +91,8 @@ export default function HelpButton({ className = '' }) {
         title="Help: how to use Limitless, organized by topic"
         onClick={() => dialogRef.current?.showModal()}
       >
-        ? Help
+        <CircleHelp size={16} aria-hidden="true" />
+        <span>Help</span>
       </button>
       <dialog
         ref={dialogRef}
@@ -100,14 +102,15 @@ export default function HelpButton({ className = '' }) {
         onClick={(event) => event.target === dialogRef.current && dialogRef.current.close()}
       >
         <div className="help-dialog__head">
-          <h2 className="panel__title">HELP</h2>
+          <h2 className="panel__title">Help</h2>
           <button
             type="button"
             className="text-link text-link--strong"
             title="Close help"
             onClick={() => dialogRef.current?.close()}
           >
-            Close ✕
+            <X size={16} aria-hidden="true" />
+            Close
           </button>
         </div>
         <div className="help-dialog__body">
@@ -125,7 +128,7 @@ export default function HelpButton({ className = '' }) {
               </button>
             ))}
           </nav>
-          <article className="help-dialog__content">
+          <article className="help-dialog__content" key={topic}>
             <h3 className="help-dialog__title">{TOPICS[topic].title}</h3>
             {TOPICS[topic].body.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>

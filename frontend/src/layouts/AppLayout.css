@@ -1,15 +1,21 @@
 .app {
   display: flex;
   min-height: 100svh;
-  background: var(--navy-950);
+  background: var(--bg);
 }
 
+/* ---------- Sidebar ---------- */
 .app__sidebar {
-  flex: 0 0 230px;
+  position: sticky;
+  top: 0;
+  flex: 0 0 248px;
   display: flex;
   flex-direction: column;
-  padding: 16px 0 32px 18px;
+  height: 100svh;
+  padding: 16px 14px 18px;
+  overflow-y: auto;
   background: var(--navy-900);
+  color: #fff;
 }
 
 /* Top left corner: signed-in user and pop-up calendar */
@@ -18,177 +24,265 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  min-height: 70px;
-  margin-bottom: 54px;
+  padding: 0 6px;
 }
 
 .app__signed-in {
-  font-size: 12px;
-  color: var(--white-50);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .app__signed-in strong {
   font-weight: 600;
-  color: var(--white);
-}
-
-/* Buttons to the other services, top of every page */
-.app__services {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: -22px 90px 26px 0;
-}
-
-.app__service {
-  display: inline-flex;
-  align-items: center;
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid var(--gold-border);
-  border-radius: 4px;
-  background: var(--navy-card);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--white);
-  cursor: pointer;
-}
-
-.app__service:hover:not(:disabled) {
-  border-color: var(--gold-300);
-}
-
-.app__service:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+  color: #fff;
 }
 
 .app__logo {
   display: inline-flex;
   align-self: flex-start;
+  margin: 22px 0 18px;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  transition: opacity var(--fast) ease;
+}
+
+.app__logo:hover {
+  opacity: 0.85;
+}
+
+.app__logo .logo__emblem {
+  width: 52px;
+}
+
+.app__logo .logo__wordmark {
+  width: 120px;
+  margin-top: 3px;
 }
 
 .app__nav {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-top: 78px;
-  padding-left: 17px;
+  gap: 4px;
 }
 
-.app__version {
-  margin-top: auto;
-  padding: 32px 17px 0;
-  font-size: 12px;
-  color: var(--white-50);
-  text-decoration: none;
-}
-
-.app__version:hover {
-  color: var(--gold-100);
-  text-decoration: underline;
+/* Highlight that slides to the active item */
+.app__nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 3px 0 0 var(--gold-300);
+  pointer-events: none;
+  transition:
+    transform var(--med) var(--ease),
+    height var(--med) var(--ease),
+    width var(--med) var(--ease);
 }
 
 .app__nav-link {
   position: relative;
-  align-self: flex-start;
-  min-width: 130px;
-  padding: 6px 20px;
-  border-radius: 10px;
-  font-weight: 300;
-  font-size: 20px;
-  line-height: 24px;
-  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
   text-decoration: none;
+  transition:
+    color var(--fast) ease,
+    background-color var(--fast) ease;
 }
 
 .app__nav-link:hover {
-  background: rgba(0, 7, 64, 0.5);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .app__nav-link--active,
 .app__nav-link--active:hover {
-  background: var(--navy-800);
+  color: #fff;
+  background: transparent;
 }
 
-.app__nav-link--active::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  top: 6px;
-  width: 3px;
-  height: 25px;
-  border-radius: 2px;
-  background: var(--gold-100);
+.app__nav-icon {
+  flex: none;
+  transition: transform var(--fast) var(--ease), color var(--fast) ease;
 }
 
+.app__nav-link:hover .app__nav-icon {
+  transform: translateX(2px);
+}
+
+.app__nav-link--active .app__nav-icon {
+  color: var(--gold-100);
+}
+
+.app__version {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 18px 12px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.62);
+  text-decoration: none;
+  transition: color var(--fast) ease;
+}
+
+.app__version:hover {
+  color: var(--gold-100);
+}
+
+/* ---------- Main area ---------- */
 .app__main {
-  position: relative;
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 34px 41px 32px 38px;
 }
 
-@media (max-width: 1024px) {
+.app__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding: 10px 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(1.4) blur(10px);
+}
+
+.app__services {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.app__service {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--fast) ease,
+    color var(--fast) ease;
+}
+
+.app__service:hover:not(:disabled),
+.app__service[aria-pressed='true'] {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.app__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1320px;
+  padding: 28px 32px 48px;
+  animation: fade-up var(--med) var(--ease);
+}
+
+/* ---------- Smaller screens: icon rail, then a top bar ---------- */
+@media (max-width: 1100px) {
+  .app__service span {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
   .app__sidebar {
-    flex-basis: 200px;
+    flex-basis: 76px;
+    align-items: center;
+    padding: 14px 10px;
+  }
+
+  .app__signed-in,
+  .app__logo .logo__wordmark,
+  .app__nav-label,
+  .app__version span {
+    display: none;
   }
 
   .app__session {
-    margin-bottom: 32px;
+    align-items: center;
+    padding: 0;
   }
 
-  .app__nav {
-    margin-top: 48px;
-    padding-left: 0;
+  .app__logo {
+    align-self: center;
+    margin: 16px 0;
   }
 
-  .app__main {
-    padding: 72px 24px 24px;
+  .app__logo .logo__emblem {
+    width: 44px;
   }
 
-  .app__services {
-    margin: -56px 90px 24px 0;
+  .app__nav-link {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .app__version {
+    padding: 16px 0 0;
+  }
+
+  .app__topbar,
+  .app__content {
+    padding-left: 20px;
+    padding-right: 20px;
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 640px) {
   .app {
     flex-direction: column;
   }
 
   .app__sidebar {
-    flex-basis: auto;
-    padding: 16px;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    height: auto;
+    overflow: visible;
+  }
+
+  .app__logo {
+    margin: 0;
   }
 
   .app__nav {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 16px;
   }
 
-  .app__nav-link {
-    min-width: 0;
-    font-size: 16px;
+  .app__version {
+    margin: 0 0 0 auto;
+    padding: 0;
   }
 
-  .app__session {
-    min-height: 0;
-    margin-bottom: 16px;
-  }
-
-  .app__main {
-    padding: 64px 16px 16px;
-  }
-
-  .app__services {
-    margin: -48px 0 24px;
-    padding-right: 90px;
+  .app__content {
+    padding: 20px 16px 32px;
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, LogOut } from 'lucide-react'
 import { labelFor, ROLES } from '../constants.js'
 import './UserMenu.css'
 
@@ -33,20 +34,21 @@ export default function UserMenu({ user, onSignOut }) {
         title="Account menu"
         onClick={() => setOpen((value) => !value)}
       >
+        {user.picture && !pictureFailed ? (
+          <img className="user-menu__avatar" src={user.picture} alt="" onError={() => setPictureFailed(true)} />
+        ) : (
+          <span className="user-menu__avatar" aria-hidden="true">
+            {user.username.slice(0, 1).toUpperCase()}
+          </span>
+        )}
         <span className="user-menu__name">{user.username}</span>
-        <span className="user-menu__caret" aria-hidden="true" />
+        <ChevronDown className="user-menu__caret" size={16} aria-hidden="true" />
       </button>
-      {user.picture && !pictureFailed ? (
-        <img className="user-menu__avatar" src={user.picture} alt="" onError={() => setPictureFailed(true)} />
-      ) : (
-        <span className="user-menu__avatar" aria-hidden="true">
-          {user.username.slice(0, 1).toUpperCase()}
-        </span>
-      )}
       {open && (
         <div className="user-menu__dropdown" role="menu">
           <p className="user-menu__role">{labelFor(ROLES, user.role)}</p>
           <button type="button" role="menuitem" className="user-menu__item" title="Sign out of Limitless" onClick={onSignOut}>
+            <LogOut size={16} aria-hidden="true" />
             Sign Out
           </button>
         </div>

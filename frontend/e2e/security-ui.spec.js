@@ -54,6 +54,7 @@ test.describe('Access control and session', () => {
 
 test.describe('UI and navigation', () => {
   test('TC-UI-01/03 (P): splash shows the logo for 2 seconds, then fades to login without a click', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' }) // this test checks the fade itself
     await page.goto('/')
     await expect(page.locator('.splash img.emblem')).toBeVisible()
     await expect(page.locator('.splash .wordmark')).toBeVisible()
@@ -89,7 +90,7 @@ test.describe('UI and navigation', () => {
     await page.getByRole('button', { name: 'Cancel' }).click()
     await expect(page).toHaveURL(/\/admin\/users$/)
     await page.goto('/admin/reports/users')
-    await page.getByRole('link', { name: '← Back to Reports' }).click()
+    await page.getByRole('link', { name: 'Back to Reports' }).click()
     await expect(page).toHaveURL(/\/admin\/reports$/)
   })
 

@@ -21,8 +21,8 @@ import {
 
 test.describe.configure({ mode: 'serial' })
 
-const ERROR_RED = 'rgb(138, 31, 18)'
-const AUTH_ERROR_RED = 'rgb(255, 128, 115)'
+const ERROR_RED = 'rgb(180, 35, 24)'
+const AUTH_ERROR_RED = 'rgb(180, 35, 24)'
 const PERIOD_END = '2026-09-30'
 const W = {}
 const fullName = (u) => `${u.first} ${u.last}`
@@ -234,7 +234,7 @@ test.describe('Financial statements', () => {
     expect((await api(request, W.accountant.token, 'GET', '/statements/trial-balance?date=2026-09-30')).status).toBe(403)
     await as(page, W.accountant)
     await page.goto('/reports')
-    await expect(page.getByText('FINANCIAL STATEMENTS', { exact: true })).toHaveCount(0)
+    await expect(page.getByText('Financial statements', { exact: true })).toHaveCount(0)
     await page.goto('/reports/statements')
     await expect(page).not.toHaveURL(/\/reports\/statements$/)
     await evidence(page, 'TC-FS-11')
@@ -278,7 +278,7 @@ test.describe('Adjusting entries', () => {
   test('TC-ADJ-01 (P): accountant prepares an adjusting entry from the journal form', async ({ page }) => {
     await as(page, W.accountant)
     await page.goto('/journal/new')
-    await page.getByLabel('TYPE', { exact: true }).selectOption('ADJUSTING')
+    await page.getByLabel('Type', { exact: true }).selectOption('ADJUSTING')
     await page.locator('input[type=date]').first().fill(PERIOD_END)
     await page.getByLabel('Account for debit line 1').selectOption({ label: label(W.rent) })
     await page.getByLabel('Amount for debit line 1').fill('10.00')
@@ -286,7 +286,7 @@ test.describe('Adjusting entries', () => {
     await page.getByLabel('Amount for credit line 1').fill('10.00')
     await page.getByRole('button', { name: 'Submit for Approval' }).click()
     await expect(page).toHaveURL(/\/journal\/\d+$/)
-    await expect(page.getByLabel('TYPE', { exact: true })).toHaveValue('Adjusting')
+    await expect(page.getByLabel('Type', { exact: true })).toHaveValue('Adjusting')
     W.formAdj = Number(page.url().split('/').pop())
     await evidence(page, 'TC-ADJ-01')
   })
@@ -411,7 +411,7 @@ test.describe('Errors: red fields and cursor on the first one', () => {
     await expect(page.locator('.alert--error')).toHaveText('First name, last name, email address, and role are required.')
     await expectRedAndFocused(page.getByLabel('FIRST NAME'))
     for (const name of ['LAST NAME', 'EMAIL ADDRESS', 'ROLE']) await expect(page.getByLabel(name)).toHaveAttribute('aria-invalid', 'true')
-    await expect(page.getByLabel('ADDRESS', { exact: true })).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByLabel('Address', { exact: true })).not.toHaveAttribute('aria-invalid', 'true')
     await evidence(page, 'TC-ERR-02')
   })
 
@@ -421,7 +421,7 @@ test.describe('Errors: red fields and cursor on the first one', () => {
     await page.getByLabel('FIRST NAME').fill('Pat')
     await page.getByRole('button', { name: 'Create User' }).click()
     await expectRedAndFocused(page.getByLabel('LAST NAME'))
-    await page.getByLabel('ADDRESS', { exact: true }).focus()
+    await page.getByLabel('Address', { exact: true }).focus()
     await page.getByRole('button', { name: 'Create User' }).click()
     await expect(page.getByLabel('LAST NAME')).toBeFocused()
     await expect(page.getByLabel('FIRST NAME')).not.toHaveAttribute('aria-invalid', 'true')
@@ -448,12 +448,12 @@ test.describe('Errors: red fields and cursor on the first one', () => {
     await page.addInitScript((value) => localStorage.setItem('limitless.session', value), JSON.stringify(await adminSession(request)))
     await page.goto('/accounts/new')
     await page.getByLabel('ACCOUNT NAME').fill(`Petty Cash ${W.tag}`)
-    await page.getByLabel('CATEGORY *', { exact: true }).selectOption('Asset')
+    await page.getByLabel('Category *', { exact: true }).selectOption('Asset')
     await page.getByLabel('ACCOUNT NUMBER').fill('2001')
     await page.getByLabel('ACCOUNT NUMBER').press('Enter')
     await expect(page.getByText('Asset account numbers must start with 1.')).toBeVisible()
     await expectRedAndFocused(page.getByLabel('ACCOUNT NUMBER'))
-    await expect(page.getByLabel('CATEGORY *', { exact: true })).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByLabel('Category *', { exact: true })).not.toHaveAttribute('aria-invalid', 'true')
     await evidence(page, 'TC-ERR-05')
   })
 
@@ -618,7 +618,7 @@ test.describe('Email: any role to any role, with attachments', () => {
     await expect(page.locator('.alert--error')).toBeVisible()
     expect((await message.boundingBox()).width).toBe(before)
     expect(before).toBeGreaterThan(600)
-    expect((await page.getByLabel('SUBJECT').boundingBox()).width).toBeLessThan(200)
+    expect((await page.getByLabel('SUBJECT').boundingBox()).width).toBeLessThan(before / 1.5)
     await evidence(page, 'TC-EML-10')
   })
 

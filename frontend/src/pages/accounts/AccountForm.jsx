@@ -61,7 +61,6 @@ export default function AccountForm() {
   return (
     <>
       <PageHeader
-        eyebrow="CHART OF ACCOUNTS"
         title={editing ? 'Edit Account' : 'Add Account'}
         subtitle={editing ? 'Update the account information.' : 'Add a new account to the chart of accounts.'}
       />
@@ -123,7 +122,7 @@ function AccountFormPanel({ account, navigate }) {
   return (
     <Panel
       as="form"
-      title={account ? 'ACCOUNT DETAILS' : 'NEW ACCOUNT'}
+      title={account ? 'Account details' : 'New account'}
       className="page-panel panel--form"
       onSubmit={handleSubmit}
       noValidate
@@ -131,10 +130,10 @@ function AccountFormPanel({ account, navigate }) {
     >
       <div className="form-body">
         <p className="form-required-note">Fields marked * are required.</p>
-        <FormSection title="ACCOUNT INFORMATION">
-          <Field label="ACCOUNT NAME" name="name" required error={errors.name} defaultValue={account?.name ?? ''} placeholder="e.g. Cash" />
+        <FormSection title="Account information">
+          <Field label="Account name" name="name" required error={errors.name} defaultValue={account?.name ?? ''} placeholder="e.g. Cash" />
           <Field
-            label="ACCOUNT NUMBER"
+            label="Account number"
             name="number"
             required
             error={errors.number}
@@ -146,7 +145,7 @@ function AccountFormPanel({ account, navigate }) {
             hint={prefix ? `${categoryFor(category).label} numbers start with ${prefix}` : '1 Asset · 2 Liability · 3 Equity · 4 Revenue · 5 Expense'}
           />
           <Field
-            label="CATEGORY"
+            label="Category"
             name="category"
             required
             error={errors.category}
@@ -155,7 +154,7 @@ function AccountFormPanel({ account, navigate }) {
             onChange={changeCategory}
           />
           <Field
-            label="SUBCATEGORY"
+            label="Subcategory"
             name="subcategory"
             required
             error={errors.subcategory}
@@ -163,7 +162,7 @@ function AccountFormPanel({ account, navigate }) {
             placeholder="e.g. Current Assets"
           />
           <Field
-            label="NORMAL SIDE"
+            label="Normal side"
             name="normal_side"
             required
             error={errors.normal_side}
@@ -172,7 +171,7 @@ function AccountFormPanel({ account, navigate }) {
             onChange={(event) => setSide(event.target.value)}
           />
           <Field
-            label="STATEMENT"
+            label="Statement"
             name="statement"
             required
             error={errors.statement}
@@ -180,7 +179,7 @@ function AccountFormPanel({ account, navigate }) {
             defaultValue={account?.statement ?? ''}
           />
           <Field
-            label="ORDER"
+            label="Order"
             name="order"
             required
             error={errors.order}
@@ -190,7 +189,7 @@ function AccountFormPanel({ account, navigate }) {
             onInput={(event) => (event.target.value = event.target.value.replace(/\D/g, ''))}
           />
           <Field
-            label="DESCRIPTION"
+            label="Description"
             name="description"
             defaultValue={account?.description ?? ''}
             className="field--wide"
@@ -198,9 +197,9 @@ function AccountFormPanel({ account, navigate }) {
           />
         </FormSection>
 
-        <FormSection title="BALANCES">
+        <FormSection title="Balances">
           <Field
-            label="INITIAL BALANCE"
+            label="Initial balance"
             name="initial_balance"
             error={errors.initial_balance}
             inputMode="decimal"
@@ -212,19 +211,19 @@ function AccountFormPanel({ account, navigate }) {
           />
           {account && (
             <>
-              <Field label="DEBIT" value={formatMoney(account.debit)} readOnly />
-              <Field label="CREDIT" value={formatMoney(account.credit)} readOnly />
-              <Field label="BALANCE" value={formatMoney(account.balance)} readOnly />
+              <Field label="Debit" value={formatMoney(account.debit)} readOnly />
+              <Field label="Credit" value={formatMoney(account.credit)} readOnly />
+              <Field label="Balance" value={formatMoney(account.balance)} readOnly />
             </>
           )}
         </FormSection>
 
-        <FormSection title="OTHER">
-          <Field label="COMMENT" name="comment" defaultValue={account?.comment ?? ''} className="field--wide" />
+        <FormSection title="Other">
+          <Field label="Comment" name="comment" defaultValue={account?.comment ?? ''} className="field--wide" />
           {account && (
             <>
-              <Field label="DATE ADDED" value={formatDateTime(account.added_at)} readOnly />
-              <Field label="ADDED BY" value={account.added_by ?? `User ${account.user_id}`} readOnly />
+              <Field label="Date added" value={formatDateTime(account.added_at)} readOnly />
+              <Field label="Added by" value={account.added_by ?? `User ${account.user_id}`} readOnly />
             </>
           )}
         </FormSection>

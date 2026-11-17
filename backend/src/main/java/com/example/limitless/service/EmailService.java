@@ -10,6 +10,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
+import java.util.Base64;
 
 /**
  * Sends email through Resend's HTTP API (works on Railway, which blocks SMTP
@@ -38,9 +40,29 @@ public class EmailService {
         this.overrideTo = overrideTo;
     }
 
+    public record Attachment(String filename, byte[] content) {}
+
     /** Plain-text email. */
     public void send(String to, String subject, String body) {
-        deliver(to, subject, "\"text\":" + q(body), body);
+        send(to, subject, body, List.of());
+    }
+
+    /** Plain-text email with files attached. */
+    public void send(String to, String subject, String body, List<Attachment> attachments) {
+        StringBuilder json = new StringBuilder("\"text\":").append(q(body));
+        if (!attachments.isEmpty()) {
+            json.append(",\"attachments\":[");
+            for (int i = 0; i < attachments.size(); i++) {
+                Attachment a = attachments.get(i);
+                if (i > 0) json.append(',');
+                json.append("{\"filename\":").append(q(a.filename()))
+                        .append(",\"content\":").append(q(Base64.getEncoder().encodeToString(a.content()))).append('}');
+            }
+            json.append(']');
+        }
+        String log = attachments.isEmpty() ? body
+                : body + "\n\nAttachments: " + String.join(", ", attachments.stream().map(Attachment::filename).toList());
+        deliver(to, subject, json.toString(), log);
     }
 
     /** HTML email with a plain-text fallback. */

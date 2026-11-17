@@ -1,6 +1,20 @@
 // Release notes for the What's New page, newest first. Add an entry at the top for each release.
 export const RELEASES = [
   {
+    version: '4.0',
+    date: '2026-11-16',
+    title: 'Sprint 4: Adjusting entries and financial statements',
+    changes: [
+      'Managers generate the trial balance, income statement, balance sheet and retained earnings statement for a date or a date range, from Reports → Financial Statements. Each can be saved, emailed or printed, and saved statements can be reopened.',
+      'Click an account number or name on a statement to open its ledger.',
+      'The journal can be filtered by type, so adjusting entries can be listed by pending, approved or rejected status.',
+      'The manager\'s home page says how many pending entries are adjusting entries, with a link to them.',
+      'Every report links each account to its ledger, including saved and printed statements.',
+      'Fields with an error are outlined in red, and the cursor moves to the first one.',
+      'Email: every role can email any active user, and files can be attached.',
+    ],
+  },
+  {
     version: '3.1',
     date: '2026-11-03',
     title: 'Sprint 1 and 2 feedback',

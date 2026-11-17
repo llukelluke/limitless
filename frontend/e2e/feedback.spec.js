@@ -132,9 +132,9 @@ test.describe("What's New", () => {
   test("TC-NEW-01 (P): the version link opens release notes for every sprint", async ({ page, request }) => {
     await as(page, request, ADMIN)
     await page.goto('/admin')
-    await page.getByRole('link', { name: /Version 3\.1 · What's New/ }).click()
+    await page.getByRole('link', { name: /Version 4\.0 · What's New/ }).click()
     await expect(page).toHaveURL(/\/whats-new$/)
-    await expect(page.locator('.release__title')).toHaveText([/^Version 3\.1/, /^Version 3\.0/, /^Version 2\.0/, /^Version 1\.0/])
+    await expect(page.locator('.release__title')).toHaveText([/^Version 4\.0/, /^Version 3\.1/, /^Version 3\.0/, /^Version 2\.0/, /^Version 1\.0/])
     await evidence(page, 'F04')
   })
 })

@@ -6,10 +6,11 @@ import AsyncContent from '../../components/AsyncContent.jsx'
 import { DataTable, PageHeader, Panel, Select, StatusBadge, ToolbarField } from '../../components/AdminUI.jsx'
 import { formatDate, formatMoney, isAdmin, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
-import { JOURNAL_STATUSES, matchesEntry, sortedLines } from '../../journal.js'
+import { ENTRY_TYPES, JOURNAL_STATUSES, matchesEntry, sortedLines } from '../../journal.js'
 import './Journal.css'
 
 const STATUS_OPTIONS = [{ value: '', label: 'All' }, ...JOURNAL_STATUSES.filter((s) => s.value !== 'DRAFT')]
+const TYPE_OPTIONS = [{ value: '', label: 'All' }, ...ENTRY_TYPES]
 
 // One line per account, debits first; credits are indented as on paper.
 const lineCells = (entry, render) => (
@@ -48,7 +49,7 @@ const columns = [
     key: 'accounts',
     header: 'ACCOUNTS',
     sortValue: (e) => sortedLines(e)[0]?.account_name,
-    width: '26%',
+    width: '22%',
     render: (e) =>
       lineCells(e, (line) => (
         <Link to={`/accounts/${line.account_id}/ledger`} title={`Open the ledger for ${line.account_name}`}>
@@ -56,8 +57,9 @@ const columns = [
         </Link>
       )),
   },
-  { key: 'debit', header: <span className="num">DEBIT</span>, width: '13%', sortValue: (e) => e.total_debits, render: (e) => lineCells(e, amount('DEBIT')) },
-  { key: 'credit', header: <span className="num">CREDIT</span>, width: '13%', sortValue: (e) => e.total_credits, render: (e) => lineCells(e, amount('CREDIT')) },
+  { key: 'debit', header: <span className="num">DEBIT</span>, width: '11%', sortValue: (e) => e.total_debits, render: (e) => lineCells(e, amount('DEBIT')) },
+  { key: 'credit', header: <span className="num">CREDIT</span>, width: '11%', sortValue: (e) => e.total_credits, render: (e) => lineCells(e, amount('CREDIT')) },
+  { key: 'entry_type', header: 'TYPE', width: '9%', render: (e) => labelFor(ENTRY_TYPES, e.entry_type) },
   { key: 'status', header: 'STATUS', width: '10%', render: (e) => <JournalStatus status={e.status} /> },
   { key: 'created_by_name', header: 'PREPARED BY', width: '11%' },
   {
@@ -71,20 +73,29 @@ const columns = [
   },
 ]
 
-// Journal — every entry with its status; filter by status and date, search by account, amount or date.
+// Journal — every entry with its status; filter by status, type (regular / adjusting) and date,
+// search by account, amount or date. Status and type live in the URL so other pages can link to them.
 export default function JournalList() {
   const { user } = useAuth()
   const [params, setParams] = useSearchParams()
   const status = params.get('status') ?? ''
+  const type = params.get('type') ?? ''
+  const setParam = (key) => (event) =>
+    setParams((current) => {
+      const next = new URLSearchParams(current)
+      if (event.target.value) next.set(key, event.target.value)
+      else next.delete(key)
+      return next
+    })
   const { data, error, loading } = useApi(api.listJournalEntries)
   const [filters, setFilters] = useState({ search: '', from: '', to: '' })
 
   const entries = data ?? []
   const rows = entries
-    .filter((entry) => (!status || entry.status === status) && matchesEntry(entry, filters))
+    .filter((entry) => (!status || entry.status === status) && (!type || entry.entry_type === type) && matchesEntry(entry, filters))
     .sort((a, b) => b.entry_date.localeCompare(a.entry_date) || b.id - a.id)
   const set = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }))
-  const filtered = status || filters.search || filters.from || filters.to
+  const filtered = status || type || filters.search || filters.from || filters.to
 
   return (
     <>
@@ -114,7 +125,18 @@ export default function JournalList() {
               title="Show pending, approved or rejected entries"
               options={STATUS_OPTIONS}
               value={status}
-              onChange={(event) => setParams(event.target.value ? { status: event.target.value } : {})}
+              onChange={setParam('status')}
+            />
+          </ToolbarField>
+          <ToolbarField label="TYPE">
+            <Select
+              wrapClassName="select--inline"
+              className="toolbar__filter"
+              aria-label="Filter by entry type"
+              title="Show regular or adjusting entries"
+              options={TYPE_OPTIONS}
+              value={type}
+              onChange={setParam('type')}
             />
           </ToolbarField>
           <ToolbarField label="SEARCH">

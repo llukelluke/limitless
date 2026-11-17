@@ -34,18 +34,20 @@ final class StatementHtml {
             .flag{margin-top:16px;padding:8px 12px;border:1px solid #b00020;color:#b00020;font-size:13px}
             .note{margin:0 0 18px 0;white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px}
             .foot{margin-top:24px;text-align:center;color:#666;font-size:12px}
+            a{color:inherit}
             @media print{body{padding:0}.flag{border-color:#000;color:#000}}
             """;
 
     static String render(StatementResponse r, String company) {
-        return page(r, company, null, null);
+        return page(r, company, null, null, true);
     }
 
     static String renderForEmail(StatementResponse r, String company, String note, String sender) {
-        return page(r, company, note, sender);
+        // No ledger links in email: relative links only resolve inside the app.
+        return page(r, company, note, sender, false);
     }
 
-    private static String page(StatementResponse r, String company, String note, String sender) {
+    private static String page(StatementResponse r, String company, String note, String sender, boolean links) {
         boolean tb = r.type().equals("trial-balance");
         boolean bs = r.type().equals("balance-sheet");
         StringBuilder sb = new StringBuilder(4096);
@@ -81,8 +83,12 @@ final class StatementHtml {
                 boolean computed = row.accountId() == null && r.type().equals("retained-earnings");
                 sb.append("<tr class=\"").append(bs ? "indent" : "")
                         .append(computed && last ? " grand" : "").append("\"><td class=\"name\">");
+                boolean link = links && row.accountId() != null;
+                if (link) sb.append("<a href=\"/accounts/").append(row.accountId()).append("/ledger\">");
                 if (row.accountNumber() != null) sb.append(esc(row.accountNumber())).append(" &middot; ");
-                sb.append(esc(row.name())).append("</td>");
+                sb.append(esc(row.name()));
+                if (link) sb.append("</a>");
+                sb.append("</td>");
                 if (tb) {
                     sb.append("<td class=\"num\">").append(money(row.debit())).append("</td>")
                             .append("<td class=\"num\">").append(money(row.credit())).append("</td>");

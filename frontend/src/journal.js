@@ -56,3 +56,19 @@ export function matchesEntry(entry, { search = '', from = '', to = '' }) {
     formatDate(entry.entry_date).toLowerCase().includes(term)
   return textMatch && inRange(entry.entry_date, from, to)
 }
+
+const LINE_FIELDS = { JRN_006: 'account_id', JRN_007: 'account_id', JRN_008: 'account_id', JRN_010: 'amount', JRN_011: 'amount', JRN_012: 'amount' }
+
+// Which inputs the problems point at: 'entry_date', 'description', 'amounts' (all of them), or '<line index>.<field>'.
+// shortcut: reads the line number from the message text ("Line 3: ..."); add a line field to ValidationIssue if that text changes.
+export function invalidFields(problems) {
+  const out = new Set()
+  for (const p of problems) {
+    const line = /^Line (\d+):/.exec(p.message)?.[1]
+    if (LINE_FIELDS[p.code] && line) out.add(`${line - 1}.${LINE_FIELDS[p.code]}`)
+    if (p.code === 'JRN_001') out.add('entry_date')
+    if (p.code === 'JRN_019') out.add('description')
+    if (p.code === 'JRN_005') out.add('amounts')
+  }
+  return out
+}

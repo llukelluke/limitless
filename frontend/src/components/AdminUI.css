@@ -80,7 +80,8 @@
   padding-left: 33px;
 }
 
-.email-form > .field:not(:last-child) {
+/* Recipient and subject stay short; the message and attachments take the full width */
+.email-form > .field--narrow {
   width: 159px;
 }
 
@@ -541,7 +542,7 @@
     padding-left: 0;
   }
 
-  .email-form > .field:not(:last-child) {
+  .email-form > .field--narrow {
     width: 100%;
   }
 
@@ -641,4 +642,34 @@
 .status-badge--neutral {
   background: var(--paper-line);
   color: var(--ink);
+}
+
+/* Financial statements */
+.statement-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.statement-title__period {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.statement-table__section th {
+  text-align: left;
+  font-weight: 700;
+}
+
+.statement-table__group td {
+  font-style: italic;
+  padding-left: 16px;
+}
+
+.statement-table__total td {
+  font-weight: 600;
+}
+
+.statement-table tfoot td {
+  font-weight: 700;
 }

@@ -1,7 +1,7 @@
 // Run with `npm test` (node's built-in runner; no backend needed).
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { matchesEntry, toRequest } from './journal.js'
+import { invalidFields, matchesEntry, toRequest } from './journal.js'
 
 test('request body lists debits first and leaves bad input for the server to report', () => {
   const draft = {
@@ -31,4 +31,14 @@ test('journal search matches account name, amount, or date', () => {
   for (const search of ['cash', '1,250', '$1250.00', '2026-11', 'nov. 2']) assert.ok(matchesEntry(entry, { search }), search)
   assert.ok(!matchesEntry(entry, { search: 'rent' }))
   assert.ok(!matchesEntry(entry, { from: '2026-11-03' }))
+})
+
+test('invalidFields points each server problem at its input', () => {
+  const bad = invalidFields([
+    { code: 'JRN_006', message: 'Line 1: select an account.' },
+    { code: 'JRN_012', message: 'Line 3: amounts can have at most two decimal places.' },
+    { code: 'JRN_001', message: 'A journal entry date is required.' },
+    { code: 'JRN_005', message: 'Total debits (1.00) must equal total credits (2.00). The difference is 1.00.' },
+  ])
+  assert.deepEqual([...bad].sort(), ['0.account_id', '2.amount', 'amounts', 'entry_date'])
 })

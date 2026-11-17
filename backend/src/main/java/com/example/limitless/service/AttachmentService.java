@@ -48,14 +48,19 @@ public class AttachmentService {
         this.messages = messages;
     }
 
-    /** Validates and stores the file, adds the row to the entry (caller saves the entry). */
-    public JournalAttachment store(JournalEntry entry, MultipartFile file) {
+    /** Throws unless the file is a non-empty PDF, Word, Excel, CSV, JPG or PNG of at most 10 MB. Returns its clean name. */
+    public String check(MultipartFile file) {
         if (file == null || file.isEmpty()) throw new UserException(HttpStatus.BAD_REQUEST, messages.get("ATT_002"));
         if (file.getSize() > MAX_BYTES) throw new UserException(HttpStatus.PAYLOAD_TOO_LARGE, messages.get("ATT_003"));
-
         String original = cleanName(file.getOriginalFilename());
+        if (!ALLOWED.contains(extension(original))) throw new UserException(HttpStatus.BAD_REQUEST, messages.get("ATT_001"));
+        return original;
+    }
+
+    /** Validates and stores the file, adds the row to the entry (caller saves the entry). */
+    public JournalAttachment store(JournalEntry entry, MultipartFile file) {
+        String original = check(file);
         String ext = extension(original);
-        if (!ALLOWED.contains(ext)) throw new UserException(HttpStatus.BAD_REQUEST, messages.get("ATT_001"));
 
         String relative = entry.getId() + "/" + UUID.randomUUID() + "." + ext;
         Path target = baseDir.resolve(relative).normalize();

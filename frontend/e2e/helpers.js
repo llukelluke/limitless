@@ -139,3 +139,39 @@ export async function evidence(page, name) {
   await expect(page.locator('.async-status', { hasText: 'Loading…' })).toHaveCount(0)
   if (process.env.E2E_EVIDENCE_DIR) await page.screenshot({ path: `${process.env.E2E_EVIDENCE_DIR}/${name}.png` })
 }
+
+// ---------- Shared by the journal and Sprint 4 specs ----------
+
+export async function api(request, token, method, path, data) {
+  const response = await request.fetch(`/api${path}`, { method, headers: { Authorization: `Bearer ${token}` }, data })
+  return { status: response.status(), body: await response.json().catch(() => null) }
+}
+
+// Create → upload → submit, the same calls the form makes. lines: [[account, 'DEBIT'|'CREDIT', amount], …]
+export async function submitEntry(request, who, { date, lines, description = null, files = [], type = 'REGULAR' }) {
+  const body = { entry_date: date, entry_type: type, description, lines: lines.map(([a, side, amount]) => ({ account_id: a.id, side, amount })) }
+  const created = await api(request, who.token, 'POST', '/journal-entries', body)
+  expect(created.status, JSON.stringify(created.body)).toBe(201)
+  for (const name of files) {
+    const response = await request.post(`/api/journal-entries/${created.body.id}/attachments`, {
+      headers: { Authorization: `Bearer ${who.token}` },
+      multipart: { file: { name, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') } },
+    })
+    expect(response.status()).toBe(201)
+  }
+  expect((await api(request, who.token, 'POST', `/journal-entries/${created.body.id}/submit`)).status).toBe(200)
+  return created.body.id
+}
+
+// Signs `who` in with a real token, the way the login page stores it.
+export async function as(page, who) {
+  const { token, ...user } = who.session
+  await page.addInitScript((value) => localStorage.setItem('limitless.session', value), JSON.stringify({ token, user }))
+}
+
+// Records the API calls the page makes, e.g. "POST /api/journal-entries".
+export function recordCalls(page) {
+  const calls = []
+  page.on('request', (r) => r.url().includes('/api/') && calls.push(`${r.method()} ${new URL(r.url()).pathname}`))
+  return calls
+}

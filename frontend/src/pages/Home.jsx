@@ -11,6 +11,8 @@ export default function Home() {
   const { user } = useAuth()
   const { data } = useApi(api.pendingJournalCount)
   const pending = data?.count ?? 0
+  const { data: adjustingData } = useApi(() => api.pendingJournalCount('ADJUSTING'))
+  const adjusting = adjustingData?.count ?? 0
   const role = labelFor(ROLES, user.role).toLowerCase()
   const article = /^[aeiou]/.test(role) ? 'an' : 'a'
 
@@ -27,7 +29,14 @@ export default function Home() {
             <strong>
               {pending} journal {pending === 1 ? 'entry is' : 'entries are'} waiting for your approval.
             </strong>{' '}
+            {adjusting > 0 && `${adjusting} of them ${adjusting === 1 ? 'is an adjusting entry' : 'are adjusting entries'}. `}
             <Link to="/journal?status=SUBMITTED">Review pending entries →</Link>
+            {adjusting > 0 && (
+              <>
+                {' '}
+                <Link to="/journal?status=SUBMITTED&type=ADJUSTING">Review pending adjusting entries →</Link>
+              </>
+            )}
           </Alert>
         )}
         <p className="home-note">

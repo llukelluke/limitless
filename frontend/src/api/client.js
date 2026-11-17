@@ -108,7 +108,6 @@ export const api = {
   deactivateUser: (id) => request(`/users/${id}/deactivate`, { method: 'PUT' }),
   suspendUser: (id, body) => request(`/users/${id}/suspend`, { method: 'PUT', body }),
   issueTemporaryPassword: (id) => request(`/users/${id}/temporary-password`, { method: 'POST' }),
-  sendEmail: (id, body) => request(`/users/${id}/send-email`, { method: 'POST', body }),
 
   allUsersReport: () => request('/users/reports/all'),
   expiredPasswordsReport: () => request('/users/reports/expired-passwords'),
@@ -126,7 +125,8 @@ export const api = {
 
   // filters: { status, from, to, search }
   listJournalEntries: (filters = {}) => request(`/journal-entries${query(filters)}`),
-  pendingJournalCount: () => request('/journal-entries/pending-count'),
+  // type: REGULAR or ADJUSTING; leave out to count both.
+  pendingJournalCount: (type) => request(`/journal-entries/pending-count${query({ type })}`),
   getJournalEntry: (id) => request(`/journal-entries/${id}`),
   validateJournalEntry: (body) => request('/journal-entries/validate', { method: 'POST', body }),
   // Saves a DRAFT; submitJournalEntry sends it for approval.
@@ -143,6 +143,31 @@ export const api = {
   // filters: { from, to, search }
   getLedger: (id, filters = {}) => request(`/accounts/${id}/ledger${query(filters)}`),
   downloadAttachment,
+
+  // Financial statements (manager only). type: trial-balance | income-statement | balance-sheet | retained-earnings
+  // dates: { date } or { from, to }
+  getStatement: (type, dates) => request(`/statements/${type}${query(dates)}`),
+  saveStatement: (type, dates) => request(`/statements/${type}/save${query(dates)}`, { method: 'POST' }),
+  emailStatement: (type, dates, body) => request(`/statements/${type}/email${query(dates)}`, { method: 'POST', body }),
+  savedStatements: () => request('/statements/saved'),
+  openSavedStatement,
+}
+
+// Saved statements are HTML pages behind the auth header: open the window first (inside the click,
+// so pop-up blockers allow it), then fill it.
+async function openSavedStatement(id) {
+  const win = window.open('', '_blank')
+  const session = loadSession()
+  const response = await fetch(`/api/statements/saved/${id}/html`, {
+    headers: session ? { Authorization: `Bearer ${session.token}` } : {},
+  })
+  if (!response.ok) {
+    win?.close()
+    const data = parseJson(await response.text())
+    throw new ApiError(response.status, data?.message ?? 'Could not open the saved statement.')
+  }
+  win.document.write(await response.text())
+  win.document.close()
 }
 
 // Attachments need the auth header, so a plain <a href> can't fetch them.

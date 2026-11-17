@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
@@ -35,6 +35,17 @@ export function ReportsHome() {
   return (
     <>
       <PageHeader eyebrow="REPORTS" title="Reports" subtitle="View and print reports. Every report has a Print button." />
+      {user.role === 'MANAGER' && (
+        <Panel title="FINANCIAL STATEMENTS" className="page-panel">
+          <div className="report-cards">
+            <ReportCard
+              label="FINANCIAL STATEMENTS"
+              description="Trial balance, income statement, balance sheet and retained earnings statement for a date or date range. Save, email or print."
+              linkTo="/reports/statements"
+            />
+          </div>
+        </Panel>
+      )}
       <Panel title="FINANCIAL REPORTS" className="page-panel">
         <div className="report-cards">
           <ReportCard label="CHART OF ACCOUNTS" description="Every account with its category, normal side, debits, credits and balance." linkTo="/reports/accounts" />
@@ -56,8 +67,8 @@ export function ReportsHome() {
 }
 
 const accountColumns = [
-  { key: 'number', header: 'NUMBER', width: '9%' },
-  { key: 'name', header: 'ACCOUNT', width: '17%' },
+  { key: 'number', header: 'NUMBER', width: '9%', render: (a) => <Link to={`/accounts/${a.id}/ledger`} title={`Open the ledger for ${a.name}`}>{a.number}</Link> },
+  { key: 'name', header: 'ACCOUNT', width: '17%', render: (a) => <Link to={`/accounts/${a.id}/ledger`} title={`Open the ledger for ${a.name}`}>{a.name}</Link> },
   { key: 'category', header: 'CATEGORY', width: '9%' },
   { key: 'subcategory', header: 'SUBCATEGORY', width: '13%' },
   { key: 'normal_side', header: 'NORMAL SIDE', width: '8%', render: (a) => labelFor(NORMAL_SIDES, a.normal_side) },
@@ -98,7 +109,14 @@ const journalColumns = [
     header: 'ACCOUNTS (DEBITS FIRST)',
     width: '30%',
     sortValue: (e) => sortedLines(e)[0]?.account_name,
-    render: (e) => sortedLines(e).map((line) => `${line.side === 'CREDIT' ? '    ' : ''}${line.account_name}`).join(', '),
+    render: (e) =>
+      sortedLines(e).map((line, i) => (
+        <Fragment key={i}>
+          {i > 0 && ', '}
+          {line.side === 'CREDIT' && '    '}
+          <Link to={`/accounts/${line.account_id}/ledger`} title={`Open the ledger for ${line.account_name}`}>{line.account_name}</Link>
+        </Fragment>
+      )),
   },
   { key: 'entry_type', header: 'TYPE', width: '9%', render: (e) => (e.entry_type === 'ADJUSTING' ? 'Adjusting' : 'Regular') },
   { key: 'status', header: 'STATUS', width: '10%', render: (e) => <StatusBadge status={e.status}>{labelFor(JOURNAL_STATUSES, e.status)}</StatusBadge> },
@@ -169,7 +187,12 @@ const eventColumns = [
     header: 'RECORD',
     width: '17%',
     sortValue: (e) => `${e.table_name} ${String(e.record_id).padStart(10, '0')}`,
-    render: (e) => `${e.table_name === 'accounts' ? 'Account' : 'Journal entry'} #${e.record_id}`,
+    render: (e) =>
+      e.table_name === 'accounts' ? (
+        <Link to={`/accounts/${e.record_id}/ledger`} title="Open this account's ledger">Account #{e.record_id}</Link>
+      ) : (
+        <Link to={`/journal/${e.record_id}`} title="Open this journal entry">Journal entry #{e.record_id}</Link>
+      ),
   },
   {
     key: 'changed',

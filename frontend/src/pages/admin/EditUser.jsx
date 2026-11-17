@@ -4,10 +4,12 @@ import { api } from '../../api/client.js'
 import Alert from '../../components/Alert.jsx'
 import AsyncContent from '../../components/AsyncContent.jsx'
 import { BackLink, Field, FormActions, FormSection, PageHeader, Panel } from '../../components/AdminUI.jsx'
-import { ROLES, STATUSES, formValues, formatDate, passwordStatus } from '../../constants.js'
+import { ROLES, STATUSES, formValues, formatDate, passwordStatus, requiredErrors } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
 
 const statusOptions = STATUSES.filter((option) => option.value !== 'PENDING')
+
+const fieldError = (message, fields) => Object.assign(new Error(message), { fields })
 
 // Applies the form to the API: profile fields first, then any status or suspension change.
 async function saveUser(user, values) {
@@ -15,10 +17,10 @@ async function saveUser(user, values) {
   const datesChanged = start !== user.suspension_start || end !== user.suspension_end
 
   if (datesChanged && (start || end)) {
-    if (!start || !end) throw new Error('Enter both a suspension start date and an expiry date.')
-    if (end <= start) throw new Error('Suspension expiry date must be after the start date.')
+    if (!start || !end) throw fieldError('Enter both a suspension start date and an expiry date.', requiredErrors(values, ['suspension_start', 'suspension_end']))
+    if (end <= start) throw fieldError('Suspension expiry date must be after the start date.', { suspension_end: 'Must be after the start date.' })
   } else if (status === 'SUSPENDED' && user.status !== 'SUSPENDED') {
-    throw new Error('To suspend this user, choose a suspension start date and expiry date.')
+    throw fieldError('To suspend this user, choose a suspension start date and expiry date.', requiredErrors(values, ['suspension_start', 'suspension_end']))
   }
 
   await api.updateUser(user.id, profile)
@@ -37,6 +39,7 @@ export default function EditUser() {
   const navigate = useNavigate()
   const { data: user, error, loading, reload } = useApi(() => api.getUser(id), [id])
   const [feedback, setFeedback] = useState(null)
+  const [fieldErrors, setFieldErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [tempPassword, setTempPassword] = useState(null)
 
@@ -56,7 +59,9 @@ export default function EditUser() {
   const handleSubmit = async (event) => {
     event.preventDefault()
     const values = formValues(event.currentTarget)
-    if (!values.first_name || !values.last_name || !values.email_address) {
+    const missing = requiredErrors(values, ['first_name', 'last_name', 'email_address'])
+    setFieldErrors(missing)
+    if (Object.keys(missing).length) {
       setFeedback({ tone: 'error', message: 'First name, last name, and email address are required.' })
       return
     }
@@ -68,6 +73,7 @@ export default function EditUser() {
       setFeedback({ tone: 'success', message: 'Changes saved.' })
       reload()
     } catch (err) {
+      setFieldErrors(err.fields ?? {})
       setFeedback({ tone: 'error', message: err.message })
     } finally {
       setSaving(false)
@@ -92,9 +98,9 @@ export default function EditUser() {
               // Re-mount the fields after each save so they show the stored values.
               <div key={JSON.stringify(user)}>
                 <FormSection title="ACCOUNT INFORMATION">
-                  <Field label="FIRST NAME" name="first_name" defaultValue={user.first_name ?? ''} />
-                  <Field label="LAST NAME" name="last_name" defaultValue={user.last_name ?? ''} />
-                  <Field label="EMAIL ADDRESS" name="email_address" type="email" defaultValue={user.email_address ?? ''} />
+                  <Field label="FIRST NAME" name="first_name" error={fieldErrors.first_name} defaultValue={user.first_name ?? ''} />
+                  <Field label="LAST NAME" name="last_name" error={fieldErrors.last_name} defaultValue={user.last_name ?? ''} />
+                  <Field label="EMAIL ADDRESS" name="email_address" type="email" error={fieldErrors.email_address} defaultValue={user.email_address ?? ''} />
                   <Field label="USERNAME" value={user.username ?? ''} readOnly />
                   <Field label="ADDRESS" name="home_address" defaultValue={user.home_address ?? ''} className="field--wide" />
                   <Field label="DATE OF BIRTH" name="birth_date" type="date" defaultValue={user.birth_date ?? ''} />
@@ -124,8 +130,8 @@ export default function EditUser() {
                 </FormSection>
 
                 <FormSection title="SCHEDULED SUSPENSION">
-                  <Field label="START DATE" name="suspension_start" type="date" defaultValue={user.suspension_start ?? ''} />
-                  <Field label="EXPIRY DATE" name="suspension_end" type="date" defaultValue={user.suspension_end ?? ''} />
+                  <Field label="START DATE" name="suspension_start" type="date" error={fieldErrors.suspension_start} defaultValue={user.suspension_start ?? ''} />
+                  <Field label="EXPIRY DATE" name="suspension_end" type="date" error={fieldErrors.suspension_end} defaultValue={user.suspension_end ?? ''} />
                 </FormSection>
               </div>
             )}

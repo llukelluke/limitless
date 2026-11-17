@@ -274,7 +274,7 @@ public class StatementService {
             throw new UserException(HttpStatus.INTERNAL_SERVER_ERROR, msgs.get("STM_006"));
         }
         SavedStatement s = new SavedStatement();
-        s.setStatementType(SavedStatement.Kind.valueOf(parseType(typeSlug).name()));
+        s.setStatementType(SavedStatement.StatementType.valueOf(parseType(typeSlug).name()));
         s.setPeriodStart(r.from());
         s.setPeriodEnd(r.to());
         s.setGeneratedBy(by);

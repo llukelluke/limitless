@@ -126,7 +126,7 @@ public class JournalEntryService {
             BigDecimal amt = line.getAmount();
             boolean debit = line.getSide() == JournalEntryLine.Side.DEBIT;
             if (debit) a.setDebit(nz(a.getDebit()).add(amt)); else a.setCredit(nz(a.getCredit()).add(amt));
-            boolean increases = (a.getSide() == Account.Side.LEFT) == debit;
+            boolean increases = (a.getSide() == Account.normalSide.LEFT) == debit;
             a.setBalance(increases ? nz(a.getBalance()).add(amt) : nz(a.getBalance()).subtract(amt));
         }
         for (Account a : touched.values()) {
@@ -314,7 +314,7 @@ public class JournalEntryService {
                 Optional<Account> acct = accounts.findById(line.accountId());
                 if (acct.isEmpty()) {
                     out.add(issue("JRN_007", "line", n));
-                } else if (!Boolean.TRUE.equals(acct.get().getActive())) {
+                } else if (!Boolean.TRUE.equals(acct.get().getIsActive())) {
                     out.add(issue("JRN_008", "line", n, "account", acct.get().getName()));
                 }
             }

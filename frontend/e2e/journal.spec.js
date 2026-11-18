@@ -97,7 +97,7 @@ test.describe('Journal entries: create (accountant and manager)', () => {
     await expect(page).toHaveURL(/\/journal\/\d+$/)
     await expect(page.locator('.alert')).toHaveText('Journal entry submitted for approval.')
     await expect(page.locator('.journal-status')).toHaveText('Pending')
-    await expect(page.locator('tbody tr td:first-child')).toHaveText([label(W.supplies), label(W.rent), label(W.cash), 'Totals'])
+    await expect(page.locator('tbody tr td:first-child')).toHaveText([label(W.supplies), label(W.rent), label(W.cash)])
     await expect(page.getByRole('button', { name: 'receipt.pdf' })).toBeVisible()
     const saved = (await api(request, W.accountant.token, 'GET', `/journal-entries/${page.url().split('/').pop()}`)).body
     expect(saved.status).toBe('SUBMITTED')

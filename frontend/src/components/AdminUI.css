@@ -368,9 +368,10 @@
   color: var(--text-2);
 }
 
+/* Accounting convention: single rule above a final total, double rule beneath it. */
 .data-table tfoot td {
-  border-top: 2px solid var(--border-strong);
-  border-bottom: 0;
+  border-top: 1px solid var(--text);
+  border-bottom: 3px double var(--text);
   background: var(--surface-2);
   font-weight: 700;
 }

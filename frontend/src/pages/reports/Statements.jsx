@@ -28,7 +28,7 @@ const PERIODS = [
 
 // Bottom line shown under the sections (trial balance totals go in its debit/credit columns instead).
 const GRAND_TOTALS = {
-  'income-statement': ['net_income', 'Net Income'],
+  'income-statement': ['net_income', 'Net Income (Loss)'],
   'balance-sheet': ['total_liabilities_and_equity', "Total Liabilities & Stockholders' Equity"],
 }
 

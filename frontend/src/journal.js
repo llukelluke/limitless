@@ -11,6 +11,8 @@ export const JOURNAL_STATUSES = [
 export const ENTRY_TYPES = [
   { value: 'REGULAR', label: 'Regular' },
   { value: 'ADJUSTING', label: 'Adjusting' },
+  { value: 'CLOSING', label: 'Closing' },
+  { value: 'REVERSING', label: 'Reversing' },
 ]
 
 // Source documents: pdf, word, excel, csv, jpg, png.

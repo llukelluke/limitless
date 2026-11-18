@@ -17,7 +17,7 @@ import {
 } from '../../components/AdminUI.jsx'
 import { NORMAL_SIDES, STATEMENTS, formatDate, formatDateTime, formatMoney, isAdmin, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
-import { JOURNAL_STATUSES, matchesEntry, sortedLines } from '../../journal.js'
+import { ENTRY_TYPES, JOURNAL_STATUSES, matchesEntry, sortedLines } from '../../journal.js'
 import { ACTIONS, changedFields } from '../../eventLog.js'
 
 const money = (key, header, width) => ({
@@ -118,7 +118,7 @@ const journalColumns = [
         </Fragment>
       )),
   },
-  { key: 'entry_type', header: 'Type', width: '9%', render: (e) => (e.entry_type === 'ADJUSTING' ? 'Adjusting' : 'Regular') },
+  { key: 'entry_type', header: 'Type', width: '9%', render: (e) => labelFor(ENTRY_TYPES, e.entry_type) },
   { key: 'status', header: 'Status', width: '10%', render: (e) => <StatusBadge status={e.status}>{labelFor(JOURNAL_STATUSES, e.status)}</StatusBadge> },
   { key: 'created_by_name', header: 'Prepared by', width: '14%' },
   money('total_debits', 'DEBITS', '9.5%'),

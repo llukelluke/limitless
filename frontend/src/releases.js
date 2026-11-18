@@ -1,6 +1,18 @@
 // Release notes for the What's New page, newest first. Add an entry at the top for each release.
 export const RELEASES = [
   {
+    version: '5.0',
+    date: '2026-11-18',
+    title: 'Sprint 5: Closing and reversing entries',
+    changes: [
+      'Journal entries can be Closing or Reversing as well as Regular or Adjusting; the journal, reports and entry pages show and filter by all four.',
+      'Financial statements leave out closing entries, so net income for a period isn\'t wiped out by the entry that closes it.',
+      'An account picked as a debit can\'t also be picked as a credit on the same entry, and vice versa.',
+      'Click an attachment to view it in the browser instead of downloading it.',
+      'Report totals are double ruled, and the income statement shows Net Income (Loss).',
+    ],
+  },
+  {
     version: '4.0',
     date: '2026-11-16',
     title: 'Sprint 4: Adjusting entries and financial statements',

@@ -193,7 +193,7 @@ public class StatementService {
 
         List<StatementRow> rows = new ArrayList<>();
         rows.add(line("Beginning retained earnings", beginning));
-        rows.add(line("Add: Net income", ni));
+        rows.add(line("Add: Net income (loss)", ni));
         rows.add(line("Less: Dividends", dividends));
         if (other.signum() != 0) rows.add(line("Other changes to retained earnings", other));
         rows.add(line("Ending retained earnings", ending));

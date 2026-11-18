@@ -43,6 +43,9 @@ function SideSection({ side, title, lines, offset, bad, accountOptions, onChange
   const own = lines.filter((line) => line.side === side)
   const total = own.reduce((sum, line) => sum + (parseMoney(line.amount) || 0), 0)
   const label = side.toLowerCase()
+  // An account can't be both debited and credited in one entry, so gray out the other side's picks.
+  const taken = new Set(lines.filter((line) => line.side !== side && line.account_id).map((line) => line.account_id))
+  const options = accountOptions.map((option) => (taken.has(option.value) ? { ...option, disabled: true } : option))
   return (
     <fieldset className="form-section journal-side">
       <legend className="form-section__title">{title}</legend>
@@ -53,7 +56,7 @@ function SideSection({ side, title, lines, offset, bad, accountOptions, onChange
             className="field__control field__control--select"
             aria-label={`Account for ${label} line ${index + 1}`}
             title="Only accounts in the chart of accounts can be used"
-            options={accountOptions}
+            options={options}
             aria-invalid={invalid(bad.has(`${offset + index}.account_id`))}
             value={line.account_id}
             onChange={(event) => onChange(line.key, 'account_id', event.target.value)}

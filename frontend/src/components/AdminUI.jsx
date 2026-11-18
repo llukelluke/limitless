@@ -53,7 +53,7 @@ export function Select({ options, className = '', wrapClassName = '', ...selectP
     <span className={`select ${wrapClassName}`}>
       <select className={className} {...selectProps}>
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option key={option.value} value={option.value} disabled={option.disabled}>
             {option.label}
           </option>
         ))}

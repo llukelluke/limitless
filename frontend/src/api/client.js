@@ -144,6 +144,9 @@ export const api = {
   getLedger: (id, filters = {}) => request(`/accounts/${id}/ledger${query(filters)}`),
   viewAttachment,
 
+  // Financial ratios for the landing page dashboard (every role)
+  financialRatios: () => request('/statements/ratios'),
+
   // Financial statements (manager only). type: trial-balance | income-statement | balance-sheet | retained-earnings
   // dates: { date } or { from, to }
   getStatement: (type, dates) => request(`/statements/${type}${query(dates)}`),

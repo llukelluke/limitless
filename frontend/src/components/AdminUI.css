@@ -748,3 +748,54 @@
 .task-cards > :nth-child(5) { animation-delay: 120ms; }
 .task-cards > :nth-child(6) { animation-delay: 150ms; }
 .task-cards > :nth-child(7) { animation-delay: 180ms; }
+
+/* Financial ratio dashboard on the landing pages: green good, yellow borderline, red needs a closer look */
+.ratio-panel {
+  margin-top: 20px;
+}
+
+.ratio-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.ratio-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-left-width: 6px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.ratio-card--good { border-left-color: var(--success); background: var(--success-bg); }
+.ratio-card--warning { border-left-color: #c48a00; background: var(--warning-bg); }
+.ratio-card--bad { border-left-color: var(--error-ink); background: var(--error-bg); }
+
+.ratio-card__name { font-size: 14px; font-weight: 600; color: var(--text); }
+.ratio-card__value { font-size: 28px; font-weight: 600; line-height: 1.2; color: var(--text); }
+.ratio-card__status { font-size: 13px; font-weight: 600; }
+.ratio-card--good .ratio-card__status { color: var(--success); }
+.ratio-card--warning .ratio-card__status { color: var(--warning); }
+.ratio-card--bad .ratio-card__status { color: var(--error-ink); }
+.ratio-card__range { font-size: 13px; color: var(--text-2); }
+
+.ratio-tabs { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
+.ratio-tab { padding: 6px 14px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: var(--text-2); cursor: pointer; }
+.ratio-tab:hover { color: var(--text); }
+.ratio-tab--active { background: var(--surface); color: var(--primary); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+
+.ratio-group { margin-top: 16px; }
+.ratio-group__title { margin-bottom: 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); }
+
+.ratio-gauge { width: 100%; height: 96px; }
+
+.ratio-customize__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 16px; }
+.ratio-customize__group { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; margin: 16px 0 0; padding: 0; border: 0; }
+.ratio-customize__group legend { padding: 0; }
+.ratio-option { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); cursor: pointer; }
+.ratio-option input { width: 16px; height: 16px; accent-color: var(--primary); }
+.ratio-option__note { color: var(--text-3); }

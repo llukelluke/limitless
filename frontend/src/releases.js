@@ -3,8 +3,11 @@ export const RELEASES = [
   {
     version: '5.0',
     date: '2026-11-18',
-    title: 'Sprint 5: Closing and reversing entries',
+    title: 'Sprint 5: Financial ratios dashboard, closing and reversing entries',
     changes: [
+      'Every landing page shows a financial ratio dashboard with the profitability, liquidity, leverage, activity and other ratios, each colored green when good, yellow when borderline and red when it needs a closer look, with an animated gauge chart (Apache ECharts).',
+      'The dashboard\'s Customize tab adds or removes ratios and charts; each user\'s choice is remembered.',
+      'Accountants\'s home page says how many journal entries are waiting for a manager\'s approval.',
       'Journal entries can be Closing or Reversing as well as Regular or Adjusting; the journal, reports and entry pages show and filter by all four.',
       'Financial statements leave out closing entries, so net income for a period isn\'t wiped out by the entry that closes it.',
       'An account picked as a debit can\'t also be picked as a credit on the same entry, and vice versa.',

@@ -761,6 +761,7 @@
   grid-auto-flow: dense; /* a smaller card fills the gap a wide one leaves */
   gap: 12px;
   container-type: inline-size;
+  position: relative; /* cards measure their slots from here while dragging */
 }
 
 .ratio-card {
@@ -780,12 +781,12 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none; /* no iOS menu on press and hold */
-  transition: box-shadow var(--fast) ease, transform var(--fast) var(--ease), opacity var(--fast) ease;
+  transition: box-shadow var(--fast) ease, opacity var(--fast) ease; /* transforms are driven by the drag */
 }
 
 .ratio-card:hover { box-shadow: var(--shadow); }
 .ratio-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.ratio-card--dragging { z-index: 1; transform: scale(1.03); box-shadow: var(--shadow-lg); opacity: 0.92; cursor: grabbing; }
+.ratio-card--dragging { z-index: 2; box-shadow: var(--shadow-lg); opacity: 0.95; cursor: grabbing; pointer-events: none; }
 .ratio-card__grip { position: absolute; top: 10px; right: 8px; color: var(--text-3); }
 .ratio-card__resize {
   position: absolute;
@@ -806,7 +807,29 @@
 @container (max-width: 683px) { .ratio-card[data-w="3"] { grid-column: span 2; } }
 @container (max-width: 451px) { .ratio-card { grid-column: auto; } }
 
-.ratio-hint { margin: 12px 0 0; font-size: 13px; color: var(--text-2); }
+/* Dashboard tips behind a star button, next to the tabs */
+.ratio-head { display: flex; align-items: center; gap: 10px; }
+.ratio-tips { position: relative; }
+.ratio-tips__button { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--gold-ink); cursor: pointer; }
+.ratio-tips__button:hover, .ratio-tips__button[aria-expanded="true"] { background: var(--surface-2); border-color: var(--border-strong); }
+.ratio-tips__popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  width: min(300px, 80vw);
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  animation: pop-in var(--fast) var(--ease);
+}
+/* On phones the star sits at the left of the panel, so the tips open to the right of it */
+@media (max-width: 600px) { .ratio-tips__popup { right: auto; left: 0; } }
 
 .ratio-card--good { border-left-color: var(--success); background: var(--success-bg); }
 .ratio-card--warning { border-left-color: #c48a00; background: var(--warning-bg); }
@@ -863,7 +886,6 @@
 .ratio-summary__hint { font-size: 13px; color: var(--text-2); }
 .ratio-summary__heading { margin: 12px 0 0; font-size: 14px; font-weight: 600; color: var(--text-2); }
 .ratio-summary__table { min-width: 0; } /* data tables are wide by default; this one fits the pop-up */
-.ratio-summary__table .num { text-align: right; white-space: nowrap; }
 .ratio-summary__ranges { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
 .ratio-summary__dot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; }
 .ratio-summary__dot--good { background: #3f9b5a; }

@@ -1,4 +1,4 @@
-// Ratio dashboard helpers: number formatting, gauge chart geometry, and each user's saved dashboard choices.
+// Ratio dashboard helpers: number formatting, chart geometry, and each user's saved dashboard choices.
 
 export const RATIO_CATEGORIES = ['Profitability', 'Liquidity', 'Leverage', 'Activity', 'Other']
 
@@ -12,7 +12,7 @@ export function formatRatio({ value, unit }) {
   return n.toFixed(2)
 }
 
-// Gauge chart scale: 0 to a little past the thresholds, the red / yellow / green stops as fractions of it
+// Chart scale (gauge, bar, ring): 0 to a little past the thresholds, the red / yellow / green stops as fractions of it
 // (the shape ECharts' gauge axisLine color takes), and the value clamped onto the scale.
 export function gauge({ value, higherIsBetter, good, warn }) {
   const max = Math.max(good, warn) * 1.5
@@ -31,12 +31,28 @@ export function gauge({ value, higherIsBetter, good, warn }) {
 // shortcut: choices live in this browser's localStorage, so they don't follow the user to another computer.
 const prefsKey = (user) => `limitless.ratio-dashboard.${user?.id ?? user?.username}`
 
-// selected: ratio keys to show (null = default: every ratio that has a value). charts: show the gauge charts.
+export const CHART_TYPES = [
+  { value: 'gauge', label: 'Gauge' },
+  { value: 'bar', label: 'Bar' },
+  { value: 'ring', label: 'Ring' },
+  { value: 'none', label: 'No chart' },
+]
+
+const DEFAULT_PREFS = { selected: null, chart: 'gauge' }
+
+// selected: ratio keys to show (null = default: every ratio that has a value). chart: one of CHART_TYPES.
+// Choices saved before chart types existed had charts: true/false; they become gauge / none.
+export function normalizePrefs(saved) {
+  const { charts, ...rest } = saved ?? {}
+  const prefs = { ...DEFAULT_PREFS, ...(charts === false ? { chart: 'none' } : {}), ...rest }
+  return CHART_TYPES.some((t) => t.value === prefs.chart) ? prefs : { ...prefs, chart: 'gauge' }
+}
+
 export function loadPrefs(user) {
   try {
-    return { selected: null, charts: true, ...JSON.parse(localStorage.getItem(prefsKey(user))) }
+    return normalizePrefs(JSON.parse(localStorage.getItem(prefsKey(user))))
   } catch {
-    return { selected: null, charts: true }
+    return normalizePrefs(null)
   }
 }
 

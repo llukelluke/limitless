@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
-import { GripVertical, MoveDiagonal2, Star } from 'lucide-react'
+import { GripVertical } from 'lucide-react'
 import { api } from '../api/client.js'
 import AsyncContent from './AsyncContent.jsx'
 import { Panel, Select } from './AdminUI.jsx'
@@ -10,14 +10,12 @@ import {
   CHART_TYPES,
   RATIO_CATEGORIES,
   chartTypeFor,
-  clampSize,
   formatRatio,
   loadPrefs,
   moveKey,
   normalizePrefs,
   orderRatios,
   savePrefs,
-  sizeFor,
   visibleRatios,
 } from '../ratios.js'
 
@@ -40,7 +38,6 @@ const HOLD_MS = 300 // press and hold this long before a card can be dragged
 const SLOP = 8 // moving further than this first means scrolling or clicking, not dragging
 const LIFT = 'scale(1.04)'
 const EASE = 'cubic-bezier(0.2, 0.7, 0.2, 1)'
-const TIPS = 'Click a ratio for its summary. Press and hold a card to drag it to a new place; drag its corner to resize it.'
 
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const cardsIn = (grid) => [...grid.querySelectorAll('[data-ratio-key]')]
@@ -51,15 +48,12 @@ function slotOf(card) {
 }
 const inside = (slot, x, y) => x >= slot.left && x <= slot.left + slot.width && y >= slot.top && y <= slot.top + slot.height
 
-function RatioCard({ ratio, chart, size, dragging, onOpen, onHold, onResize }) {
+function RatioCard({ ratio, chart, dragging, onOpen, onHold }) {
   const status = STATUS[ratio.status] ?? STATUS.NONE
   return (
     <article
       className={`ratio-card ${status.className} ${dragging ? 'ratio-card--dragging' : ''}`}
-      style={{ '--w': size.w, '--h': size.h }}
       data-ratio-key={ratio.key}
-      data-w={size.w}
-      data-h={size.h}
       role="button"
       tabIndex={0}
       aria-haspopup="dialog"
@@ -83,16 +77,13 @@ function RatioCard({ ratio, chart, size, dragging, onOpen, onHold, onResize }) {
       )}
       <p className="ratio-card__status">{status.label}</p>
       <p className="ratio-card__range">{ratio.note ?? `Good: ${ratio.goodRange}`}</p>
-      <span className="ratio-card__resize" title="Drag to resize this card" aria-hidden="true" onPointerDown={onResize} onClick={(event) => event.stopPropagation()}>
-        <MoveDiagonal2 size={14} />
-      </span>
     </article>
   )
 }
 
 // Financial ratios as of today, color coded, on every role's landing page. The Customize tab picks which ratios
-// show and each one's chart type. On the dashboard each card opens a summary when clicked, can be dragged to a new
-// place in its category (press and hold, then slide), and resized from its corner. Choices are saved for this user.
+// show and each one's chart type. On the dashboard each card opens a summary when clicked and can be dragged to a
+// new place in its category (press and hold, then slide). Choices are saved for this user. How-to: Help panel.
 export default function RatioDashboard() {
   const { user } = useAuth()
   const { data, error, loading } = useApi(api.financialRatios)
@@ -100,11 +91,9 @@ export default function RatioDashboard() {
   const [prefs, setPrefs] = useState(() => loadPrefs(user))
   const [openKey, setOpenKey] = useState(null)
   const [draggingKey, setDraggingKey] = useState(null)
-  const gesture = useRef(null) // the press, drag or resize in progress
+  const gesture = useRef(null) // the press or drag in progress
   const justDragged = useRef(false)
-  const before = useRef(null) // where each card was drawn just before a reorder or resize, for the slide animation
-  const [tipsOpen, setTipsOpen] = useState(false)
-  const tipsRef = useRef(null)
+  const before = useRef(null) // where each card was drawn just before a reorder, for the slide animation
   const ratios = orderRatios(data ?? [], prefs.order)
   const shown = visibleRatios(ratios, prefs.selected)
   const shownKeys = shown.map((r) => r.key)
@@ -117,7 +106,6 @@ export default function RatioDashboard() {
   const toggle = (key) =>
     update({ ...prefs, selected: shownKeys.includes(key) ? shownKeys.filter((k) => k !== key) : [...shownKeys, key] })
   const setType = (key, type) => update({ ...prefs, types: { ...prefs.types, [key]: type } })
-  const setSize = (key, size) => update({ ...prefs, sizes: { ...prefs.sizes, [key]: clampSize(size) } })
   // The next or previous shown card in the same category
   const neighbor = (key, step) => {
     const ratio = ratios.find((r) => r.key === key)
@@ -125,7 +113,7 @@ export default function RatioDashboard() {
     return group[group.findIndex((r) => r.key === key) + step]?.key
   }
 
-  // ---------- press and hold to drag; drag the corner to resize ----------
+  // ---------- press and hold to drag ----------
   // The dragged card follows the pointer: its slot plus the offset it was grabbed at.
   const follow = (g) => {
     const card = g.grid.querySelector(`[data-ratio-key="${g.key}"]`)
@@ -137,7 +125,7 @@ export default function RatioDashboard() {
   const capture = (grid, moving) => {
     before.current = { grid, moving, rects: new Map(cardsIn(grid).map((card) => [card.dataset.ratioKey, card.getBoundingClientRect()])) }
   }
-  // After a reorder or resize: slide each other card from where it was to its new place (FLIP), and keep the
+  // After a reorder: slide each other card from where it was to its new place (FLIP), and keep the
   // dragged card under the pointer in its new slot.
   useLayoutEffect(() => {
     const b = before.current
@@ -147,7 +135,7 @@ export default function RatioDashboard() {
     for (const card of cardsIn(b.grid)) {
       const key = card.dataset.ratioKey
       if (key === b.moving) {
-        if (g?.kind === 'drag' && g.key === key) follow(g)
+        if (g?.key === key) follow(g)
         continue
       }
       const old = b.rects.get(key)
@@ -164,14 +152,12 @@ export default function RatioDashboard() {
     if (!g) return
     clearTimeout(g.timer)
     if (!g.active) return
-    if (g.kind === 'drag') {
-      // Settle the card into its slot
-      const card = g.grid.querySelector(`[data-ratio-key="${g.key}"]`)
-      if (card) {
-        const from = card.style.transform
-        card.style.transform = ''
-        if (from && !reduceMotion()) card.animate([{ transform: from }, { transform: 'none' }], { duration: 200, easing: EASE })
-      }
+    // Settle the card into its slot
+    const card = g.grid.querySelector(`[data-ratio-key="${g.key}"]`)
+    if (card) {
+      const from = card.style.transform
+      card.style.transform = ''
+      if (from && !reduceMotion()) card.animate([{ transform: from }, { transform: 'none' }], { duration: 200, easing: EASE })
     }
     justDragged.current = true // the click that follows a drag must not open the summary
     setTimeout(() => (justDragged.current = false), 0)
@@ -186,15 +172,6 @@ export default function RatioDashboard() {
     if (!g) return
     const dx = event.clientX - g.x
     const dy = event.clientY - g.y
-    if (g.kind === 'resize') {
-      g.active = true
-      const size = clampSize({ w: (g.width + dx + g.gap) / g.unitW, h: (g.height + dy + g.gap) / g.unitH })
-      if (size.w === g.size.w && size.h === g.size.h) return
-      g.size = size
-      capture(g.grid, g.key)
-      setPrefs((current) => ({ ...current, sizes: { ...current.sizes, [g.key]: size } }))
-      return
-    }
     if (!g.active) {
       if (Math.hypot(dx, dy) > SLOP) finishGesture() // moved before the hold finished: a scroll or a click
       return
@@ -213,7 +190,7 @@ export default function RatioDashboard() {
   useEffect(() => {
     // During a touch drag, stop the page scrolling under the finger. Chrome decides at touchstart whether a touch
     // may scroll, so this listener has to be there before the touch begins, not added once the drag starts.
-    const stopScroll = (event) => gesture.current?.active && gesture.current.kind === 'drag' && event.preventDefault()
+    const stopScroll = (event) => gesture.current?.active && event.preventDefault()
     document.addEventListener('touchmove', stopScroll, { passive: false })
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerEnd)
@@ -240,7 +217,6 @@ export default function RatioDashboard() {
       if (!reduceMotion()) card.animate([{ transform: 'none' }, { transform: card.style.transform }], { duration: 150, easing: EASE })
     }, HOLD_MS)
     gesture.current = {
-      kind: 'drag',
       key,
       x: event.clientX,
       y: event.clientY,
@@ -253,64 +229,10 @@ export default function RatioDashboard() {
     }
   }
 
-  const dragToResize = (key) => (event) => {
-    if (event.button !== 0) return
-    event.stopPropagation()
-    event.preventDefault()
-    const card = event.currentTarget.closest('.ratio-card').getBoundingClientRect()
-    const grid = event.currentTarget.closest('.ratio-cards')
-    const gap = parseFloat(getComputedStyle(grid).columnGap) || 0
-    const size = sizeFor(prefs, key)
-    gesture.current = {
-      kind: 'resize',
-      key,
-      grid,
-      size,
-      x: event.clientX,
-      y: event.clientY,
-      width: card.width,
-      height: card.height,
-      gap,
-      unitW: (card.width + gap) / size.w,
-      unitH: (card.height + gap) / size.h,
-    }
-  }
-
   const open = (key) => () => !justDragged.current && setOpenKey(key)
   const openRatio = ratios.find((r) => r.key === openKey)
 
-  // Close the tips on Escape or a click anywhere else
-  useEffect(() => {
-    if (!tipsOpen) return undefined
-    const close = (event) => (event.type === 'keydown' ? event.key === 'Escape' : !tipsRef.current?.contains(event.target)) && setTipsOpen(false)
-    document.addEventListener('pointerdown', close)
-    document.addEventListener('keydown', close)
-    return () => {
-      document.removeEventListener('pointerdown', close)
-      document.removeEventListener('keydown', close)
-    }
-  }, [tipsOpen])
-
   const tabs = (
-    <div className="ratio-head">
-      <span className="ratio-tips" ref={tipsRef}>
-        <button
-          type="button"
-          className="ratio-tips__button"
-          title="How to use the dashboard"
-          aria-label="How to use the dashboard"
-          aria-expanded={tipsOpen}
-          aria-controls="ratio-tips"
-          onClick={() => setTipsOpen((open) => !open)}
-        >
-          <Star size={16} aria-hidden="true" />
-        </button>
-        {tipsOpen && (
-          <span id="ratio-tips" className="ratio-tips__popup" role="note">
-            {TIPS}
-          </span>
-        )}
-      </span>
     <div className="ratio-tabs" role="tablist" aria-label="Financial ratios">
       {TABS.map(({ id, label, title }) => (
         <button
@@ -327,7 +249,6 @@ export default function RatioDashboard() {
           {label}
         </button>
       ))}
-    </div>
     </div>
   )
 
@@ -349,11 +270,9 @@ export default function RatioDashboard() {
                         key={ratio.key}
                         ratio={ratio}
                         chart={chartTypeFor(prefs, ratio.key)}
-                        size={sizeFor(prefs, ratio.key)}
                         dragging={draggingKey === ratio.key}
                         onOpen={open(ratio.key)}
                         onHold={holdToDrag(ratio.key)}
-                        onResize={dragToResize(ratio.key)}
                       />
                     ))}
                   </div>
@@ -363,10 +282,9 @@ export default function RatioDashboard() {
             <RatioSummary
               ratio={openRatio}
               chartType={openRatio ? chartTypeFor(prefs, openRatio.key) : 'gauge'}
-              size={openRatio ? sizeFor(prefs, openRatio.key) : { w: 1, h: 1 }}
               canMoveEarlier={Boolean(openRatio && neighbor(openRatio.key, -1))}
               canMoveLater={Boolean(openRatio && neighbor(openRatio.key, 1))}
-              onChange={({ type, size }) => (type ? setType(openKey, type) : setSize(openKey, size))}
+              onChange={(type) => setType(openKey, type)}
               onMove={(step) => {
                 const grid = document.querySelector(`[data-ratio-key="${openKey}"]`)?.closest('.ratio-cards')
                 if (grid) capture(grid, null)
@@ -398,7 +316,7 @@ export default function RatioDashboard() {
               <button
                 type="button"
                 className="btn btn--secondary btn--sm"
-                title="Show the ratios that have data, as gauges, in the standard order and size"
+                title="Show the ratios that have data, as gauges, in the standard order"
                 onClick={() => update(normalizePrefs(null))}
               >
                 Reset to default

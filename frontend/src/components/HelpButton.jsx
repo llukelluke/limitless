@@ -16,6 +16,16 @@ const TOPICS = [
     ],
   },
   {
+    title: 'Financial Ratio Dashboard',
+    body: [
+      'Every landing page shows the financial ratios as of today. Each card is green when the ratio is good, yellow when it is borderline, and red when it needs a closer look.',
+      'Click a ratio card (or press Enter on it) to see its summary: the amounts it is worked out from, its formula, and what each color means for that ratio.',
+      'To move a card, press and hold it, then drag it to a new place in its category. The other cards slide out of the way. A quick swipe on a phone still scrolls the page.',
+      'Open the Customize tab to choose which ratios to show (one dropdown per category) and the chart for each: gauge, bar, ring or no chart. "Chart type for all" sets every ratio at once, and "Reset to default" undoes your changes.',
+      'Your choices and card order are saved for you on this computer.',
+    ],
+  },
+  {
     title: 'Signing In & Passwords',
     body: [
       'Sign in with the username and password your administrator gave you. New users can request access from the sign-in page; an administrator must approve the request.',

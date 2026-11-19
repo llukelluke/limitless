@@ -29,7 +29,7 @@ test('by default only ratios with a value are shown; a saved choice wins', () =>
 })
 
 test('saved choices: defaults, old charts on/off becomes gauge / none, unknown chart types are dropped', () => {
-  const empty = { types: {}, order: [], sizes: {} }
+  const empty = { types: {}, order: [] }
   assert.deepEqual(normalizePrefs(null), { selected: null, chart: 'gauge', ...empty })
   assert.deepEqual(normalizePrefs({ selected: ['a'], charts: false }), { selected: ['a'], chart: 'none', ...empty })
   assert.equal(normalizePrefs({ chart: 'pie' }).chart, 'gauge')

@@ -757,10 +757,14 @@
 .ratio-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-auto-rows: minmax(250px, auto);
+  grid-auto-flow: dense; /* a smaller card fills the gap a wide one leaves */
   gap: 12px;
+  container-type: inline-size;
 }
 
 .ratio-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -769,7 +773,40 @@
   border-left-width: 6px;
   background: var(--surface-2);
   border-radius: 8px;
+  /* Size chosen by the user: columns and rows to span */
+  grid-column: span var(--w, 1);
+  grid-row: span var(--h, 1);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* no iOS menu on press and hold */
+  transition: box-shadow var(--fast) ease, transform var(--fast) var(--ease), opacity var(--fast) ease;
 }
+
+.ratio-card:hover { box-shadow: var(--shadow); }
+.ratio-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.ratio-card--dragging { z-index: 1; transform: scale(1.03); box-shadow: var(--shadow-lg); opacity: 0.92; cursor: grabbing; }
+.ratio-card__grip { position: absolute; top: 10px; right: 8px; color: var(--text-3); }
+.ratio-card__resize {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--text-3);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.ratio-card__resize:hover { background: var(--surface); color: var(--text); }
+
+/* Fewer columns on narrower screens: a 3-wide card shrinks to 2, and phones show one card per row */
+@container (max-width: 683px) { .ratio-card[data-w="3"] { grid-column: span 2; } }
+@container (max-width: 451px) { .ratio-card { grid-column: auto; } }
+
+.ratio-hint { margin: 12px 0 0; font-size: 13px; color: var(--text-2); }
 
 .ratio-card--good { border-left-color: var(--success); background: var(--success-bg); }
 .ratio-card--warning { border-left-color: #c48a00; background: var(--warning-bg); }
@@ -791,7 +828,7 @@
 .ratio-group { margin-top: 16px; }
 .ratio-group__title { margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--text-2); }
 
-.ratio-chart { width: 100%; height: 96px; }
+.ratio-chart { flex: 1; width: 100%; min-height: 96px; } /* grows with the card */
 
 .ratio-customize__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 16px; }
 
@@ -805,7 +842,31 @@
 .ratio-dropdown__summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
 .ratio-dropdown__title { font-size: 14px; font-weight: 600; color: var(--text); }
 .ratio-dropdown__count { font-size: 13px; color: var(--text-2); }
-.ratio-dropdown__menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; padding: 4px 14px 14px; border-top: 1px solid var(--border); padding-top: 12px; animation: fade-in var(--fast) ease; }
+.ratio-dropdown__menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 8px 16px; padding: 4px 14px 14px; border-top: 1px solid var(--border); padding-top: 12px; animation: fade-in var(--fast) ease; }
+.ratio-choice { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ratio-choice .select { flex: 0 0 130px; }
+@media (max-width: 480px) { .ratio-dropdown__menu { grid-template-columns: 1fr; } }
 .ratio-option { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); cursor: pointer; }
 .ratio-option input { width: 16px; height: 16px; accent-color: var(--primary); }
 .ratio-option__note { color: var(--text-3); }
+
+/* Ratio summary pop-up (opens from a ratio card) */
+.ratio-summary { width: min(560px, calc(100vw - 32px)); }
+.ratio-summary__body { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.ratio-summary__value { margin: 0; font-size: 28px; font-weight: 600; }
+.ratio-summary__status { margin-left: 8px; padding: 2px 10px; border-radius: 999px; font-size: 13px; vertical-align: middle; }
+.ratio-summary__status--good { background: var(--success-bg); color: var(--success); }
+.ratio-summary__status--warning { background: var(--warning-bg); color: var(--warning); }
+.ratio-summary__status--bad { background: var(--error-bg); color: var(--error-ink); }
+.ratio-summary__status--none { background: var(--surface-2); color: var(--text-2); }
+.ratio-summary__formula, .ratio-summary__note, .ratio-summary__hint { margin: 0; font-size: 14px; }
+.ratio-summary__hint { font-size: 13px; color: var(--text-2); }
+.ratio-summary__heading { margin: 12px 0 0; font-size: 14px; font-weight: 600; color: var(--text-2); }
+.ratio-summary__table { min-width: 0; } /* data tables are wide by default; this one fits the pop-up */
+.ratio-summary__table .num { text-align: right; white-space: nowrap; }
+.ratio-summary__ranges { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.ratio-summary__dot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; }
+.ratio-summary__dot--good { background: #3f9b5a; }
+.ratio-summary__dot--warning { background: #e3b23c; }
+.ratio-summary__dot--bad { background: #d6544a; }
+.ratio-summary__layout { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }

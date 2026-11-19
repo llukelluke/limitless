@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -309,8 +310,35 @@ public class StatementService {
         BigDecimal workingCapital = currentAssets.subtract(currentLiabilities);
         BigDecimal commonEquity = equity.subtract(preferred);
 
+        // The amounts behind each ratio, shown when its chart is clicked. Ratios with no data list none.
+        Map<String, Map<String, BigDecimal>> parts = Map.ofEntries(
+                Map.entry("gross-margin", parts("Sales", sales, "Cost of goods sold", cogs)),
+                Map.entry("operating-margin", parts("Net income", netIncome, "Interest expense", interest,
+                        "Income tax expense", taxes, "Profits before taxes and interest", ebit, "Sales", sales)),
+                Map.entry("net-margin", parts("Net income", netIncome, "Sales", sales)),
+                Map.entry("roa", parts("Net income", netIncome, "Total assets", assets)),
+                Map.entry("roe", parts("Net income", netIncome, "Total stockholders' equity", equity)),
+                Map.entry("return-on-common-equity", parts("Net income", netIncome, "Total stockholders' equity", equity,
+                        "Preferred stock", preferred)),
+                Map.entry("current", parts("Current assets", currentAssets, "Current liabilities", currentLiabilities)),
+                Map.entry("quick", parts("Current assets", currentAssets, "Inventory", inventory,
+                        "Current liabilities", currentLiabilities)),
+                Map.entry("inventory-to-nwc", parts("Inventory", inventory, "Current assets", currentAssets,
+                        "Current liabilities", currentLiabilities, "Net working capital", workingCapital)),
+                Map.entry("debt-to-assets", parts("Total debt", debt, "Total assets", assets)),
+                Map.entry("debt-to-equity", parts("Total debt", debt, "Total stockholders' equity", equity)),
+                Map.entry("lt-debt-to-equity", parts("Long-term debt", longTermDebt, "Total stockholders' equity", equity)),
+                Map.entry("times-interest-earned", parts("Profits before taxes and interest", ebit, "Interest expense", interest)),
+                Map.entry("inventory-turnover", parts("Sales", sales, "Inventory", inventory)),
+                Map.entry("fixed-asset-turnover", parts("Sales", sales, "Fixed assets", fixedAssets)),
+                Map.entry("asset-turnover", parts("Sales", sales, "Total assets", assets)),
+                Map.entry("ar-turnover", parts("Sales", sales, "Accounts receivable", receivables)),
+                Map.entry("collection-period", parts("Accounts receivable", receivables, "Sales", sales,
+                        "Average daily sales (sales ÷ 365)", div(sales, BigDecimal.valueOf(365)))),
+                Map.entry("dividend-payout", parts("Dividends", dividends, "Net income", netIncome)));
+
         String P = "Profitability", L = "Liquidity", V = "Leverage", A = "Activity", O = "Other";
-        return List.of(
+        return Stream.of(
                 ratio("gross-margin", P, "Gross Profit Margin", "(Sales − Cost of goods sold) ÷ Sales",
                         div(sales.subtract(cogs), sales), "percent", true, 0.40, 0.20, "40% or higher"),
                 ratio("operating-margin", P, "Operating Profit Margin", "Profits before taxes and interest ÷ Sales",
@@ -371,7 +399,19 @@ public class StatementService {
                 ratio("dividend-payout", O, "Dividend Payout", "Annual dividends per share ÷ After-tax earnings per share",
                         div(dividends, netIncome), "percent", false, 0.60, 1.0, "60% or lower"),
                 none("cash-flow-per-share", O, "Cash Flow per Share",
-                        "(After-tax profits + Depreciation) ÷ Common shares outstanding", "dollars"));
+                        "(After-tax profits + Depreciation) ÷ Common shares outstanding", "dollars"))
+                .map(r -> r.withParts(parts.getOrDefault(r.key(), Map.of())))
+                .toList();
+    }
+
+    /** Label, amount, label, amount… in order. Amounts are rounded to cents for display. */
+    private static Map<String, BigDecimal> parts(Object... labelsAndAmounts) {
+        Map<String, BigDecimal> m = new LinkedHashMap<>();
+        for (int i = 0; i < labelsAndAmounts.length; i += 2) {
+            BigDecimal amount = (BigDecimal) labelsAndAmounts[i + 1];
+            m.put((String) labelsAndAmounts[i], amount == null ? null : amount.setScale(2, java.math.RoundingMode.HALF_UP));
+        }
+        return m;
     }
 
     private static boolean isCurrent(String subcategory) {
@@ -389,7 +429,7 @@ public class StatementService {
 
     private static RatioResponse none(String key, String category, String name, String formula, String unit,
                                       String note) {
-        return new RatioResponse(key, category, name, formula, null, unit, "NONE", true, 0, 0, null, note);
+        return new RatioResponse(key, category, name, formula, null, unit, "NONE", true, 0, 0, null, note, Map.of());
     }
 
     /**
@@ -406,7 +446,7 @@ public class StatementService {
             else status = d < 0 || d > warn ? "BAD" : d > good ? "WARNING" : "GOOD";
         }
         return new RatioResponse(key, category, name, formula, v, unit, status, higherIsBetter, good, warn, goodRange,
-                v == null ? "Not enough data yet: the amount it divides by is zero." : null);
+                v == null ? "Not enough data yet: the amount it divides by is zero." : null, Map.of());
     }
 
     // =====================================================================

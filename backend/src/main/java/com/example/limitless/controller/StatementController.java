@@ -1,5 +1,6 @@
 package com.example.limitless.controller;
 
+import com.example.limitless.dto.RatioResponse;
 import com.example.limitless.dto.SavedStatementResponse;
 import com.example.limitless.dto.StatementEmailRequest;
 import com.example.limitless.dto.StatementResponse;
@@ -32,6 +33,12 @@ public class StatementController {
     public StatementController(StatementService service, UserRepository users) {
         this.service = service;
         this.users = users;
+    }
+
+    /** Financial ratios for the landing page dashboard. Open to every signed-in role (see SecurityConfig). */
+    @GetMapping("/ratios")
+    public List<RatioResponse> ratios() {
+        return service.ratios();
     }
 
     /** View: the statement as JSON for the frontend to render. */

@@ -17,7 +17,7 @@ import {
 } from '../../components/AdminUI.jsx'
 import { NORMAL_SIDES, STATEMENTS, formatDate, formatDateTime, formatMoney, isAdmin, labelFor } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
-import { JOURNAL_STATUSES, matchesEntry, sortedLines } from '../../journal.js'
+import { ENTRY_TYPES, JOURNAL_STATUSES, matchesEntry, sortedLines } from '../../journal.js'
 import { ACTIONS, changedFields } from '../../eventLog.js'
 
 const money = (key, header, width) => ({
@@ -118,7 +118,7 @@ const journalColumns = [
         </Fragment>
       )),
   },
-  { key: 'entry_type', header: 'Type', width: '9%', render: (e) => (e.entry_type === 'ADJUSTING' ? 'Adjusting' : 'Regular') },
+  { key: 'entry_type', header: 'Type', width: '9%', render: (e) => labelFor(ENTRY_TYPES, e.entry_type) },
   { key: 'status', header: 'Status', width: '10%', render: (e) => <StatusBadge status={e.status}>{labelFor(JOURNAL_STATUSES, e.status)}</StatusBadge> },
   { key: 'created_by_name', header: 'Prepared by', width: '14%' },
   money('total_debits', 'DEBITS', '9.5%'),
@@ -129,17 +129,17 @@ const ALL = { value: '', label: 'All' }
 
 export function JournalReport() {
   const { data, error, loading } = useApi(api.listJournalEntries)
-  const [filters, setFilters] = useState({ status: '', from: '', to: '' })
+  const [filters, setFilters] = useState({ status: '', type: '', from: '', to: '' })
   const set = (key) => (event) => setFilters((current) => ({ ...current, [key]: event.target.value }))
   const rows = (data ?? [])
-    .filter((e) => e.status !== 'DRAFT' && (!filters.status || e.status === filters.status) && matchesEntry(e, filters))
+    .filter((e) => e.status !== 'DRAFT' && (!filters.status || e.status === filters.status) && (!filters.type || e.entry_type === filters.type) && matchesEntry(e, filters))
     .sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.id - b.id)
   const range = filters.from || filters.to
     ? `${filters.from ? formatDate(filters.from) : 'start'} to ${filters.to ? formatDate(filters.to) : 'today'}`
     : 'all dates'
   return (
     <>
-      <PageHeader title="Journal Entries Report" subtitle="Journal entries by status and date range." />
+      <PageHeader title="Journal Entries Report" subtitle="Journal entries by status, type and date range." />
       <Panel title="Journal entries" className="page-panel" action={<ReportActions />}>
         <div className="toolbar" role="search">
           <ToolbarField label="Status">
@@ -153,6 +153,17 @@ export function JournalReport() {
               onChange={set('status')}
             />
           </ToolbarField>
+          <ToolbarField label="Type">
+            <Select
+              wrapClassName="select--inline"
+              className="toolbar__filter"
+              aria-label="Filter by entry type"
+              title="Show entries of one type"
+              options={[ALL, ...ENTRY_TYPES]}
+              value={filters.type}
+              onChange={set('type')}
+            />
+          </ToolbarField>
           <ToolbarField label="From">
             <input className="toolbar__search toolbar__date" type="date" aria-label="From date" title="Only entries on or after this date" value={filters.from} onChange={set('from')} />
           </ToolbarField>
@@ -161,7 +172,7 @@ export function JournalReport() {
           </ToolbarField>
         </div>
         <ReportMeta>
-          Status: {filters.status ? labelFor(JOURNAL_STATUSES, filters.status) : 'All'} · {range} · {rows.length} entries
+          Status: {filters.status ? labelFor(JOURNAL_STATUSES, filters.status) : 'All'} · Type: {filters.type ? labelFor(ENTRY_TYPES, filters.type) : 'All'} · {range} · {rows.length} entries
         </ReportMeta>
         <AsyncContent loading={loading} error={error}>
           <DataTable

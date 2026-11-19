@@ -1,5 +1,6 @@
 package com.example.limitless.service;
 
+import com.example.limitless.dto.RatioResponse;
 import com.example.limitless.dto.StatementEmailRequest;
 import com.example.limitless.dto.StatementResponse;
 import com.example.limitless.dto.StatementRow;
@@ -193,7 +194,7 @@ public class StatementService {
 
         List<StatementRow> rows = new ArrayList<>();
         rows.add(line("Beginning retained earnings", beginning));
-        rows.add(line("Add: Net income", ni));
+        rows.add(line("Add: Net income (loss)", ni));
         rows.add(line("Less: Dividends", dividends));
         if (other.signum() != 0) rows.add(line("Other changes to retained earnings", other));
         rows.add(line("Ending retained earnings", ending));
@@ -254,6 +255,158 @@ public class StatementService {
                         new StatementSection("Liabilities", liabilities, totalL),
                         new StatementSection("Stockholders' Equity", equity, totalE)),
                 totals, totalA.compareTo(totalLE) == 0);
+    }
+
+    // =====================================================================
+    // Financial ratios (landing page dashboard, every role)
+    // =====================================================================
+
+    private static final String NO_SHARES = "Needs share counts or market prices, which aren't kept in the ledger.";
+
+    /**
+     * Every ratio on the course's "Summary of Key Financial Ratios" sheet, as of today, from the balance sheet and the
+     * income statement to date. Ledger amounts are picked out by account name and subcategory:
+     *   current = subcategory says "current" (not "non-current"); fixed assets and long-term debt are the rest;
+     *   inventory, receivable, cost of goods/sales, interest, tax, depreciation, preferred, by account name.
+     * Ratios needing data the ledger doesn't hold (shares, market price, leases) come back with no value and a note.
+     * Green/yellow/red ranges are common textbook rules of thumb.
+     */
+    @Transactional(readOnly = true)
+    public List<RatioResponse> ratios() {
+        List<Account> all = sortedAccounts();
+        Period p = new Period(null, LocalDate.now());
+        StatementResponse bs = balanceSheet(all, p), is = incomeStatement(all, p);
+        BigDecimal assets = bs.totals().get("total_assets"), debt = bs.totals().get("total_liabilities");
+        BigDecimal equity = bs.totals().get("total_equity");
+        BigDecimal sales = is.totals().get("total_revenues"), netIncome = is.totals().get("net_income");
+        BigDecimal dividends = retainedEarnings(all, p).totals().get("dividends");
+
+        BigDecimal currentAssets = ZERO, inventory = ZERO, receivables = ZERO, fixedAssets = ZERO;
+        for (StatementRow r : bs.sections().get(0).rows()) {
+            String n = lower(r.name());
+            if (isCurrent(r.subcategory())) currentAssets = currentAssets.add(r.amount());
+            else fixedAssets = fixedAssets.add(r.amount());
+            if (n.contains("inventor")) inventory = inventory.add(r.amount());
+            if (n.contains("receivable")) receivables = receivables.add(r.amount());
+        }
+        BigDecimal currentLiabilities = ZERO, longTermDebt = ZERO;
+        for (StatementRow r : bs.sections().get(1).rows()) {
+            if (isCurrent(r.subcategory())) currentLiabilities = currentLiabilities.add(r.amount());
+            else longTermDebt = longTermDebt.add(r.amount());
+        }
+        BigDecimal preferred = ZERO;
+        for (StatementRow r : bs.sections().get(2).rows()) {
+            if (lower(r.name()).contains("preferred")) preferred = preferred.add(r.amount());
+        }
+        BigDecimal cogs = ZERO, interest = ZERO, taxes = ZERO;
+        for (StatementRow r : is.sections().get(1).rows()) {
+            String n = lower(r.name());
+            if (n.contains("cost of goods") || n.contains("cost of sales")) cogs = cogs.add(r.amount());
+            else if (n.contains("interest")) interest = interest.add(r.amount());
+            else if (n.contains("tax")) taxes = taxes.add(r.amount());
+        }
+        BigDecimal ebit = netIncome.add(interest).add(taxes);
+        BigDecimal workingCapital = currentAssets.subtract(currentLiabilities);
+        BigDecimal commonEquity = equity.subtract(preferred);
+
+        String P = "Profitability", L = "Liquidity", V = "Leverage", A = "Activity", O = "Other";
+        return List.of(
+                ratio("gross-margin", P, "Gross Profit Margin", "(Sales − Cost of goods sold) ÷ Sales",
+                        div(sales.subtract(cogs), sales), "percent", true, 0.40, 0.20, "40% or higher"),
+                ratio("operating-margin", P, "Operating Profit Margin", "Profits before taxes and interest ÷ Sales",
+                        div(ebit, sales), "percent", true, 0.15, 0.05, "15% or higher"),
+                ratio("net-margin", P, "Net Profit Margin", "Profits after taxes ÷ Sales",
+                        div(netIncome, sales), "percent", true, 0.10, 0.05, "10% or higher"),
+                ratio("roa", P, "Return on Total Assets", "Profits after taxes ÷ Total assets",
+                        div(netIncome, assets), "percent", true, 0.05, 0.02, "5% or higher"),
+                ratio("roe", P, "Return on Stockholders' Equity", "Profits after taxes ÷ Total stockholders' equity",
+                        div(netIncome, equity.signum() > 0 ? equity : null), "percent", true, 0.15, 0.10, "15% or higher"),
+                // Preferred dividends aren't told apart in the ledger, so all of net income is used.
+                ratio("return-on-common-equity", P, "Return on Common Equity",
+                        "(Profits after taxes − Preferred dividends) ÷ (Total equity − Preferred stock)",
+                        div(netIncome, commonEquity.signum() > 0 ? commonEquity : null), "percent", true, 0.15, 0.10, "15% or higher"),
+                none("eps", P, "Earnings per Share",
+                        "(Profits after taxes − Preferred dividends) ÷ Common shares outstanding", "dollars"),
+
+                ratio("current", L, "Current Ratio", "Current assets ÷ Current liabilities",
+                        div(currentAssets, currentLiabilities), "ratio", true, 1.5, 1.0, "1.5 or higher"),
+                ratio("quick", L, "Quick (Acid-Test) Ratio", "(Current assets − Inventory) ÷ Current liabilities",
+                        div(currentAssets.subtract(inventory), currentLiabilities), "ratio", true, 1.0, 0.5,
+                        "1.0 or higher"),
+                ratio("inventory-to-nwc", L, "Inventory to Net Working Capital",
+                        "Inventory ÷ (Current assets − Current liabilities)",
+                        div(inventory, workingCapital), "ratio", false, 0.5, 1.0, "0.5 or lower"),
+
+                ratio("debt-to-assets", V, "Debt-to-Assets Ratio", "Total debt ÷ Total assets",
+                        div(debt, assets), "percent", false, 0.40, 0.60, "40% or lower"),
+                ratio("debt-to-equity", V, "Debt-to-Equity Ratio", "Total debt ÷ Total stockholders' equity",
+                        div(debt, equity), "ratio", false, 1.0, 2.0, "1.0 or lower"),
+                ratio("lt-debt-to-equity", V, "Long-Term Debt-to-Equity", "Long-term debt ÷ Total shareholders' equity",
+                        div(longTermDebt, equity), "ratio", false, 0.5, 1.0, "0.5 or lower"),
+                ratio("times-interest-earned", V, "Times Interest Earned",
+                        "Profits before interest and taxes ÷ Total interest charges",
+                        div(ebit, interest), "times", true, 3.0, 1.5, "3.0 or higher"),
+                none("fixed-charge-coverage", V, "Fixed-Charge Coverage",
+                        "(Profits before taxes and interest + Lease obligations) ÷ (Interest charges + Lease obligations)",
+                        "times", "Needs lease obligations, which aren't kept in the ledger."),
+
+                ratio("inventory-turnover", A, "Inventory Turnover", "Sales ÷ Inventory",
+                        div(sales, inventory), "times", true, 6.0, 3.0, "6.0 or higher"),
+                ratio("fixed-asset-turnover", A, "Fixed Assets Turnover", "Sales ÷ Fixed assets",
+                        div(sales, fixedAssets), "times", true, 2.0, 1.0, "2.0 or higher"),
+                ratio("asset-turnover", A, "Total Assets Turnover", "Sales ÷ Total assets",
+                        div(sales, assets), "times", true, 1.0, 0.5, "1.0 or higher"),
+                // All sales are taken as credit sales: the ledger doesn't split them.
+                ratio("ar-turnover", A, "Accounts Receivable Turnover", "Annual credit sales ÷ Accounts receivable",
+                        div(sales, receivables), "times", true, 8.0, 5.0, "8.0 or higher"),
+                ratio("collection-period", A, "Average Collection Period", "Accounts receivable ÷ (Total sales ÷ 365)",
+                        div(receivables, div(sales, BigDecimal.valueOf(365))), "days", false, 45, 60,
+                        "45 days or fewer"),
+
+                none("dividend-yield", O, "Dividend Yield on Common Stock",
+                        "Annual dividends per share ÷ Current market price per share", "percent"),
+                none("price-earnings", O, "Price-Earnings Ratio",
+                        "Current market price per share ÷ After-tax earnings per share", "ratio"),
+                // Per share ÷ per share: the share count cancels out.
+                ratio("dividend-payout", O, "Dividend Payout", "Annual dividends per share ÷ After-tax earnings per share",
+                        div(dividends, netIncome), "percent", false, 0.60, 1.0, "60% or lower"),
+                none("cash-flow-per-share", O, "Cash Flow per Share",
+                        "(After-tax profits + Depreciation) ÷ Common shares outstanding", "dollars"));
+    }
+
+    private static boolean isCurrent(String subcategory) {
+        String s = lower(subcategory).replace("-", "").replace(" ", "");
+        return s.contains("current") && !s.contains("noncurrent");
+    }
+
+    private static BigDecimal div(BigDecimal a, BigDecimal b) {
+        return a == null || b == null || b.signum() == 0 ? null : a.divide(b, 4, java.math.RoundingMode.HALF_UP);
+    }
+
+    private static RatioResponse none(String key, String category, String name, String formula, String unit) {
+        return none(key, category, name, formula, unit, NO_SHARES);
+    }
+
+    private static RatioResponse none(String key, String category, String name, String formula, String unit,
+                                      String note) {
+        return new RatioResponse(key, category, name, formula, null, unit, "NONE", true, 0, 0, null, note);
+    }
+
+    /**
+     * green = at or past `good` in the better direction, yellow = up to `warn`, red beyond. A negative value where
+     * lower is better (negative equity or working capital) is red.
+     */
+    static RatioResponse ratio(String key, String category, String name, String formula, BigDecimal v, String unit,
+                               boolean higherIsBetter, double good, double warn, String goodRange) {
+        String status;
+        if (v == null) status = "NONE";
+        else {
+            double d = v.doubleValue();
+            if (higherIsBetter) status = d >= good ? "GOOD" : d >= warn ? "WARNING" : "BAD";
+            else status = d < 0 || d > warn ? "BAD" : d > good ? "WARNING" : "GOOD";
+        }
+        return new RatioResponse(key, category, name, formula, v, unit, status, higherIsBetter, good, warn, goodRange,
+                v == null ? "Not enough data yet: the amount it divides by is zero." : null);
     }
 
     // =====================================================================

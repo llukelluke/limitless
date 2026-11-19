@@ -55,6 +55,8 @@ public class SecurityConfig {
                                 "/api/journal-entries/*/approve", "/api/journal-entries/*/reject")
                         .hasRole("MANAGER")
 
+                        // The ratio dashboard is on every role's landing page; full statements stay manager only
+                        .requestMatchers(HttpMethod.GET, "/api/statements/ratios").authenticated()
                         .requestMatchers("/api/statements/**").hasRole("MANAGER")
 
                         // 5. Create, edit, cancel, submit, attach: manager or accountant

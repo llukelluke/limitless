@@ -59,7 +59,7 @@ public class JournalEntry {
     @OrderBy("id ASC")
     private List<JournalAttachment> attachments = new ArrayList<>();
 
-    public enum JournalEntryType {REGULAR, ADJUSTING}
+    public enum JournalEntryType {REGULAR, ADJUSTING, CLOSING, REVERSING}
 
     public enum JournalStatus {DRAFT, SUBMITTED, APPROVED, REJECTED}
 }

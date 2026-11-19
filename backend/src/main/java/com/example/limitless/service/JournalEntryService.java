@@ -217,7 +217,7 @@ public class JournalEntryService {
         return pendingCount(null);
     }
 
-    /** type: null/blank = all entries, otherwise REGULAR or ADJUSTING. */
+    /** type: null/blank = all entries, otherwise REGULAR, ADJUSTING, CLOSING, or REVERSING. */
     @Transactional(readOnly = true)
     public long pendingCount(String type) {
         JournalEntry.JournalEntryType ty = parseTypeFilter(type);
@@ -232,7 +232,7 @@ public class JournalEntryService {
         return list(status, null, from, to, search, actor);
     }
 
-    /** type: null/blank = all entries, otherwise REGULAR or ADJUSTING. */
+    /** type: null/blank = all entries, otherwise REGULAR, ADJUSTING, CLOSING, or REVERSING. */
     @Transactional(readOnly = true)
     public List<JournalEntryResponse> list(String status, String type, LocalDate from, LocalDate to,
                                            String search, User actor) {
@@ -427,7 +427,7 @@ public class JournalEntryService {
         try {
             return JournalEntry.JournalEntryType.valueOf(s.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            throw new UserException(HttpStatus.BAD_REQUEST, msgs.get("JRN_002")); // "Entry type must be REGULAR or ADJUSTING."
+            throw new UserException(HttpStatus.BAD_REQUEST, msgs.get("JRN_002")); // "Entry type must be REGULAR, ADJUSTING, CLOSING, or REVERSING."
         }
     }
 

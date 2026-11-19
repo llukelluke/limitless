@@ -64,6 +64,58 @@ Set `ADMIN_PASSWORD` (and optionally `ADMIN_USERNAME`, default `admin`, and `ADM
 variables in your backend Run Configuration; the backend creates that administrator on startup if none exists.
 The password must follow the password rules (8+ characters, starts with a letter, includes a number and a special character).
 
+## UI Libraries: Charts, Icons and Animations
+Organized by SWEBOK v4 knowledge areas, so each choice traces from requirement to design, construction, test and upkeep.
+
+### Software Requirements
+| Requirement (sprint feature list) | Met by |
+|---|---|
+| Sprint 5: ratio dashboard on every landing page, colored green (good), yellow (borderline), red (needs a closer look) | Apache ECharts gauge on each ratio card, plus the card's color and written status |
+| Sprint 5: users can add or remove ratios and charts | Dashboard's **Customize** tab |
+| Sprint 5: landing page looks like every other page | Same panels, colors, icons and animations as the rest of the app |
+| Sprint 2: icons and tooltips on buttons and menus | Lucide icons; every icon button also has a `title` tooltip |
+
+### Software Design
+- **Charts (Apache ECharts):** each ratio is a half-dial gauge with red, yellow and green bands set by the ratio's own thresholds. The needle sweeps from 0 to the value when the page loads. The thresholds come from `GET /api/statements/ratios` (`StatementService.ratios()`), so the backend is the single source of truth for what counts as good.
+- **Page animations:** these are plain CSS only, with no animation library. Four shared keyframes in `frontend/src/index.css` use the motion tokens `--fast` (140 ms), `--med` (240 ms) and `--ease`:
+
+  | Animation | Used on |
+  |---|---|
+  | `fade-up` | page panels, task cards (staggered), the page content area, auth forms, journal lines |
+  | `fade-in` | field errors, the help dialog backdrop, event-log before/after tables |
+  | `pop-in` | alerts, the calendar, user menu, help dialog, attachment list items, the auth checkmark |
+  | `pulse` | the "Loading…" text |
+
+  The splash screen has its own `splash-fade-in` and `splash-fade-out` (`pages/auth/Splash.css`). Transitions also drive these motions:
+  - the sidebar highlight sliding to the active menu item (`.app__nav-indicator`);
+  - cards lifting on hover;
+  - link arrows nudging right on hover;
+  - button color changes.
+- **Accessibility:** the global `prefers-reduced-motion` rule in `index.css` turns off CSS animation, and `RatioGauge.jsx` turns off ECharts animation when that setting is on. Every gauge also shows its value and status as text, so color is never the only signal. Print styles switch animation off.
+- **Icons (Lucide):** this is the only icon pack, imported per icon (for example `import { BookOpen } from 'lucide-react'`), so only the icons used are bundled. Brand images (emblem, wordmark) are in `frontend/src/assets/brand/`.
+
+### Software Construction (reuse of third-party components)
+| Package | Version | License | Used in | Purpose |
+|---|---|---|---|---|
+| [`echarts`](https://echarts.apache.org/) (Apache ECharts) | 6.1.0 | Apache-2.0 | `components/RatioGauge.jsx` | Animated ratio gauges |
+| [`lucide-react`](https://lucide.dev/) | 1.74.0 | ISC | sidebar, top toolbar, task cards, buttons | Icon pack |
+| `@pluperfect/react-accountant-calculator` | 1.0.0 (vendored in `frontend/vendor/`) | MIT | `components/CalculatorButton.jsx` | Toolbar calculator |
+
+- ECharts is imported from `echarts/core` with only `GaugeChart` and `CanvasRenderer` registered, and `RatioGauge` is loaded with `React.lazy`. That keeps it out of the main bundle; it arrives as a separate chunk only when the dashboard shows a gauge.
+- **To add a chart type:** register it in `RatioGauge.jsx` (`echarts.use([...])`) or in a new lazily loaded component; don't import the full `echarts` package.
+- **To add an animation:** reuse the shared keyframes and motion tokens before writing a new one.
+
+### Software Testing
+- `frontend/src/ratios.test.js` (`npm test`) covers number formatting, the gauge scale and color bands, and which ratios show by default.
+- `StatementRatioTest` (backend) covers the green/yellow/red thresholds.
+- To check visually, sign in, open the landing page, and confirm the needles sweep and the **Customize** choices persist after a reload.
+
+### Software Maintenance and Configuration Management
+- Versions are pinned in `frontend/package-lock.json`, so commit it with any dependency change.
+- To upgrade, run `npm install echarts@latest lucide-react@latest`, then `npm run lint`, `npm test`, `npm run build`, and check the dashboard and sidebar icons.
+- **Customize choices are stored per user in browser `localStorage`** (`limitless.ratio-dashboard.<user id>`), so they don't follow a user to another computer.
+- Ratio thresholds are maintained in one place, `StatementService.ratios()`.
+
 ## Deployment (Railway)
 The root `Dockerfile` builds the React app into the Spring Boot jar, so one service serves both the site and the API.
 
@@ -95,6 +147,7 @@ Test plan and test cases (positive and negative, `TC-<area>-<n>`): see the team'
 
 - **Backend unit tests** (JUnit 5 + Mockito, no database needed except `LimitlessApplicationTests`):
   `cd backend && ./mvnw test`
+- **Frontend unit tests** (Node's built-in test runner): `cd frontend && npm test`
 - **End-to-end browser tests** (Playwright; uses your installed Chrome). Start MySQL, the backend and
   `npm run dev` first, then: `cd frontend && npm run test:e2e`.
   Results report: `npx playwright show-report`. Each test name starts with its test case ID.

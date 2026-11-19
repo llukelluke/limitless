@@ -73,7 +73,7 @@ const columns = [
   },
 ]
 
-// Journal — every entry with its status; filter by status, type (regular / adjusting) and date,
+// Journal — every entry with its status; filter by status, type (regular / adjusting / closing / reversing) and date,
 // search by account, amount or date. Status and type live in the URL so other pages can link to them.
 export default function JournalList() {
   const { user } = useAuth()
@@ -132,7 +132,7 @@ export default function JournalList() {
               wrapClassName="select--inline"
               className="toolbar__filter"
               aria-label="Filter by entry type"
-              title="Show regular or adjusting entries"
+              title="Show entries of one type"
               options={TYPE_OPTIONS}
               value={type}
               onChange={setParam('type')}

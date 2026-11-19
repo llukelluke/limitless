@@ -1,5 +1,6 @@
 import { api } from '../../api/client.js'
 import AsyncContent from '../../components/AsyncContent.jsx'
+import RatioDashboard from '../../components/RatioDashboard.jsx'
 import { DataTable, PageHeader, Panel, StatCard } from '../../components/AdminUI.jsx'
 import { isSystemUser } from '../../constants.js'
 import useApi from '../../hooks/useApi.js'
@@ -39,6 +40,8 @@ export default function Dashboard() {
           linkLabel="View Users"
         />
       </div>
+
+      <RatioDashboard />
 
       <Panel title="Pending access requests" className="dashboard-requests">
         <AsyncContent loading={loading} error={error}>

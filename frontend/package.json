@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@pluperfect/react-accountant-calculator": "file:vendor/pluperfect-react-accountant-calculator-1.0.0.tgz",
+    "echarts": "^6.1.0",
     "lucide-react": "^1.74.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

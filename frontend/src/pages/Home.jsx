@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, BookOpen, ChartColumn, FileText, History, Mail, NotebookPen } from 'lucide-react'
 import { api } from '../api/client.js'
 import Alert from '../components/Alert.jsx'
+import RatioDashboard from '../components/RatioDashboard.jsx'
 import { PageHeader, Panel } from '../components/AdminUI.jsx'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { ROLES, labelFor } from '../constants.js'
@@ -18,7 +19,7 @@ const TASKS = [
   { icon: Mail, title: 'Ask a question', text: 'Email a manager, accountant or administrator from inside Limitless.', to: '/email' },
 ]
 
-// Landing page for managers and accountants. Managers are told about entries waiting for approval.
+// Landing page for managers and accountants: messages (entries waiting for approval), the ratio dashboard, tasks.
 export default function Home() {
   const { user } = useAuth()
   const { data } = useApi(api.pendingJournalCount)
@@ -52,6 +53,15 @@ export default function Home() {
           </Alert>
         </div>
       )}
+      {user.role !== 'MANAGER' && pending > 0 && (
+        <div className="home-alert">
+          <Alert tone="info">
+            {pending} journal {pending === 1 ? 'entry is' : 'entries are'} waiting for a manager's approval.{' '}
+            <Link to="/journal?status=SUBMITTED">View pending entries →</Link>
+          </Alert>
+        </div>
+      )}
+      <RatioDashboard />
       <Panel title="What would you like to do?" className="page-panel">
         <div className="task-cards">
           {tasks.map(({ icon: Icon, title, text, to }) => (

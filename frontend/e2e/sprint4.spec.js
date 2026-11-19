@@ -347,9 +347,9 @@ test.describe('Adjusting entries', () => {
 
   test('TC-ADJ-07 (N): an unknown entry type is rejected', async ({ request }) => {
     const res = await api(request, W.accountant.token, 'POST', '/journal-entries/validate', {
-      entry_date: PERIOD_END, entry_type: 'CLOSING', lines: [{ account_id: W.rent.id, side: 'DEBIT', amount: 5 }, { account_id: W.cash.id, side: 'CREDIT', amount: 5 }],
+      entry_date: PERIOD_END, entry_type: 'BOGUS', lines: [{ account_id: W.rent.id, side: 'DEBIT', amount: 5 }, { account_id: W.cash.id, side: 'CREDIT', amount: 5 }],
     })
-    expect(res.body.errors.map((e) => e.message)).toContain('Entry type must be REGULAR or ADJUSTING.')
+    expect(res.body.errors.map((e) => e.message)).toContain('Entry type must be REGULAR, ADJUSTING, CLOSING, or REVERSING.')
   })
 })
 

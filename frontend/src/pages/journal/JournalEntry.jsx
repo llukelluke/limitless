@@ -22,18 +22,15 @@ const columns = [
   {
     key: 'account',
     header: 'Account',
-    render: (row) =>
-      row.account_id ? (
-        <Link
-          to={`/accounts/${row.account_id}/ledger`}
-          className={row.debit === null ? 'journal-lines__credit' : undefined}
-          title={`Open the ledger for ${row.account_name}`}
-        >
-          {row.account_number} · {row.account_name}
-        </Link>
-      ) : (
-        <strong>{row.account_name}</strong>
-      ),
+    render: (row) => (
+      <Link
+        to={`/accounts/${row.account_id}/ledger`}
+        className={row.debit === null ? 'journal-lines__credit' : undefined}
+        title={`Open the ledger for ${row.account_name}`}
+      >
+        {row.account_number} · {row.account_name}
+      </Link>
+    ),
   },
   money('debit'),
   money('credit'),
@@ -52,14 +49,13 @@ export default function JournalEntry() {
   const [busy, setBusy] = useState(false)
 
   const canReview = user.role === 'MANAGER' && entry?.status === 'SUBMITTED'
-  const rows = entry && [
-    ...sortedLines(entry).map((line) => ({
+  const rows =
+    entry &&
+    sortedLines(entry).map((line) => ({
       ...line,
       debit: line.side === 'DEBIT' ? line.amount : null,
       credit: line.side === 'CREDIT' ? line.amount : null,
-    })),
-    { id: 'total', account_name: 'Totals', debit: entry.total_debits, credit: entry.total_credits },
-  ]
+    }))
 
   const review = async (action) => {
     setBusy(true)
@@ -76,8 +72,8 @@ export default function JournalEntry() {
     }
   }
 
-  const download = (attachment) =>
-    api.downloadAttachment(entry.id, attachment).catch((err) => setFeedback({ tone: 'error', message: err.message }))
+  const view = (attachment) =>
+    api.viewAttachment(entry.id, attachment).catch((err) => setFeedback({ tone: 'error', message: err.message }))
 
   return (
     <>
@@ -173,8 +169,8 @@ export default function JournalEntry() {
                         <button
                           type="button"
                           className="text-link"
-                          title={`Download ${attachment.original_name}`}
-                          onClick={() => download(attachment)}
+                          title={`View ${attachment.original_name}`}
+                          onClick={() => view(attachment)}
                         >
                           {attachment.original_name}
                         </button>

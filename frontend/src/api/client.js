@@ -125,7 +125,7 @@ export const api = {
 
   // filters: { status, from, to, search }
   listJournalEntries: (filters = {}) => request(`/journal-entries${query(filters)}`),
-  // type: REGULAR or ADJUSTING; leave out to count both.
+  // type: REGULAR, ADJUSTING, CLOSING or REVERSING; leave out to count all.
   pendingJournalCount: (type) => request(`/journal-entries/pending-count${query({ type })}`),
   getJournalEntry: (id) => request(`/journal-entries/${id}`),
   validateJournalEntry: (body) => request('/journal-entries/validate', { method: 'POST', body }),
@@ -142,7 +142,10 @@ export const api = {
   rejectJournalEntry: (id, comment) => request(`/journal-entries/${id}/reject`, { method: 'PUT', body: { comment } }),
   // filters: { from, to, search }
   getLedger: (id, filters = {}) => request(`/accounts/${id}/ledger${query(filters)}`),
-  downloadAttachment,
+  viewAttachment,
+
+  // Financial ratios for the landing page dashboard (every role)
+  financialRatios: () => request('/statements/ratios'),
 
   // Financial statements (manager only). type: trial-balance | income-statement | balance-sheet | retained-earnings
   // dates: { date } or { from, to }
@@ -171,14 +174,26 @@ async function openSavedStatement(id) {
 }
 
 // Attachments need the auth header, so a plain <a href> can't fetch them.
-async function downloadAttachment(entryId, attachment) {
+// Open the tab first (inside the click, so pop-up blockers allow it), then show the file in it.
+async function viewAttachment(entryId, attachment) {
+  const win = window.open('', '_blank')
   const session = loadSession()
   const response = await fetch(`/api/journal-entries/${entryId}/attachments/${attachment.id}`, {
     headers: session ? { Authorization: `Bearer ${session.token}` } : {},
   })
-  if (!response.ok) throw new ApiError(response.status, `Could not download ${attachment.original_name}.`)
-  const url = URL.createObjectURL(await response.blob())
-  const link = Object.assign(document.createElement('a'), { href: url, download: attachment.original_name })
-  link.click()
-  URL.revokeObjectURL(url)
+  if (!response.ok) {
+    win?.close()
+    throw new ApiError(response.status, `Could not open ${attachment.original_name}.`)
+  }
+  viewFile(await response.blob(), win)
+}
+
+// Show a file (fetched or freshly picked) in a browser tab. PDFs and images render natively;
+// CSV is relabeled as plain text, since browsers download text/csv instead of showing it.
+// shortcut: Word/Excel have no built-in browser viewer, so those still download; add a converter if needed.
+export function viewFile(file, win = window.open('', '_blank')) {
+  const blob = /\.csv$/i.test(file.name ?? '') || file.type === 'text/csv' ? new Blob([file], { type: 'text/plain' }) : file
+  const url = URL.createObjectURL(blob)
+  if (win) win.location.href = url
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }

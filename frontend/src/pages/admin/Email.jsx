@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { api } from '../../api/client.js'
+import { api, viewFile } from '../../api/client.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import Alert from '../../components/Alert.jsx'
 import { Field, FormActions, PageHeader, Panel } from '../../components/AdminUI.jsx'
@@ -129,7 +129,9 @@ export default function Email() {
               <ul className="journal-files">
                 {files.map((file, index) => (
                   <li key={`${file.name}-${index}`}>
-                    {file.name}{' '}
+                    <button type="button" className="text-link" title={`View ${file.name}`} onClick={() => viewFile(file)}>
+                      {file.name}
+                    </button>{' '}
                     <button
                       type="button"
                       className="text-link"

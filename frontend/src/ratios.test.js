@@ -1,7 +1,7 @@
 // Run with `npm test`.
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatRatio, gauge, visibleRatios } from './ratios.js'
+import { formatRatio, gauge, normalizePrefs, visibleRatios } from './ratios.js'
 
 test('formats each unit', () => {
   assert.equal(formatRatio({ value: 0.1234, unit: 'percent' }), '12.3%')
@@ -26,4 +26,12 @@ test('by default only ratios with a value are shown; a saved choice wins', () =>
   const ratios = [{ key: 'a', value: 1 }, { key: 'b', value: null }]
   assert.deepEqual(visibleRatios(ratios, null).map((r) => r.key), ['a'])
   assert.deepEqual(visibleRatios(ratios, ['b']).map((r) => r.key), ['b'])
+})
+
+test('saved choices: defaults, old charts on/off becomes gauge / none, unknown chart types fall back to gauge', () => {
+  assert.deepEqual(normalizePrefs(null), { selected: null, chart: 'gauge' })
+  assert.deepEqual(normalizePrefs({ selected: ['a'], charts: false }), { selected: ['a'], chart: 'none' })
+  assert.deepEqual(normalizePrefs({ charts: true }), { selected: null, chart: 'gauge' })
+  assert.equal(normalizePrefs({ chart: 'bar' }).chart, 'bar')
+  assert.equal(normalizePrefs({ chart: 'pie' }).chart, 'gauge')
 })

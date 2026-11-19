@@ -313,11 +313,13 @@ test.describe('Journal entries: manager approval', () => {
     await expect(refs(page)).toHaveText([ref(W.e6), ref(W.e5)])
   })
 
+  // Sprint 5: accountants are now told how many entries wait for a manager (TC-MSG-01), but are never asked to approve.
   test('TC-APR-02 (N): accountants do not see the approval notice', async ({ page }) => {
     await as(page, W.accountant)
     await page.goto('/home')
     await expect(page.getByRole('heading', { name: `Welcome, ${W.accountant.username}` })).toBeVisible()
-    await expect(page.locator('.alert')).toHaveCount(0)
+    await expect(page.getByText(/waiting for your approval/)).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /Review pending/ })).toHaveCount(0)
   })
 
   test('TC-APR-03 (P): manager approves a pending entry', async ({ page, request }) => {

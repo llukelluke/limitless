@@ -70,13 +70,19 @@ Organized by SWEBOK v4 knowledge areas, so each choice traces from requirement t
 ### Software Requirements
 | Requirement (sprint feature list) | Met by |
 |---|---|
-| Sprint 5: ratio dashboard on every landing page, colored green (good), yellow (borderline), red (needs a closer look) | Apache ECharts gauge on each ratio card, plus the card's color and written status |
-| Sprint 5: users can add or remove ratios and charts | Dashboard's **Customize** tab |
+| Sprint 5: ratio dashboard on every landing page, colored green (good), yellow (borderline), red (needs a closer look) | An Apache ECharts chart on each ratio card (gauge, bar or ring), plus the card's color and written status |
+| Sprint 5: users can add or remove ratios and charts, and choose the chart type | Dashboard's **Customize** tab: a Chart type menu and one dropdown of checkboxes per ratio category |
 | Sprint 5: landing page looks like every other page | Same panels, colors, icons and animations as the rest of the app |
 | Sprint 2: icons and tooltips on buttons and menus | Lucide icons; every icon button also has a `title` tooltip |
 
 ### Software Design
-- **Charts (Apache ECharts):** each ratio is a half-dial gauge with red, yellow and green bands set by the ratio's own thresholds. The needle sweeps from 0 to the value when the page loads. The thresholds come from `GET /api/statements/ratios` (`StatementService.ratios()`), so the backend is the single source of truth for what counts as good.
+- **Charts (Apache ECharts):** each user picks a chart type in **Customize**:
+  - **Gauge** (default): a half dial with red, yellow and green bands set by the ratio's own thresholds; the needle sweeps from 0 to the value.
+  - **Bar:** a bar that grows to the value over the same bands.
+  - **Ring:** a ring that fills in the ratio's status color.
+  - **No chart:** cards show the number and status only.
+
+  All three charts animate when the page loads, and all share one scale (`gauge()` in `ratios.js`). The thresholds come from `GET /api/statements/ratios` (`StatementService.ratios()`), so the backend is the single source of truth for what counts as good.
 - **Page animations:** these are plain CSS only, with no animation library. Four shared keyframes in `frontend/src/index.css` use the motion tokens `--fast` (140 ms), `--med` (240 ms) and `--ease`:
 
   | Animation | Used on |
@@ -91,24 +97,24 @@ Organized by SWEBOK v4 knowledge areas, so each choice traces from requirement t
   - cards lifting on hover;
   - link arrows nudging right on hover;
   - button color changes.
-- **Accessibility:** the global `prefers-reduced-motion` rule in `index.css` turns off CSS animation, and `RatioGauge.jsx` turns off ECharts animation when that setting is on. Every gauge also shows its value and status as text, so color is never the only signal. Print styles switch animation off.
+- **Accessibility:** the global `prefers-reduced-motion` rule in `index.css` turns off CSS animation, and `RatioChart.jsx` turns off ECharts animation when that setting is on. Every chart also shows its value and status as text, so color is never the only signal. Print styles switch animation off.
 - **Icons (Lucide):** this is the only icon pack, imported per icon (for example `import { BookOpen } from 'lucide-react'`), so only the icons used are bundled. Brand images (emblem, wordmark) are in `frontend/src/assets/brand/`.
 
 ### Software Construction (reuse of third-party components)
 | Package | Version | License | Used in | Purpose |
 |---|---|---|---|---|
-| [`echarts`](https://echarts.apache.org/) (Apache ECharts) | 6.1.0 | Apache-2.0 | `components/RatioGauge.jsx` | Animated ratio gauges |
+| [`echarts`](https://echarts.apache.org/) (Apache ECharts) | 6.1.0 | Apache-2.0 | `components/RatioChart.jsx` | Animated ratio charts (gauge, bar, ring) |
 | [`lucide-react`](https://lucide.dev/) | 1.74.0 | ISC | sidebar, top toolbar, task cards, buttons | Icon pack |
 | `@pluperfect/react-accountant-calculator` | 1.0.0 (vendored in `frontend/vendor/`) | MIT | `components/CalculatorButton.jsx` | Toolbar calculator |
 
-- ECharts is imported from `echarts/core` with only `GaugeChart` and `CanvasRenderer` registered, and `RatioGauge` is loaded with `React.lazy`. That keeps it out of the main bundle; it arrives as a separate chunk only when the dashboard shows a gauge.
-- **To add a chart type:** register it in `RatioGauge.jsx` (`echarts.use([...])`) or in a new lazily loaded component; don't import the full `echarts` package.
+- ECharts is imported from `echarts/core` with only the parts used registered (`GaugeChart`, `BarChart`, `GridComponent`, `MarkAreaComponent`, `CanvasRenderer`), and `RatioChart` is loaded with `React.lazy`. That keeps it out of the main bundle; it arrives as a separate chunk (about 164 kB gzipped) only when the dashboard shows a chart.
+- **To add a chart type:** add it to `CHART_TYPES` in `ratios.js` and to `chartOption()` in `RatioChart.jsx` (registering any new ECharts parts with `echarts.use([...])`); don't import the full `echarts` package.
 - **To add an animation:** reuse the shared keyframes and motion tokens before writing a new one.
 
 ### Software Testing
-- `frontend/src/ratios.test.js` (`npm test`) covers number formatting, the gauge scale and color bands, and which ratios show by default.
+- `frontend/src/ratios.test.js` (`npm test`) covers number formatting, the chart scale and color bands, which ratios show by default, and how saved choices are read (including the chart type).
 - `StatementRatioTest` (backend) covers the green/yellow/red thresholds.
-- To check visually, sign in, open the landing page, and confirm the needles sweep and the **Customize** choices persist after a reload.
+- To check visually, sign in, open the landing page, and confirm the charts animate, and that the **Customize** choices (ratios and chart type) persist after a reload.
 
 ### Software Maintenance and Configuration Management
 - Versions are pinned in `frontend/package-lock.json`, so commit it with any dependency change.
@@ -151,6 +157,8 @@ Test plan and test cases (positive and negative, `TC-<area>-<n>`): see the team'
 - **End-to-end browser tests** (Playwright; uses your installed Chrome). Start MySQL, the backend and
   `npm run dev` first, then: `cd frontend && npm run test:e2e`.
   Results report: `npx playwright show-report`. Each test name starts with its test case ID.
+  Every spec runs on desktop Chrome; `sprint5.spec.js` also runs on a tablet (iPad Pro 11) and two phones
+  (iPhone 14, Pixel 7), emulated in Chrome. One device only: `npx playwright test --project=phone-ios`.
   Evidence screenshots: `E2E_SCREENSHOTS=1 npm run test:e2e` saves each test's final screen to
   `frontend/test-results/<test>/test-finished-1.png` (also shown in the report).
 - Lombok does not support JDK 27 yet; build the backend with JDK 25 or 26

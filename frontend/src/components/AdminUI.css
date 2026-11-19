@@ -789,13 +789,23 @@
 .ratio-tab--active { background: var(--surface); color: var(--primary); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
 
 .ratio-group { margin-top: 16px; }
-.ratio-group__title { margin-bottom: 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); }
+.ratio-group__title { margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--text-2); }
 
-.ratio-gauge { width: 100%; height: 96px; }
+.ratio-chart { width: 100%; height: 96px; }
 
 .ratio-customize__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 16px; }
-.ratio-customize__group { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; margin: 16px 0 0; padding: 0; border: 0; }
-.ratio-customize__group legend { padding: 0; }
+
+/* Category dropdowns: a select-like bar that opens a list of checkboxes beneath it */
+.ratio-dropdown { margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.ratio-dropdown[open] { box-shadow: var(--shadow); }
+.ratio-dropdown__summary { display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; list-style: none; }
+.ratio-dropdown__summary::-webkit-details-marker { display: none; }
+.ratio-dropdown__summary::after { content: ''; width: 8px; height: 8px; margin-left: auto; border: solid var(--text-2); border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform var(--fast) var(--ease); }
+.ratio-dropdown[open] .ratio-dropdown__summary::after { transform: rotate(-135deg); }
+.ratio-dropdown__summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
+.ratio-dropdown__title { font-size: 14px; font-weight: 600; color: var(--text); }
+.ratio-dropdown__count { font-size: 13px; color: var(--text-2); }
+.ratio-dropdown__menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; padding: 4px 14px 14px; border-top: 1px solid var(--border); padding-top: 12px; animation: fade-in var(--fast) ease; }
 .ratio-option { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); cursor: pointer; }
 .ratio-option input { width: 16px; height: 16px; accent-color: var(--primary); }
 .ratio-option__note { color: var(--text-3); }

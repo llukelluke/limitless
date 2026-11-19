@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test'
 
 // End-to-end tests drive the real UI against the real backend.
 // Start MySQL, the backend and `npm run dev` first, then run `npm run test:e2e`.
@@ -21,4 +21,14 @@ export default defineConfig({
     screenshot: process.env.E2E_SCREENSHOTS ? 'on' : 'only-on-failure',
     trace: 'retain-on-failure',
   },
+  // Every spec runs on desktop. The Sprint 5 spec also runs on a tablet and two phones, emulated in the same
+  // Chrome (screen size, touch and mobile user agent; Safari's engine is not installed).
+  projects: [
+    { name: 'desktop', use: {} },
+    ...[['tablet', 'iPad Pro 11'], ['phone-ios', 'iPhone 14'], ['phone-android', 'Pixel 7']].map(([name, device]) => ({
+      name,
+      testMatch: /sprint5\.spec\.js/,
+      use: { ...devices[device], browserName: 'chromium', channel: 'chrome' },
+    })),
+  ],
 })

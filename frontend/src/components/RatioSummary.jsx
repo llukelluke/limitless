@@ -60,14 +60,18 @@ export default function RatioSummary({ ratio, chartType, size, canMoveEarlier, c
                     {Object.entries(ratio.parts).map(([label, amount]) => (
                       <tr key={label}>
                         <td>{label}</td>
-                        <td className="num">{money(amount)}</td>
+                        <td>
+                          <span className="num">{money(amount)}</span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
                     <tr>
                       <td>{ratio.name}</td>
-                      <td className="num">{formatRatio(ratio)}</td>
+                      <td>
+                        <span className="num">{formatRatio(ratio)}</span>
+                      </td>
                     </tr>
                   </tfoot>
                 </table>

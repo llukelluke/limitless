@@ -1,5 +1,5 @@
-import { Suspense, lazy, useEffect, useEffectEvent, useRef, useState } from 'react'
-import { GripVertical, MoveDiagonal2 } from 'lucide-react'
+import { Suspense, lazy, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
+import { GripVertical, MoveDiagonal2, Star } from 'lucide-react'
 import { api } from '../api/client.js'
 import AsyncContent from './AsyncContent.jsx'
 import { Panel, Select } from './AdminUI.jsx'
@@ -38,6 +38,18 @@ const TABS = [
 
 const HOLD_MS = 300 // press and hold this long before a card can be dragged
 const SLOP = 8 // moving further than this first means scrolling or clicking, not dragging
+const LIFT = 'scale(1.04)'
+const EASE = 'cubic-bezier(0.2, 0.7, 0.2, 1)'
+const TIPS = 'Click a ratio for its summary. Press and hold a card to drag it to a new place; drag its corner to resize it.'
+
+const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+const cardsIn = (grid) => [...grid.querySelectorAll('[data-ratio-key]')]
+// A card's place in the grid, ignoring any transform on it (the grid is the cards' offset parent)
+function slotOf(card) {
+  const grid = card.offsetParent.getBoundingClientRect()
+  return { left: grid.left + card.offsetLeft, top: grid.top + card.offsetTop, width: card.offsetWidth, height: card.offsetHeight }
+}
+const inside = (slot, x, y) => x >= slot.left && x <= slot.left + slot.width && y >= slot.top && y <= slot.top + slot.height
 
 function RatioCard({ ratio, chart, size, dragging, onOpen, onHold, onResize }) {
   const status = STATUS[ratio.status] ?? STATUS.NONE
@@ -51,7 +63,7 @@ function RatioCard({ ratio, chart, size, dragging, onOpen, onHold, onResize }) {
       role="button"
       tabIndex={0}
       aria-haspopup="dialog"
-      title={`${ratio.formula}. Click for a summary; press and hold to drag it to a new place.`}
+      title={`${ratio.formula}. Click for a summary.`}
       onClick={onOpen}
       onKeyDown={(event) => {
         if (event.key !== 'Enter' && event.key !== ' ') return
@@ -90,6 +102,9 @@ export default function RatioDashboard() {
   const [draggingKey, setDraggingKey] = useState(null)
   const gesture = useRef(null) // the press, drag or resize in progress
   const justDragged = useRef(false)
+  const before = useRef(null) // where each card was drawn just before a reorder or resize, for the slide animation
+  const [tipsOpen, setTipsOpen] = useState(false)
+  const tipsRef = useRef(null)
   const ratios = orderRatios(data ?? [], prefs.order)
   const shown = visibleRatios(ratios, prefs.selected)
   const shownKeys = shown.map((r) => r.key)
@@ -111,12 +126,53 @@ export default function RatioDashboard() {
   }
 
   // ---------- press and hold to drag; drag the corner to resize ----------
+  // The dragged card follows the pointer: its slot plus the offset it was grabbed at.
+  const follow = (g) => {
+    const card = g.grid.querySelector(`[data-ratio-key="${g.key}"]`)
+    if (!card) return
+    const slot = slotOf(card)
+    card.style.transform = `translate(${g.lastX - g.grabX - slot.left}px, ${g.lastY - g.grabY - slot.top}px) ${LIFT}`
+  }
+  // Remember where every card in the grid is drawn now, so the next render can slide them from there.
+  const capture = (grid, moving) => {
+    before.current = { grid, moving, rects: new Map(cardsIn(grid).map((card) => [card.dataset.ratioKey, card.getBoundingClientRect()])) }
+  }
+  // After a reorder or resize: slide each other card from where it was to its new place (FLIP), and keep the
+  // dragged card under the pointer in its new slot.
+  useLayoutEffect(() => {
+    const b = before.current
+    if (!b) return
+    before.current = null
+    const g = gesture.current
+    for (const card of cardsIn(b.grid)) {
+      const key = card.dataset.ratioKey
+      if (key === b.moving) {
+        if (g?.kind === 'drag' && g.key === key) follow(g)
+        continue
+      }
+      const old = b.rects.get(key)
+      const now = card.getBoundingClientRect()
+      if (!old || reduceMotion() || (old.left === now.left && old.top === now.top)) continue
+      card.getAnimations().forEach((animation) => animation.cancel())
+      card.animate([{ transform: `translate(${old.left - now.left}px, ${old.top - now.top}px)` }, { transform: 'none' }], { duration: 220, easing: EASE })
+    }
+  })
+
   const finishGesture = () => {
     const g = gesture.current
     gesture.current = null
     if (!g) return
     clearTimeout(g.timer)
     if (!g.active) return
+    if (g.kind === 'drag') {
+      // Settle the card into its slot
+      const card = g.grid.querySelector(`[data-ratio-key="${g.key}"]`)
+      if (card) {
+        const from = card.style.transform
+        card.style.transform = ''
+        if (from && !reduceMotion()) card.animate([{ transform: from }, { transform: 'none' }], { duration: 200, easing: EASE })
+      }
+    }
     justDragged.current = true // the click that follows a drag must not open the summary
     setTimeout(() => (justDragged.current = false), 0)
     setDraggingKey(null)
@@ -133,6 +189,9 @@ export default function RatioDashboard() {
     if (g.kind === 'resize') {
       g.active = true
       const size = clampSize({ w: (g.width + dx + g.gap) / g.unitW, h: (g.height + dy + g.gap) / g.unitH })
+      if (size.w === g.size.w && size.h === g.size.h) return
+      g.size = size
+      capture(g.grid, g.key)
       setPrefs((current) => ({ ...current, sizes: { ...current.sizes, [g.key]: size } }))
       return
     }
@@ -140,10 +199,15 @@ export default function RatioDashboard() {
       if (Math.hypot(dx, dy) > SLOP) finishGesture() // moved before the hold finished: a scroll or a click
       return
     }
-    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-ratio-key]')
-    const targetKey = target?.dataset.ratioKey
-    if (!targetKey || targetKey === g.key || target.closest('.ratio-cards') !== g.grid) return
-    setPrefs((current) => ({ ...current, order: moveKey(orderRatios(data ?? [], current.order).map((r) => r.key), g.key, targetKey) }))
+    g.lastX = event.clientX
+    g.lastY = event.clientY
+    follow(g)
+    // Swap places with the card whose slot the pointer is over (slots, not drawn positions, so cards that are
+    // still sliding don't swap back and forth)
+    const target = cardsIn(g.grid).find((card) => card.dataset.ratioKey !== g.key && inside(slotOf(card), event.clientX, event.clientY))
+    if (!target) return
+    capture(g.grid, g.key)
+    setPrefs((current) => ({ ...current, order: moveKey(orderRatios(data ?? [], current.order).map((r) => r.key), g.key, target.dataset.ratioKey) }))
   })
   const onPointerEnd = useEffectEvent(finishGesture)
   useEffect(() => {
@@ -164,12 +228,29 @@ export default function RatioDashboard() {
 
   const holdToDrag = (key) => (event) => {
     if (event.button !== 0 || gesture.current) return
+    const card = event.currentTarget
+    const slot = slotOf(card)
     const timer = setTimeout(() => {
-      if (gesture.current?.key !== key) return
-      gesture.current.active = true
+      const g = gesture.current
+      if (g?.key !== key) return
+      g.active = true
       setDraggingKey(key)
+      // Lift the card up, then let it follow the pointer
+      card.style.transform = `translate(0px, 0px) ${LIFT}`
+      if (!reduceMotion()) card.animate([{ transform: 'none' }, { transform: card.style.transform }], { duration: 150, easing: EASE })
     }, HOLD_MS)
-    gesture.current = { kind: 'drag', key, x: event.clientX, y: event.clientY, grid: event.currentTarget.closest('.ratio-cards'), timer }
+    gesture.current = {
+      kind: 'drag',
+      key,
+      x: event.clientX,
+      y: event.clientY,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      grabX: event.clientX - slot.left,
+      grabY: event.clientY - slot.top,
+      grid: card.closest('.ratio-cards'),
+      timer,
+    }
   }
 
   const dragToResize = (key) => (event) => {
@@ -177,11 +258,14 @@ export default function RatioDashboard() {
     event.stopPropagation()
     event.preventDefault()
     const card = event.currentTarget.closest('.ratio-card').getBoundingClientRect()
-    const gap = parseFloat(getComputedStyle(event.currentTarget.closest('.ratio-cards')).columnGap) || 0
+    const grid = event.currentTarget.closest('.ratio-cards')
+    const gap = parseFloat(getComputedStyle(grid).columnGap) || 0
     const size = sizeFor(prefs, key)
     gesture.current = {
       kind: 'resize',
       key,
+      grid,
+      size,
       x: event.clientX,
       y: event.clientY,
       width: card.width,
@@ -195,7 +279,38 @@ export default function RatioDashboard() {
   const open = (key) => () => !justDragged.current && setOpenKey(key)
   const openRatio = ratios.find((r) => r.key === openKey)
 
+  // Close the tips on Escape or a click anywhere else
+  useEffect(() => {
+    if (!tipsOpen) return undefined
+    const close = (event) => (event.type === 'keydown' ? event.key === 'Escape' : !tipsRef.current?.contains(event.target)) && setTipsOpen(false)
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('keydown', close)
+    return () => {
+      document.removeEventListener('pointerdown', close)
+      document.removeEventListener('keydown', close)
+    }
+  }, [tipsOpen])
+
   const tabs = (
+    <div className="ratio-head">
+      <span className="ratio-tips" ref={tipsRef}>
+        <button
+          type="button"
+          className="ratio-tips__button"
+          title="How to use the dashboard"
+          aria-label="How to use the dashboard"
+          aria-expanded={tipsOpen}
+          aria-controls="ratio-tips"
+          onClick={() => setTipsOpen((open) => !open)}
+        >
+          <Star size={16} aria-hidden="true" />
+        </button>
+        {tipsOpen && (
+          <span id="ratio-tips" className="ratio-tips__popup" role="note">
+            {TIPS}
+          </span>
+        )}
+      </span>
     <div className="ratio-tabs" role="tablist" aria-label="Financial ratios">
       {TABS.map(({ id, label, title }) => (
         <button
@@ -213,6 +328,7 @@ export default function RatioDashboard() {
         </button>
       ))}
     </div>
+    </div>
   )
 
   return (
@@ -221,9 +337,6 @@ export default function RatioDashboard() {
         {tab === 'dashboard' ? (
           <div role="tabpanel" id="ratio-tabpanel-dashboard" aria-labelledby="ratio-tab-dashboard">
             {shown.length === 0 && <p className="home-note">No ratios selected. Open Customize to pick some.</p>}
-            {shown.length > 0 && (
-              <p className="ratio-hint">Click a ratio for its summary. Press and hold a card to drag it to a new place; drag its corner to resize it.</p>
-            )}
             {RATIO_CATEGORIES.map((category) => {
               const group = shown.filter((r) => r.category === category)
               if (group.length === 0) return null
@@ -254,7 +367,11 @@ export default function RatioDashboard() {
               canMoveEarlier={Boolean(openRatio && neighbor(openRatio.key, -1))}
               canMoveLater={Boolean(openRatio && neighbor(openRatio.key, 1))}
               onChange={({ type, size }) => (type ? setType(openKey, type) : setSize(openKey, size))}
-              onMove={(step) => update({ ...prefs, order: moveKey(allKeys, openKey, neighbor(openKey, step)) })}
+              onMove={(step) => {
+                const grid = document.querySelector(`[data-ratio-key="${openKey}"]`)?.closest('.ratio-cards')
+                if (grid) capture(grid, null)
+                update({ ...prefs, order: moveKey(allKeys, openKey, neighbor(openKey, step)) })
+              }}
               onClose={() => setOpenKey(null)}
             />
           </div>

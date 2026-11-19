@@ -5,8 +5,6 @@ import { CHART_TYPES, formatRatio } from '../ratios.js'
 
 const money = (n) => (n == null ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n))
 const STATUS = { GOOD: 'Good', WARNING: 'Borderline', BAD: 'Needs a closer look', NONE: 'Not enough data' }
-const WIDTHS = [1, 2, 3].map((w) => ({ value: String(w), label: w === 1 ? '1 column' : `${w} columns` }))
-const HEIGHTS = [1, 2].map((h) => ({ value: String(h), label: h === 1 ? '1 row' : '2 rows' }))
 
 // The three ranges behind the card's color, in the ratio's own unit
 function ranges(ratio) {
@@ -17,8 +15,8 @@ function ranges(ratio) {
 }
 
 // Pop-up shown when a ratio card is clicked: the value, how it is worked out from the books, the ranges behind
-// its color, and its layout (chart type, size, position) for people who can't or don't want to drag.
-export default function RatioSummary({ ratio, chartType, size, canMoveEarlier, canMoveLater, onChange, onMove, onClose }) {
+// its color, and its layout (chart type, position) for people who can't or don't want to drag.
+export default function RatioSummary({ ratio, chartType, canMoveEarlier, canMoveLater, onChange, onMove, onClose }) {
   const ref = useRef(null)
   useEffect(() => {
     if (ratio && !ref.current.open) ref.current.showModal()
@@ -97,15 +95,7 @@ export default function RatioSummary({ ratio, chartType, size, canMoveEarlier, c
             <div className="ratio-summary__layout">
               <label className="ratio-option">
                 Chart
-                <Select wrapClassName="select--inline" className="toolbar__filter" title="Chart type for this ratio" options={CHART_TYPES} value={chartType} onChange={(event) => onChange({ type: event.target.value })} />
-              </label>
-              <label className="ratio-option">
-                Width
-                <Select wrapClassName="select--inline" className="toolbar__filter" title="How many columns the card spans" options={WIDTHS} value={String(size.w)} onChange={(event) => onChange({ size: { ...size, w: Number(event.target.value) } })} />
-              </label>
-              <label className="ratio-option">
-                Height
-                <Select wrapClassName="select--inline" className="toolbar__filter" title="How many rows the card spans" options={HEIGHTS} value={String(size.h)} onChange={(event) => onChange({ size: { ...size, h: Number(event.target.value) } })} />
+                <Select wrapClassName="select--inline" className="toolbar__filter" title="Chart type for this ratio" options={CHART_TYPES} value={chartType} onChange={(event) => onChange(event.target.value)} />
               </label>
               <button type="button" className="btn btn--secondary btn--sm" title="Move this card one place earlier in its category" disabled={!canMoveEarlier} onClick={() => onMove(-1)}>
                 Move earlier

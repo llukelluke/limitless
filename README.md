@@ -72,7 +72,7 @@ Organized by SWEBOK v4 knowledge areas, so each choice traces from requirement t
 |---|---|
 | Sprint 5: ratio dashboard on every landing page, colored green (good), yellow (borderline), red (needs a closer look) | An Apache ECharts chart on each ratio card (gauge, bar or ring), plus the card's color and written status |
 | Sprint 5: users can add or remove ratios and charts, and choose the chart type | Dashboard's **Customize** tab: a Chart type menu and one dropdown of checkboxes per ratio category |
-| Sprint 5: see what makes up each chart; arrange the dashboard | Click a card for its summary (the amounts behind it, the formula, the color ranges); press and hold a card to drag it within its category; drag its corner to resize it |
+| Sprint 5: see what makes up each chart; arrange the dashboard | Click a card for its summary (the amounts behind it, the formula, the color ranges); press and hold a card to drag it within its category; how-to in the **Help** panel |
 | Sprint 5: landing page looks like every other page | Same panels, colors, icons and animations as the rest of the app |
 | Sprint 2: icons and tooltips on buttons and menus | Lucide icons; every icon button also has a `title` tooltip |
 
@@ -86,11 +86,12 @@ Organized by SWEBOK v4 knowledge areas, so each choice traces from requirement t
   All three charts animate when the page loads, and all share one scale (`gauge()` in `ratios.js`).
 - **Summary pop-up:** clicking a card (or pressing Enter on it) opens `RatioSummary.jsx`. It shows the dollar amounts the ratio is built from (the `parts` field of `GET /api/statements/ratios`), the formula, and what each color means.
 - **Arranging the dashboard:**
-  - **Move:** press and hold a card for 0.3 s, then slide it to a new place in its category.
-  - **Resize:** drag the corner grip to make a card 1–3 columns wide and 1–2 rows tall. On narrow screens, wide cards shrink to fit (CSS container queries).
-  - **Without dragging:** the summary pop-up's Layout section does the same with menus and Move earlier / Move later buttons, for keyboard and screen-reader users.
+  - **Move:** press and hold a card for 0.3 s, then slide it to a new place in its category. The card lifts and follows the pointer, and the other cards slide out of the way (FLIP animation with the Web Animations API, off under reduced motion).
+  - **Without dragging:** the summary pop-up's Layout section has a chart-type menu and Move earlier / Move later buttons, for keyboard and screen-reader users.
   - **Touch:** dragging works by touch; a quick swipe still scrolls the page.
-  - **Saved:** order and sizes are kept with the user's other dashboard choices. The thresholds come from `GET /api/statements/ratios` (`StatementService.ratios()`), so the backend is the single source of truth for what counts as good.
+  - **Saved:** the order is kept with the user's other dashboard choices.
+  - **Help:** the **Financial Ratio Dashboard** topic in the Help panel (top of every page) explains all of this.
+- **Thresholds:** the green/yellow/red ranges come from `GET /api/statements/ratios` (`StatementService.ratios()`), so the backend is the single source of truth for what counts as good.
 - **Page animations:** these are plain CSS only, with no animation library. Four shared keyframes in `frontend/src/index.css` use the motion tokens `--fast` (140 ms), `--med` (240 ms) and `--ease`:
 
   | Animation | Used on |
@@ -127,7 +128,7 @@ Organized by SWEBOK v4 knowledge areas, so each choice traces from requirement t
 ### Software Maintenance and Configuration Management
 - Versions are pinned in `frontend/package-lock.json`, so commit it with any dependency change.
 - To upgrade, run `npm install echarts@latest lucide-react@latest`, then `npm run lint`, `npm test`, `npm run build`, and check the dashboard and sidebar icons.
-- **Dashboard choices are stored per user in browser `localStorage`** (`limitless.ratio-dashboard.<user id>`): shown ratios, chart types, order and sizes. They don't follow a user to another computer.
+- **Dashboard choices are stored per user in browser `localStorage`** (`limitless.ratio-dashboard.<user id>`): shown ratios, chart types and card order. They don't follow a user to another computer.
 - Ratio thresholds are maintained in one place, `StatementService.ratios()`.
 
 ## Deployment (Railway)

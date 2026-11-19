@@ -6,7 +6,8 @@ export const RELEASES = [
     title: 'Sprint 5: Financial ratios dashboard, closing and reversing entries',
     changes: [
       'Every landing page shows a financial ratio dashboard with the profitability, liquidity, leverage, activity and other ratios, each colored green when good, yellow when borderline and red when it needs a closer look, with an animated chart (Apache ECharts).',
-      'The dashboard\'s Customize tab picks the chart type (gauge, bar, ring or none) and, from a dropdown per category, which ratios to show; each user\'s choice is remembered.',
+      'The dashboard\'s Customize tab picks the chart type (gauge, bar, ring or none) for all ratios or for each one, and, from a dropdown per category, which ratios to show.',
+      'Click a ratio to see the amounts it is worked out from and what its colors mean. Press and hold a card to drag it to a new place; drag its corner to resize it. Each user\'s layout is remembered.',
       'Accountants\'s home page says how many journal entries are waiting for a manager\'s approval.',
       'Journal entries can be Closing or Reversing as well as Regular or Adjusting; the journal, reports and entry pages show and filter by all four.',
       'Financial statements leave out closing entries, so net income for a period isn\'t wiped out by the entry that closes it.',

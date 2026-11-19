@@ -28,10 +28,10 @@ test('by default only ratios with a value are shown; a saved choice wins', () =>
   assert.deepEqual(visibleRatios(ratios, ['b']).map((r) => r.key), ['b'])
 })
 
-test('saved choices: defaults, old charts on/off becomes gauge / none, unknown chart types fall back to gauge', () => {
-  assert.deepEqual(normalizePrefs(null), { selected: null, chart: 'gauge' })
-  assert.deepEqual(normalizePrefs({ selected: ['a'], charts: false }), { selected: ['a'], chart: 'none' })
-  assert.deepEqual(normalizePrefs({ charts: true }), { selected: null, chart: 'gauge' })
-  assert.equal(normalizePrefs({ chart: 'bar' }).chart, 'bar')
+test('saved choices: defaults, old charts on/off becomes gauge / none, unknown chart types are dropped', () => {
+  const empty = { types: {}, order: [], sizes: {} }
+  assert.deepEqual(normalizePrefs(null), { selected: null, chart: 'gauge', ...empty })
+  assert.deepEqual(normalizePrefs({ selected: ['a'], charts: false }), { selected: ['a'], chart: 'none', ...empty })
   assert.equal(normalizePrefs({ chart: 'pie' }).chart, 'gauge')
+  assert.deepEqual(normalizePrefs({ types: { a: 'bar', b: 'pie' } }).types, { a: 'bar' })
 })

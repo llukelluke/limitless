@@ -38,14 +38,40 @@ export const CHART_TYPES = [
   { value: 'none', label: 'No chart' },
 ]
 
-const DEFAULT_PREFS = { selected: null, chart: 'gauge' }
+const DEFAULT_PREFS = { selected: null, chart: 'gauge', types: {}, order: [], sizes: {} }
+const isChartType = (value) => CHART_TYPES.some((t) => t.value === value)
 
-// selected: ratio keys to show (null = default: every ratio that has a value). chart: one of CHART_TYPES.
+// selected: ratio keys to show (null = default: every ratio that has a value). chart: chart type for every ratio,
+// types: per-ratio chart types that override it. order: ratio keys in the user's order. sizes: { key: { w, h } }.
 // Choices saved before chart types existed had charts: true/false; they become gauge / none.
 export function normalizePrefs(saved) {
   const { charts, ...rest } = saved ?? {}
   const prefs = { ...DEFAULT_PREFS, ...(charts === false ? { chart: 'none' } : {}), ...rest }
-  return CHART_TYPES.some((t) => t.value === prefs.chart) ? prefs : { ...prefs, chart: 'gauge' }
+  if (!isChartType(prefs.chart)) prefs.chart = 'gauge'
+  prefs.types = Object.fromEntries(Object.entries(prefs.types ?? {}).filter(([, t]) => isChartType(t)))
+  return prefs
+}
+
+export const chartTypeFor = (prefs, key) => prefs.types[key] ?? prefs.chart
+
+// Cards are 1–3 grid columns wide and 1–2 rows tall.
+export const clampSize = ({ w = 1, h = 1 } = {}) => ({
+  w: Math.min(Math.max(Math.round(w), 1), 3),
+  h: Math.min(Math.max(Math.round(h), 1), 2),
+})
+export const sizeFor = (prefs, key) => clampSize(prefs.sizes[key])
+
+// Ratios in the user's saved order; any not in it (new ratios) follow in the API's order.
+export function orderRatios(ratios, order) {
+  const rank = (r) => (order.includes(r.key) ? order.indexOf(r.key) : order.length + ratios.indexOf(r))
+  return [...ratios].sort((a, b) => rank(a) - rank(b))
+}
+
+// Moves `key` to where `target` is in the list of keys (after it when moving forward, before it when moving back).
+export function moveKey(keys, key, target) {
+  const next = keys.filter((k) => k !== key)
+  next.splice(keys.indexOf(target), 0, key)
+  return next
 }
 
 export function loadPrefs(user) {
